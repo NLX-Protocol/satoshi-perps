@@ -135,7 +135,7 @@ module.exports = {
       polygon: POLYGONSCAN_API_KEY,
 
     },
-    customChains:[
+    customChains: [
       {
         network: "core-testnet",
         chainId: 1115,
@@ -147,13 +147,31 @@ module.exports = {
     ]
   },
   solidity: {
-    version: "0.6.12",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 10
+    compilers: [
+      {
+        version: "0.8.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 10,
+            details: {
+              constantOptimizer: true,
+            },
+          },
+        },
+      },
+      
+      {
+        version: "0.6.12",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 10
+          }
+        }
       }
-    }
+    ],
+
   },
   typechain: {
     outDir: "typechain",

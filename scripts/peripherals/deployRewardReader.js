@@ -1,7 +1,10 @@
 const { deployContract, contractAt, writeTmpAddresses } = require("../shared/helpers")
 
 async function main() {
-  await deployContract("RewardReader", [], "RewardReader")
+  const rewardReader = await deployContract("RewardReader", [], "RewardReader")
+  writeTmpAddresses({
+    rewardReader: rewardReader.address
+  })
 }
 
 main()

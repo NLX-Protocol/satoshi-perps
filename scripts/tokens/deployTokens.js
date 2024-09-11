@@ -3,9 +3,13 @@ const { expandDecimals } = require("../../test/shared/utilities")
 
 async function main() {
   const addresses = {}
-  addresses.BTC = (await callWithRetries(deployContract, ["FaucetToken", ["Bitcoin", "BTC", 18, expandDecimals(1, 18)]])).address
-  // addresses.USDC = (await callWithRetries(deployContract, ["FaucetToken", ["USDC Coin", "USDC", 18, expandDecimals(1000, 18)]])).address
-  // addresses.USDT = (await callWithRetries(deployContract, ["FaucetToken", ["Tether", "USDT", 18, expandDecimals(1000, 18)]])).address
+  addresses.aBTC = (await callWithRetries(deployContract, ["FaucetToken", ["Bitcoin", "aBTC", 18, expandDecimals(1, 18)]])).address
+  addresses.COREBTC = (await callWithRetries(deployContract, ["FaucetToken", ["Bitcoin", "COREBTC", 8, expandDecimals(1, 8)]])).address
+  addresses.solvBTC = (await callWithRetries(deployContract, ["FaucetToken", ["Bitcoin", "solvBTC", 18, expandDecimals(1, 18)]])).address
+  addresses.USDT = (await callWithRetries(deployContract, ["FaucetToken", ["Tether", "USDT", 6, expandDecimals(1000, 6)]])).address
+  addresses.USDC = (await callWithRetries(deployContract, ["FaucetToken", ["USDC Coin", "USDC", 6, expandDecimals(1000, 6)]])).address
+  addresses.USDE = (await callWithRetries(deployContract, ["FaucetToken", ["USDE Coin", "USDE", 6, expandDecimals(1000, 6)]])).address
+  addresses.WCORE = (await callWithRetries(deployContract, ["WCORE", []])).address
 
   writeTmpAddresses(addresses)
 }

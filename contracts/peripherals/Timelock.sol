@@ -282,6 +282,27 @@ contract Timelock is ITimelock, BasicMulticall {
         IVault(_vault).setIsLeverageEnabled(_isLeverageEnabled);
     }
 
+    function setVaultTokenConfig(
+        address _vault,
+        address _token,
+        uint256 _tokenDecimals,
+        uint256 _tokenWeight,
+        uint256 _minProfitBps,
+        uint256 _maxUsdgAmount,
+        bool _isStable,
+        bool _isShortable
+    ) external onlyKeeperAndAbove {
+        IVault(_vault).setTokenConfig(
+            _token,
+            _tokenDecimals,
+            _tokenWeight,
+            _minProfitBps,
+            _maxUsdgAmount,
+            _isStable,
+            _isShortable
+        );
+    }
+
     function setTokenConfig(
         address _vault,
         address _token,

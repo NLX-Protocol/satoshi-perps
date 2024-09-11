@@ -1,4 +1,4 @@
-const { getFrameSigner, deployContract, contractAt , sendTxn } = require("../shared/helpers")
+const { getFrameSigner, deployContract, contractAt, sendTxn, writeTmpAddresses } = require("../shared/helpers")
 const { expandDecimals } = require("../../test/shared/utilities")
 const { toUsd } = require("../../test/shared/units")
 const { errors } = require("../../test/core/Vault/helpers")
@@ -76,22 +76,56 @@ async function getValues(signer) {
 }
 
 async function main() {
-  const signer = await getFrameSigner()
 
-  const {
-    positionManagerAddress,
-    vault,
-    timelock,
-    router,
-    shortsTracker,
-    weth,
-    depositFee,
-    orderBook,
-    referralStorage,
-    orderKeepers,
-    liquidators,
-    partnerContracts
-  } = await getValues(signer)
+  // // -------------------BTC --------------------
+  // const positionManagerAddress = undefined
+  // const vault = await contractAt("Vault", "0xB3992C9eaE205CC5AD8c95F79131d429287aE1e7")
+  // const timelock = await contractAt("Timelock", await vault.gov())
+  // const router = await contractAt("Router", await vault.router())
+  // const shortsTracker = await contractAt("ShortsTracker", "0xEE4e97f7Fb8c15e3B5F5755202e3b8f92dC6173a")
+  // const shortsTrackerTimelock = await contractAt("ShortsTrackerTimelock", await shortsTracker.gov())
+  // const weth = await contractAt("WETH", tokens.nativeToken.address)
+  // const orderBook = await contractAt("OrderBook", "0x62D5a40b271863aE3eb996E151AEfcF5221beee8")
+  // const referralStorage = await contractAt("ReferralStorage", "0x918699b3E3Ac04aAd93fe9cC6352C94893c3f495")
+  // const positionUtils = await contractAt("PositionUtils", "0x27CF2eCFD81f53932c94A4240D34648049691ae0")
+
+  // // -------------------Core --------------------
+  // const positionManagerAddress = undefined
+  // const vault = await contractAt("Vault", "0x026a7149B3591b9811B5500041ba143a74c71344")
+  // const timelock = await contractAt("Timelock", await vault.gov())
+  // const router = await contractAt("Router", await vault.router())
+  // const shortsTracker = await contractAt("ShortsTracker", "0x83C1699a78C9071AFc2ad1d2c1C4b0013Dc073ad")
+  // const shortsTrackerTimelock = await contractAt("ShortsTrackerTimelock", await shortsTracker.gov())
+  // const weth = await contractAt("WETH", tokens.nativeToken.address)
+  // const orderBook = await contractAt("OrderBook", "0x187FB46B55eeF3a9730d671c2516C2F5E2a2c825")
+  // const referralStorage = await contractAt("ReferralStorage", "0x6C156d171b5E7523590770b320541B9dF5305e08")
+  // const positionUtils = await contractAt("PositionUtils", "0x3c333eFA66358fbed5799cb7e6B0286b80d3FC44")
+
+  // -------------------USD --------------------
+  const positionManagerAddress = undefined
+  const vault = await contractAt("Vault", "0x4204d09EC45e305Ecf06dC872B928e345F664678")
+  const timelock = await contractAt("Timelock", await vault.gov())
+  const router = await contractAt("Router", await vault.router())
+  const shortsTracker = await contractAt("ShortsTracker", "0x000E4E3AdBB355E8ffb14f4dA5c5b021FAE2B0BC")
+  const shortsTrackerTimelock = await contractAt("ShortsTrackerTimelock", await shortsTracker.gov())
+  const weth = await contractAt("WETH", tokens.nativeToken.address)
+  const orderBook = await contractAt("OrderBook", "0x8A38C4f56277d261c03fEf49BB7414d4b7bEBc6F")
+  const referralStorage = await contractAt("ReferralStorage", "0xb114DA215ad61076A1Ada04901C2F4ca69b1b4e4")
+  const positionUtils = await contractAt("PositionUtils", "0x5bd3810A0A892FcB95474A9C8E530BE42235e924")
+
+
+  const orderKeepers = [
+    { address: "0x77B6935623878F8f9dce8E1A28d4A8A7E89A37b6" },
+    { address: "0x0666992F2D2fD045e9b876B5490F5470452aFBD3" }
+  ]
+  const liquidators = [
+    { address: "0x73CbB4801bFE4AD34d8B0Fd3dab8bE0E9e9d2579" }
+  ]
+
+  const partnerContracts = []
+
+
+
 
   let positionManager
   if (positionManagerAddress) {
@@ -100,7 +134,11 @@ async function main() {
   } else {
     console.log("Deploying new position manager")
     const positionManagerArgs = [vault.address, router.address, shortsTracker.address, weth.address, depositFee, orderBook.address]
-    positionManager = await deployContract("PositionManager", positionManagerArgs)
+    positionManager = await deployContract("PositionManager", positionManagerArgs, "PositionManager", {
+      libraries: {
+        PositionUtils: positionUtils.address,
+      }
+    })
   }
 
   // positionManager only reads from referralStorage so it does not need to be set as a handler of referralStorage
@@ -132,7 +170,9 @@ async function main() {
     await sendTxn(timelock.setLiquidator(vault.address, positionManager.address, true), "timelock.setLiquidator(vault, positionManager, true)")
   }
   if (!(await shortsTracker.isHandler(positionManager.address))) {
-    await sendTxn(shortsTracker.setHandler(positionManager.address, true), "shortsTracker.setContractHandler(positionManager.address, true)")
+    await sendTxn(shortsTrackerTimelock.signalSetHandler(shortsTracker.address, positionManager.address, true), "shortsTrackerTimelock.signalSetHandler")
+    await sendTxn(shortsTrackerTimelock.setHandler(shortsTracker.address, positionManager.address, true), "shortsTrackerTimelock.setHandler")
+    // await sendTxn(shortsTracker.setHandler(positionManager.address, true), "shortsTracker.setContractHandler(positionManager.address, true)")
   }
   if (!(await router.plugins(positionManager.address))) {
     await sendTxn(router.addPlugin(positionManager.address), "router.addPlugin(positionManager)")
@@ -149,6 +189,10 @@ async function main() {
     await sendTxn(positionManager.setGov(await vault.gov()), "positionManager.setGov")
   }
 
+  const addresses = {
+    positionManagerUsd: positionManager.address,
+  }
+  writeTmpAddresses(addresses)
   console.log("done.")
 }
 
