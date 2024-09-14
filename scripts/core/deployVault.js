@@ -35,7 +35,13 @@ async function main() {
 
   const shortsTracker = await deployContract("ShortsTracker", [vault.address], "ShortsTracker",)
 
-  const nlpManager = await deployContract("NlpManager", [vault.address, usdgUsd.address, nlpUsd.address, shortsTracker.address, 15 * 60])
+  const nlpManager = await deployContract("NlpManager", [
+    vault.address, 
+    usdgUsd.address, 
+    nlpUsd.address, 
+    shortsTracker.address, 
+    0,// coolDown Period - 15 * 60
+  ])
   // await sendTxn(nlpManager.setInPrivateMode(true), "nlpManager.setInPrivateMode")
 
   await sendTxn(nlpUsd.setMinter(nlpManager.address, true), "nlpUsd.setMinter")
