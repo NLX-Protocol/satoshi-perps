@@ -8,7 +8,7 @@ const { initVault, getBnbConfig, getBtcConfig, getDaiConfig } = require("./Vault
 
 use(solidity)
 
-describe.only("PositionRouter", function () {
+describe("PositionRouter", function () {
   const { AddressZero, HashZero } = ethers.constants
   const provider = waffle.provider
   const [wallet, positionKeeper, minter, user0, user1, user2, user3, user4, tokenManager, mintReceiver, signer0, signer1, updater0, updater1] = provider.getWallets()

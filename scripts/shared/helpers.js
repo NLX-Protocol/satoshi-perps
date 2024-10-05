@@ -144,6 +144,41 @@ async function deployContract(name, args, label, options) {
   return contract
 }
 
+async function verifyUpgradeable(contract, constructorArguments = undefined) {
+   // Verify the contract after deployment
+   if (constructorArguments) {
+    try {
+      console.log("Verifying contract...");
+  
+      await hre.run("verify:verify", {
+        address: contract,
+        constructorArguments,        
+      });
+  
+      console.info("Contract verified successfully!");
+    } catch (err) {
+      console.error("Verification failed:", err);
+    }
+
+   }else{
+
+     try {
+      console.log("Verifying contract...");
+  
+      await hre.run("verify:verify", {
+        address: contract,
+        constructorArguments: [],        
+      });
+  
+      console.info("Contract verified successfully!");
+    } catch (err) {
+      console.error("Verification failed:", err);
+    }
+   }
+
+  return 
+}
+
 async function contractAt(name, address, provider = undefined, options) {
 
   const contractFactoryOptions = {}
@@ -218,6 +253,7 @@ module.exports = {
   getFrameSigner,
   sendTxn,
   deployContract,
+  verifyUpgradeable,
   contractAt,
   writeTmpAddresses,
   readTmpAddresses,

@@ -60,12 +60,9 @@ contract GmxTimelock is IGmxTimelock {
         bool isStable,
         bool isShortable
     );
-    event SignalPriceFeedSetTokenConfig(
+    event SignalPriceFeedSetResilientOracle(
         address vaultPriceFeed,
-        address token,
-        address priceFeed,
-        uint256 priceDecimals,
-        bool isStrictStable
+        address _resilientOracleAddress
     );
     event ClearAction(bytes32 action);
 
@@ -243,11 +240,6 @@ contract GmxTimelock is IGmxTimelock {
 
     function setFavorPrimaryPrice(address _priceFeed, bool _favorPrimaryPrice) external onlyAdmin {
         IVaultPriceFeed(_priceFeed).setFavorPrimaryPrice(_favorPrimaryPrice);
-    }
-
-    function setPriceSampleSpace(address _priceFeed,uint256 _priceSampleSpace) external onlyAdmin {
-        require(_priceSampleSpace <= 5, "Invalid _priceSampleSpace");
-        IVaultPriceFeed(_priceFeed).setPriceSampleSpace(_priceSampleSpace);
     }
 
     function setIsSwapEnabled(address _vault, bool _isSwapEnabled) external onlyAdmin {
@@ -471,57 +463,40 @@ contract GmxTimelock is IGmxTimelock {
         );
     }
 
-    function signalPriceFeedSetTokenConfig(
+    function signalPriceFeedSetResilientOracle(
         address _vaultPriceFeed,
-        address _token,
-        address _priceFeed,
-        uint256 _priceDecimals,
-        bool _isStrictStable
+        address _resilientOracleAddress
     ) external onlyAdmin {
-        bytes32 action = keccak256(abi.encodePacked(
-            "priceFeedSetTokenConfig",
+       bytes32 action = keccak256(abi.encodePacked(
+            "priceFeedSetResilientOracle",
             _vaultPriceFeed,
-            _token,
-            _priceFeed,
-            _priceDecimals,
-            _isStrictStable
+            _resilientOracleAddress
         ));
 
         _setPendingAction(action);
 
-        emit SignalPriceFeedSetTokenConfig(
+        emit SignalPriceFeedSetResilientOracle(
             _vaultPriceFeed,
-            _token,
-            _priceFeed,
-            _priceDecimals,
-            _isStrictStable
+            _resilientOracleAddress
         );
     }
 
+
     function priceFeedSetTokenConfig(
         address _vaultPriceFeed,
-        address _token,
-        address _priceFeed,
-        uint256 _priceDecimals,
-        bool _isStrictStable
+        address _resilientOracleAddress
     ) external onlyAdmin {
         bytes32 action = keccak256(abi.encodePacked(
             "priceFeedSetTokenConfig",
             _vaultPriceFeed,
-            _token,
-            _priceFeed,
-            _priceDecimals,
-            _isStrictStable
+            _resilientOracleAddress
         ));
 
         _validateAction(action);
         _clearAction(action);
 
-        IVaultPriceFeed(_vaultPriceFeed).setTokenConfig(
-            _token,
-            _priceFeed,
-            _priceDecimals,
-            _isStrictStable
+        IVaultPriceFeed(_vaultPriceFeed).setResilientOracle(
+            _resilientOracleAddress
         );
     }
 

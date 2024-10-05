@@ -5,6 +5,7 @@ import "../libraries/math/SafeMath.sol";
 import "./interfaces/IVaultPriceFeed.sol";
 import "../oracle/interfaces/AggregatorV3Interface.sol";
 import "../oracle/interfaces/ISecondaryPriceFeed.sol";
+import "../oracle/interfaces/IResilientOracle.sol";
 import "../oracle/interfaces/IChainlinkFlags.sol";
 import "../amm/interfaces/IPancakePair.sol";
 
@@ -30,7 +31,6 @@ contract VaultPriceFeed is IVaultPriceFeed {
     bool public isSecondaryPriceEnabled = true;
     bool public useV2Pricing = false;
     bool public favorPrimaryPrice = false;
-    uint256 public priceSampleSpace = 3;
     uint256 public maxStrictPriceDeviation = 0;
     address public secondaryPriceFeed;
     uint256 public spreadThresholdBasisPoints = 30;
@@ -42,8 +42,8 @@ contract VaultPriceFeed is IVaultPriceFeed {
     address public ethBnb;
     address public btcBnb;
 
-    mapping (address => address) public priceFeeds;
-    mapping (address => uint256) public priceDecimals;
+
+    address public resilientOracleAddress;
     mapping (address => uint256) public spreadBasisPoints;
     // Chainlink can return prices for stablecoins
     // that differs from 1 USD by a larger percentage than stableSwapFeeBasisPoints
@@ -125,24 +125,14 @@ contract VaultPriceFeed is IVaultPriceFeed {
         favorPrimaryPrice = _favorPrimaryPrice;
     }
 
-    function setPriceSampleSpace(uint256 _priceSampleSpace) external override onlyGov {
-        require(_priceSampleSpace > 0, "VaultPriceFeed: invalid _priceSampleSpace");
-        priceSampleSpace = _priceSampleSpace;
-    }
-
     function setMaxStrictPriceDeviation(uint256 _maxStrictPriceDeviation) external override onlyGov {
         maxStrictPriceDeviation = _maxStrictPriceDeviation;
     }
 
-    function setTokenConfig(
-        address _token,
-        address _priceFeed,
-        uint256 _priceDecimals,
-        bool _isStrictStable
+    function setResilientOracle(
+        address _resilientOracleAddress
     ) external override onlyGov {
-        priceFeeds[_token] = _priceFeed;
-        priceDecimals[_token] = _priceDecimals;
-        strictStableTokens[_token] = _isStrictStable;
+        resilientOracleAddress = _resilientOracleAddress;
     }
 
     function getPrice(address _token, bool _maximise, bool _includeAmmPrice, bool /* _useSwapPricing */) public override view returns (uint256) {
@@ -273,27 +263,21 @@ contract VaultPriceFeed is IVaultPriceFeed {
     }
 
     function getLatestPrimaryPrice(address _token) public override view returns (uint256) {
-        address priceFeedAddress = priceFeeds[_token];
-        require(priceFeedAddress != address(0), "VaultPriceFeed: invalid price feed");
 
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddress);
+        require(resilientOracleAddress != address(0), "VaultPriceFeed: invalid price feed");
 
-        (
-            /* uint80 roundId */,
-            int256 price,
-            /*uint256 startedAt*/,
-            /*uint256 timeStamp*/,
-            /*uint80 answeredInRound*/
-        ) = priceFeed.latestRoundData();
+        IResilientOracle resilientOracle = IResilientOracle(resilientOracleAddress);
+        uint256 price = resilientOracle.getPrice(_token, true);
 
         require(price > 0, "VaultPriceFeed: invalid price");
 
-        return uint256(price);
+        return price;
     }
 
     function getPrimaryPrice(address _token, bool _maximise) public override view returns (uint256) {
-        address priceFeedAddress = priceFeeds[_token];
-        require(priceFeedAddress != address(0), "VaultPriceFeed: invalid price feed");
+
+        require(resilientOracleAddress != address(0), "VaultPriceFeed: invalid price feed");
+        IResilientOracle resilientOracle = IResilientOracle(resilientOracleAddress);
 
         if (chainlinkFlags != address(0)) {
             bool isRaised = IChainlinkFlags(chainlinkFlags).getFlag(FLAG_ARBITRUM_SEQ_OFFLINE);
@@ -303,45 +287,11 @@ contract VaultPriceFeed is IVaultPriceFeed {
             }
         }
 
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddress);
+        uint256 price = resilientOracle.getPrice(_token, _maximise);
 
-        uint256 price = 0;
+        require(price > 0, "VaultPriceFeed: invalid price");
 
-        ( uint80 roundId, , , , ) = priceFeed.latestRoundData();
-        
-        for (uint80 i = 0; i < priceSampleSpace; i++) {
-            if (roundId <= i) { break; }
-            uint256 p;
-
-            if (i == 0) {
-                (, int256 _p, , ,) = priceFeed.latestRoundData();
-                require(_p > 0, "VaultPriceFeed: invalid price");
-                p = uint256(_p);
-            } else {
-                (, int256 _p, , ,) = priceFeed.getRoundData(roundId - i);
-                require(_p > 0, "VaultPriceFeed: invalid price");
-                p = uint256(_p);
-            }
-
-            if (price == 0) {
-                price = p;
-                continue;
-            }
-
-            if (_maximise && p > price) {
-                price = p;
-                continue;
-            }
-
-            if (!_maximise && p < price) {
-                price = p;
-            }
-        }
-
-        require(price > 0, "VaultPriceFeed: could not fetch price");
-        // normalise price precision
-        uint256 _priceDecimals = priceDecimals[_token];
-        return price.mul(PRICE_PRECISION).div(10 ** _priceDecimals);
+        return price;
     }
 
     function getSecondaryPrice(address _token, uint256 _referencePrice, bool _maximise) public view returns (uint256) {

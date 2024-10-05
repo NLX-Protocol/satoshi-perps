@@ -28,16 +28,23 @@
     "typechain": "^5.1.2"
   },
   "dependencies": {
+    "@chainlink/contracts": "^0.5.1",
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-verify": "^2.0.11",
+    "@openzeppelin/contracts": "4.9.3",
+    "@pythnetwork/pyth-sdk-solidity": "^2.3.0",
+    "@openzeppelin/contracts-upgradeable": "^4.7.3",
+    "@openzeppelin/hardhat-upgrades": "^1.7.0",
     "@synapseprotocol/sdk": "^0.94.1",
     "@uniswap/sdk-core": "^3.0.1",
     "@uniswap/v3-sdk": "^3.8.2",
+    "@venusprotocol/governance-contracts": "^2.3.0",
     "bn.js": "^5.2.0",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "csv-parse": "^4.16.3",
     "express": "^4.18.2",
     "get-all-files": "^4.1.0",
-    "@openzeppelin/contracts": "4.9.3",
     "solidity-code-metrics": "^0.0.25"
   }
 }

@@ -1,7 +1,11 @@
-require("@nomiclabs/hardhat-waffle")
-require("@nomiclabs/hardhat-etherscan")
-require("hardhat-contract-sizer")
-require('@typechain/hardhat')
+require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-etherscan");
+require("hardhat-contract-sizer");
+require("@typechain/hardhat");
+require("@nomiclabs/hardhat-ethers");
+require("@openzeppelin/hardhat-upgrades");
+
+
 
 const {
   CORE_TESTNET_URL,
@@ -74,6 +78,7 @@ module.exports = {
     "core-testnet": {
       url: CORE_TESTNET_URL,
       chainId: 1115,
+      gasLimit:26000000,
       // gasPrice: 10000000000,
       accounts: getEnvAccounts(CORE_TESTNET_DEPLOY_KEY),
     },
@@ -153,6 +158,17 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
+            details: {
+              yul: true,
+            },
+          },
+        },
+      },
+      {
+        version: "0.8.25",
+        settings: {
+          optimizer: {
+            enabled: true,
             runs: 10,
             details: {
               constantOptimizer: true,
@@ -160,7 +176,6 @@ module.exports = {
           },
         },
       },
-      
       {
         version: "0.6.12",
         settings: {

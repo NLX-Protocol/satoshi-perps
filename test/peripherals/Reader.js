@@ -8,7 +8,7 @@ const { initVault, getBnbConfig, getBtcConfig, getDaiConfig } = require("../core
 
 use(solidity)
 
-describe("Reader", function () {
+describe.only("Reader", function () {
   const provider = waffle.provider
   const [wallet, user0, user1, user2, user3] = provider.getWallets()
   let vault
@@ -63,6 +63,9 @@ describe("Reader", function () {
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(60000))
     await vault.setTokenConfig(...getBtcConfig(btc, btcPriceFeed))
 
+    console.log({
+      vault: vault.address, weth: bnb.address, usdgAmount: expandDecimals(1, 30).toString(), tokens: [btc.address, dai.address]
+    });
     const results = await reader.getVaultTokenInfo(vault.address, bnb.address, expandDecimals(1, 30), [btc.address, dai.address])
     expect(await results.length).eq(20)
   })

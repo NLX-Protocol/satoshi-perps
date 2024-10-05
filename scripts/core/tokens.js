@@ -11,13 +11,16 @@ module.exports = {
       name: "usdt",
       address: "0xe297A83fbB19d7884E5B96047113e256C5b266EB",
       decimals: 6,
-      priceFeed: "0x16abbf7f777236374A82398534B8aAFcCACDb921",
+      priceFeed: { 
+        apro: "0x16abbf7f777236374A82398534B8aAFcCACDb921", 
+        pyth: "0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b"
+       },
       priceDecimals: 8,
       isStrictStable: true,
       tokenWeight: 1000,
       minProfitBps: 0,
       maxUsdgAmount: 5 * 1000 * 1000,
-      bufferAmount:1000,
+      bufferAmount: 1000,
       isStable: true,
       isShortable: true,
     },
@@ -25,13 +28,16 @@ module.exports = {
       name: "usdc",
       address: "0x076027C99628cf7e142f506627125De31561764f",
       decimals: 6,
-      priceFeed: "0x16abbf7f777236374A82398534B8aAFcCACDb921",
+      priceFeed: { 
+        apro: "0x16abbf7f777236374A82398534B8aAFcCACDb921", 
+        pyth: "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"
+       },
       priceDecimals: 8,
       isStrictStable: true,
       tokenWeight: 1000,
       minProfitBps: 0,
       maxUsdgAmount: 5 * 1000 * 1000,
-      bufferAmount:1000,
+      bufferAmount: 1000,
       isStable: true,
       isShortable: true,
     },
@@ -39,29 +45,35 @@ module.exports = {
       name: "usde",
       address: "0x73A2b01bE81Eb0A753bEF9480E8CE013019ae366",
       decimals: 6,
-      priceFeed: "0x16abbf7f777236374A82398534B8aAFcCACDb921",
+      priceFeed: { 
+        apro: "0x16abbf7f777236374A82398534B8aAFcCACDb921", 
+        pyth: "0x6ec879b1e9963de5ee97e9c8710b742d6228252a5e2ca12d4ae81d7fe5ee8c5d"
+       },
       priceDecimals: 8,
       isStrictStable: true,
       tokenWeight: 1000,
       minProfitBps: 0,
       maxUsdgAmount: 5 * 1000 * 1000,
-      bufferAmount:1000,
+      bufferAmount: 1000,
       isStable: true,
       isShortable: true,
     },
-    
+
     // -------------------- aBTC, solvBTC, coreBTC --------------------
     aBTC: {
       name: "aBTC",
       address: "0x9D14040c235ff8a8B59d9C4deE7dcdb49B515EC8",
       decimals: 18,
-      priceFeed: "0x1BF924E71cED920387E7f0E0C545cB969a1f805b",
+      priceFeed: { 
+        apro: "0x1BF924E71cED920387E7f0E0C545cB969a1f805b", 
+        pyth: "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
+       },
       priceDecimals: 8,
       isStrictStable: false,
       tokenWeight: 1000,
       minProfitBps: 0,
       maxUsdgAmount: 5 * 1000 * 1000,
-      bufferAmount:1,
+      bufferAmount: 1,
       isStable: false,
       isShortable: true,
     },
@@ -69,13 +81,16 @@ module.exports = {
       name: "solvBTC",
       address: "0xef317386be450E6Cb6e191E38B819508c4D5e820",
       decimals: 18,
-      priceFeed: "0x1BF924E71cED920387E7f0E0C545cB969a1f805b",
+      priceFeed: { 
+        apro: "0x1BF924E71cED920387E7f0E0C545cB969a1f805b", 
+        pyth: "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
+       },
       priceDecimals: 8,
       isStrictStable: false,
       tokenWeight: 1000,
       minProfitBps: 0,
       maxUsdgAmount: 5 * 1000 * 1000,
-      bufferAmount:1,
+      bufferAmount: 1,
       isStable: false,
       isShortable: true,
     },
@@ -83,33 +98,43 @@ module.exports = {
       name: "coreBTC",
       address: "0xE8E8371405538DAb7BA7f063eD16C00CeE026468",
       decimals: 8,
-      priceFeed: "0x1BF924E71cED920387E7f0E0C545cB969a1f805b",
+      priceFeed: { 
+        apro: "0x1BF924E71cED920387E7f0E0C545cB969a1f805b", 
+        pyth: "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
+       },
       priceDecimals: 8,
       isStrictStable: false,
       tokenWeight: 1000,
       minProfitBps: 0,
       maxUsdgAmount: 15 * 1000 * 1000,
-      bufferAmount:1,
+      bufferAmount: 1,
       isStable: false,
       isShortable: true,
     },
- 
+
     core: {
       name: "core",
       address: "0x0B4501d4e506956c648908F306717608f7625831",
       decimals: 18,
-      priceFeed: "0x485C4e2efB14a5f601B0401a8464129FB2f9502b",
+      priceFeed: { 
+        apro: "0x485C4e2efB14a5f601B0401a8464129FB2f9502b", 
+        pyth: "0x9b4503710cc8c53f75c30e6e4fda1a7064680ef2e0ee97acd2e3a7c37b3c830c"
+       },
       priceDecimals: 8,
       isStrictStable: false,
       tokenWeight: 1000,
       minProfitBps: 0,
       maxUsdgAmount: 10 * 1000 * 1000,
-      bufferAmount:1000,
+      bufferAmount: 1000,
       isStable: false,
       isShortable: true,
     },
     nativeToken: {
       address: "0x0B4501d4e506956c648908F306717608f7625831",
+      priceFeed: { 
+        apro: "0x485C4e2efB14a5f601B0401a8464129FB2f9502b", 
+        pyth: "0x9b4503710cc8c53f75c30e6e4fda1a7064680ef2e0ee97acd2e3a7c37b3c830c"
+       },
       decimals: 18,
     },
   },

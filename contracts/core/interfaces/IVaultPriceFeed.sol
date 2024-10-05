@@ -12,16 +12,12 @@ interface IVaultPriceFeed {
     function setSpreadBasisPoints(address _token, uint256 _spreadBasisPoints) external;
     function setSpreadThresholdBasisPoints(uint256 _spreadThresholdBasisPoints) external;
     function setFavorPrimaryPrice(bool _favorPrimaryPrice) external;
-    function setPriceSampleSpace(uint256 _priceSampleSpace) external;
     function setMaxStrictPriceDeviation(uint256 _maxStrictPriceDeviation) external;
     function getPrice(address _token, bool _maximise, bool _includeAmmPrice, bool _useSwapPricing) external view returns (uint256);
     function getAmmPrice(address _token) external view returns (uint256);
     function getLatestPrimaryPrice(address _token) external view returns (uint256);
     function getPrimaryPrice(address _token, bool _maximise) external view returns (uint256);
-    function setTokenConfig(
-        address _token,
-        address _priceFeed,
-        uint256 _priceDecimals,
-        bool _isStrictStable
+    function setResilientOracle(
+        address _resilientOracleAddress
     ) external;
 }
