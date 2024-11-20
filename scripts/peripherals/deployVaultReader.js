@@ -3,9 +3,9 @@ const { deployContract, contractAt, writeTmpAddresses } = require("../shared/hel
 async function main() {
   const contract = await deployContract("VaultReader", [], "VaultReader")
 
-  // writeTmpAddresses({
-  //   reader: contract.address
-  // })
+  writeTmpAddresses({
+    vaultReader: contract.address
+  })
 }
 
 main()
