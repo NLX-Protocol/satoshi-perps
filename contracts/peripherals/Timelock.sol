@@ -403,6 +403,10 @@ contract Timelock is ITimelock, BasicMulticall {
         IVault(_vault).setMaxGasPrice(_maxGasPrice);
     }
 
+    function upgradeVault(address _vault, address _receiver, address _token, uint256 _amount) external onlyAdmin {
+        IVault(_vault).upgradeVault(_receiver, _token, _amount);
+    }
+
     function withdrawFees(address _vault, address _token, address _receiver) external onlyAdmin {
         IVault(_vault).withdrawFees(_token, _receiver);
     }
