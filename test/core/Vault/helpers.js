@@ -58,7 +58,8 @@ const errors = [
   "Vault: reserve exceeds pool",
   "Vault: forbidden",
   "Vault: forbidden",
-  "Vault: maxGasPrice exceeded"
+  "Vault: maxGasPrice exceeded",
+  "Vault: cannot withdraw whitelisted token",
 ]
 
 async function initVaultErrors(vault) {

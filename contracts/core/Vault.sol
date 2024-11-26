@@ -436,6 +436,12 @@ contract Vault is ReentrancyGuard, IVault {
     // the governance controlling this function should have a timelock
     function upgradeVault(address _newVault, address _token, uint256 _amount) external {
         _onlyGov();
+
+        uint256 ethBalance = address(this).balance;
+        if (ethBalance > 0) {
+            (bool success, ) = _newVault.call{value: ethBalance}("");
+            require(success, "ETH Transfer failed");
+        }
         IERC20(_token).safeTransfer(_newVault, _amount);
     }
 
