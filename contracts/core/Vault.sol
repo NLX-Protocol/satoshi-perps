@@ -434,7 +434,7 @@ contract Vault is ReentrancyGuard, IVault {
     }
 
     // the governance controlling this function should have a timelock
-    function upgradeVault(address _newVault, address _token, uint256 _amount) external {
+    function upgradeVault(address _newVault, address _token, uint256 _amount) external override{
         _onlyGov();
 
         uint256 ethBalance = address(this).balance;

@@ -8,7 +8,7 @@ const { initVault, getBnbConfig, getBtcConfig, getDaiConfig } = require("../core
 
 use(solidity)
 
-describe.only("Reader", function () {
+describe("Reader", function () {
   const provider = waffle.provider
   const [wallet, user0, user1, user2, user3] = provider.getWallets()
   let vault
