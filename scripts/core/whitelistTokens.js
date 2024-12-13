@@ -8,7 +8,7 @@ const tokens = require('./tokens')[network];
 // // ---------- BTC ----------
 // const VAULT_ADDRESS = "0xB3992C9eaE205CC5AD8c95F79131d429287aE1e7"
 // const VAULT_PRICE_FEED_ADDRESS = "0x7d47e535E620566fa7ba716D1B41E380d5dd2904"
-// const NLP_MANAGER_ADDRESS = "0xbCb9573a247921a4F3fa3BcF210354E4561f967C"
+// const SLP_MANAGER_ADDRESS = "0xbCb9573a247921a4F3fa3BcF210354E4561f967C"
 // const REFERRAL_STORAGE_ADDRESS = "0x918699b3E3Ac04aAd93fe9cC6352C94893c3f495"
 // const POSITION_ROUTER_ADDRESS = "0x239ad5c1D15DAe0f8163bC178c7921Bf5a1759cc"
 // const { aBTC, coreBTC, solvBTC } = tokens
@@ -17,7 +17,7 @@ const tokens = require('./tokens')[network];
 // // ---------- USD ----------
 // const VAULT_ADDRESS = "0x4204d09EC45e305Ecf06dC872B928e345F664678"
 // const VAULT_PRICE_FEED_ADDRESS = "0x94823c97c127E0e5617f5182d3FdcBBF3F9E56C5"
-// const NLP_MANAGER_ADDRESS = "0x16aCa8b0547566eA9b2aa7a232871D5D5C8160a6"
+// const SLP_MANAGER_ADDRESS = "0x16aCa8b0547566eA9b2aa7a232871D5D5C8160a6"
 // const REFERRAL_STORAGE_ADDRESS = "0xb114DA215ad61076A1Ada04901C2F4ca69b1b4e4"
 // const POSITION_ROUTER_ADDRESS = "0xE450D1514f20E2f67dc4E0124ab146d19ee97334"
 // const { usdt, usdc, usde } = tokens
@@ -27,7 +27,7 @@ const tokens = require('./tokens')[network];
 const VAULT_ADDRESS = "0x026a7149B3591b9811B5500041ba143a74c71344"
 const VAULT_PRICE_FEED_ADDRESS = "0x05DBa9dB32e5c54F8a523F5a43bD9DC9D04C8AcC"
 const REFERRAL_STORAGE_ADDRESS = "0x6C156d171b5E7523590770b320541B9dF5305e08"
-const NLP_MANAGER_ADDRESS = "0xa0aD95c8145e5eE58aB4Bb5484Fa041703Fb62C0"
+const SLP_MANAGER_ADDRESS = "0xa0aD95c8145e5eE58aB4Bb5484Fa041703Fb62C0"
 const POSITION_ROUTER_ADDRESS = "0xc152FA8fc1191eD0F294488C26A4bED4e06d974C"
 const { core, } = tokens
 const tokenArr = [core,]
@@ -45,8 +45,8 @@ async function main() {
   //   0, // buffer
   //   wallet.address, // tokenManager
   //   wallet.address, // mintReceiver
-  //   NLP_MANAGER_ADDRESS, // nlpManager
-  //   NLP_MANAGER_ADDRESS, // prevNlpManager
+  //   SLP_MANAGER_ADDRESS, // slpManager
+  //   SLP_MANAGER_ADDRESS, // prevSlpManager
   //   wallet.address, // rewardRouter
   //   expandDecimals(100_000_000, 18), // maxTokenSupply
   //   50, // marginFeeBasisPoints 0.5%
@@ -102,7 +102,6 @@ async function main() {
       token.isStable, // _isStable
       token.isShortable // _isShortable
     ), `vault.setTokenConfig(${token.name}) ${token.address}`)
-
   }
 
 

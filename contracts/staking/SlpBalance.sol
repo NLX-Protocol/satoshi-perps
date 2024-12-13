@@ -4,24 +4,24 @@ pragma solidity 0.6.12;
 
 import "../libraries/math/SafeMath.sol";
 import "../libraries/token/IERC20.sol";
-import "../core/interfaces/INlpManager.sol";
+import "../core/interfaces/ISlpManager.sol";
 
-contract NlpBalance {
+contract SlpBalance {
     using SafeMath for uint256;
 
-    INlpManager public nlpManager;
-    address public stakedNlpTracker;
+    ISlpManager public slpManager;
+    address public stakedSlpTracker;
 
     mapping (address => mapping (address => uint256)) public allowances;
 
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
     constructor(
-        INlpManager _nlpManager,
-        address _stakedNlpTracker
+        ISlpManager _slpManager,
+        address _stakedSlpTracker
     ) public {
-        nlpManager = _nlpManager;
-        stakedNlpTracker = _stakedNlpTracker;
+        slpManager = _slpManager;
+        stakedSlpTracker = _stakedSlpTracker;
     }
 
     function allowance(address _owner, address _spender) external view returns (uint256) {
@@ -39,15 +39,15 @@ contract NlpBalance {
     }
 
     function transferFrom(address _sender, address _recipient, uint256 _amount) external returns (bool) {
-        uint256 nextAllowance = allowances[_sender][msg.sender].sub(_amount, "NlpBalance: transfer amount exceeds allowance");
+        uint256 nextAllowance = allowances[_sender][msg.sender].sub(_amount, "SlpBalance: transfer amount exceeds allowance");
         _approve(_sender, msg.sender, nextAllowance);
         _transfer(_sender, _recipient, _amount);
         return true;
     }
 
     function _approve(address _owner, address _spender, uint256 _amount) private {
-        require(_owner != address(0), "NlpBalance: approve from the zero address");
-        require(_spender != address(0), "NlpBalance: approve to the zero address");
+        require(_owner != address(0), "SlpBalance: approve from the zero address");
+        require(_spender != address(0), "SlpBalance: approve to the zero address");
 
         allowances[_owner][_spender] = _amount;
 
@@ -55,14 +55,14 @@ contract NlpBalance {
     }
 
     function _transfer(address _sender, address _recipient, uint256 _amount) private {
-        require(_sender != address(0), "NlpBalance: transfer from the zero address");
-        require(_recipient != address(0), "NlpBalance: transfer to the zero address");
+        require(_sender != address(0), "SlpBalance: transfer from the zero address");
+        require(_recipient != address(0), "SlpBalance: transfer to the zero address");
 
         require(
-            nlpManager.lastAddedAt(_sender).add(nlpManager.cooldownDuration()) <= block.timestamp,
-            "NlpBalance: cooldown duration not yet passed"
+            slpManager.lastAddedAt(_sender).add(slpManager.cooldownDuration()) <= block.timestamp,
+            "SlpBalance: cooldown duration not yet passed"
         );
 
-        IERC20(stakedNlpTracker).transferFrom(_sender, _recipient, _amount);
+        IERC20(stakedSlpTracker).transferFrom(_sender, _recipient, _amount);
     }
 }

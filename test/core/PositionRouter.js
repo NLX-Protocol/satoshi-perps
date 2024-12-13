@@ -58,8 +58,8 @@ describe("PositionRouter", function () {
       5 * 24 * 60 * 60, // _buffer
       ethers.constants.AddressZero, // _tokenManager
       ethers.constants.AddressZero, // _mintReceiver
-      ethers.constants.AddressZero, // _nlpManager
-      ethers.constants.AddressZero, // _prevnlpManager
+      ethers.constants.AddressZero, // _slpManager
+      ethers.constants.AddressZero, // _prevSlpManager
       ethers.constants.AddressZero, // _rewardRouter
       expandDecimals(1000, 18), // _maxTokenSupply
       10, // marginFeeBasisPoints 0.1%
@@ -2745,18 +2745,18 @@ describe("PositionRouter", function () {
   })
 
   describe("Updates short tracker data", () => {
-    let nlpManager
+    let slpManager
 
     beforeEach(async () => {
-      const nlp = await deployContract("NLP", [])
-      nlpManager = await deployContract("NlpManager", [
+      const slp = await deployContract("SLP", [])
+      slpManager = await deployContract("SlpManager", [
         vault.address,
         usdg.address,
-        nlp.address,
+        slp.address,
         shortsTracker.address,
         24 * 60 * 60
       ])
-      await nlpManager.setShortsTrackerAveragePriceWeight(10000)
+      await slpManager.setShortsTrackerAveragePriceWeight(10000)
 
       await router.addPlugin(positionRouter.address)
       await router.connect(user0).approvePlugin(positionRouter.address)
@@ -2804,7 +2804,7 @@ describe("PositionRouter", function () {
       expect(hasProfit, "has profit 0").to.be.false
       expect(delta, "delta 0").to.be.equal(toUsd(100))
 
-      let aumBefore = await nlpManager.getAum(true)
+      let aumBefore = await slpManager.getAum(true)
 
       await positionRouter.connect(user0).createIncreasePosition(...params, { value: executionFee })
       key = await positionRouter.getRequestKey(user0.address, 2)
@@ -2817,7 +2817,7 @@ describe("PositionRouter", function () {
       expect(hasProfit, "has profit 1").to.be.false
       expect(delta, "delta 1").to.be.closeTo(toUsd(100), 100)
 
-      let aumAfter = await nlpManager.getAum(true)
+      let aumAfter = await slpManager.getAum(true)
       expect(aumAfter).to.be.closeTo(aumBefore, 100)
     })
 
@@ -2865,7 +2865,7 @@ describe("PositionRouter", function () {
       expect(hasProfit, "has profit 0").to.be.false
       expect(delta, "delta 0").to.be.equal(toUsd(100))
 
-      let aumBefore = await nlpManager.getAum(true)
+      let aumBefore = await slpManager.getAum(true)
 
       await positionRouter.connect(user0).createDecreasePosition(...decreaseParams, { value: executionFee })
       key = await positionRouter.getRequestKey(user0.address, 1)
@@ -2878,13 +2878,13 @@ describe("PositionRouter", function () {
       expect(hasProfit, "has profit 1").to.be.false
       expect(delta, "delta 1").to.be.equal(toUsd(90))
 
-      expect(await nlpManager.getAum(true), "aum 0").to.be.closeTo(aumBefore, 100)
+      expect(await slpManager.getAum(true), "aum 0").to.be.closeTo(aumBefore, 100)
 
       await bnbPriceFeed.setLatestAnswer(toChainlinkPrice(300))
       await bnbPriceFeed.setLatestAnswer(toChainlinkPrice(300))
       await bnbPriceFeed.setLatestAnswer(toChainlinkPrice(300))
 
-      aumBefore = await nlpManager.getAum(true)
+      aumBefore = await slpManager.getAum(true)
 
       await positionRouter.connect(user0).createDecreasePosition(...decreaseParams, { value: executionFee })
       key = await positionRouter.getRequestKey(user0.address, 2)
@@ -2897,7 +2897,7 @@ describe("PositionRouter", function () {
       expect(hasProfit, "has profit 2").to.be.false
       expect(delta, "delta 2").to.be.equal(toUsd(0))
 
-      expect(await nlpManager.getAum(true), "aum 1").to.be.closeTo(aumBefore, 100)
+      expect(await slpManager.getAum(true), "aum 1").to.be.closeTo(aumBefore, 100)
     })
   })
 })

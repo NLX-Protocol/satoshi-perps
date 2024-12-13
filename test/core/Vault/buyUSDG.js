@@ -24,8 +24,8 @@ describe("Vault.buyUSDG", function () {
   let distributor0
   let yieldTracker0
 
-  let nlpManager
-  let nlp
+  let slpManager
+  let slp
 
   beforeEach(async () => {
     bnb = await deployContract("Token", [])
@@ -57,8 +57,8 @@ describe("Vault.buyUSDG", function () {
     await vaultPriceFeed.setTokenConfig(btc.address, btcPriceFeed.address, 8, false)
     await vaultPriceFeed.setTokenConfig(dai.address, daiPriceFeed.address, 8, false)
 
-    nlp = await deployContract("NLP", [])
-    nlpManager = await deployContract("NlpManager", [vault.address, usdg.address, nlp.address, ethers.constants.AddressZero, 24 * 60 * 60])
+    slp = await deployContract("SLP", [])
+    slpManager = await deployContract("SlpManager", [vault.address, usdg.address, slp.address, ethers.constants.AddressZero, 24 * 60 * 60])
   })
 
   it("buyUSDG", async () => {
@@ -93,7 +93,7 @@ describe("Vault.buyUSDG", function () {
 
     await validateVaultBalance(expect, vault, bnb)
 
-    expect(await nlpManager.getAumInUsdg(true)).eq(29700)
+    expect(await slpManager.getAumInUsdg(true)).eq(29700)
   })
 
   it("buyUSDG allows gov to mint", async () => {

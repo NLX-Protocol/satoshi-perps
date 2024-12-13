@@ -7,46 +7,38 @@ const tokens = require('./tokens')[network];
 
 
 
+const VAULT = "0xadFfd30C98181d5D647EaF0a969421f0f73d9028" //BTC
+const VAULT_PRICE_FEED = "0xfD38B765A6dC05C42f8B369f421Ce6E9663ebF7D"
 
 async function main() {
   const wallet = (await ethers.getSigners())[0]
 
-  const { aBTC, solvBTC, coreBTC, usdt, usdc, usde, core } = tokens
+  const {
+    BTC, GOLD, OIL, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC
+  } = tokens
+
   const vaultPriceFeedTimelock = await deployContract("PriceFeedTimelock", [
     wallet.address,
     0,
     wallet.address
   ])
 
-  // // ----------BTC market----------
-  // const vaultPriceFeedContract = "0x7d47e535E620566fa7ba716D1B41E380d5dd2904"
-  // const tokenArr = [aBTC, solvBTC, coreBTC]
-  // const addresses = {
-  //   vaultPriceFeedTimelockBTC: vaultPriceFeedTimelock.address,
-  // }
-
-  // // ----------CORE market----------
-  // const vaultPriceFeedContract = "0x05DBa9dB32e5c54F8a523F5a43bD9DC9D04C8AcC"
-  // const tokenArr = [core]
-  // const addresses = {
-  //   vaultPriceFeedTimelockCore: vaultPriceFeedTimelock.address,
-  // }
+  // ----------BTC market----------
 
 
-  // ----------USD market----------
-  const vaultPriceFeedContract = "0x94823c97c127E0e5617f5182d3FdcBBF3F9E56C5"
-  const tokenArr = [usdt, usdc, usde ]
+  const tokenArr = [BTC, GOLD, OIL, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC]
+
   const addresses = {
-    vaultPriceFeedTimelockUsd: vaultPriceFeedTimelock.address,
+    vaultPriceFeedTimelockBTC: vaultPriceFeedTimelock.address,
   }
 
-  const vaultPriceFeed = await contractAt("VaultPriceFeed", vaultPriceFeedContract,)
 
-  await sendTxn(vaultPriceFeed.setMaxStrictPriceDeviation(expandDecimals(1, 28)), "vaultPriceFeed.setMaxStrictPriceDeviation") // 0.01 USD
-  await sendTxn(vaultPriceFeed.setPriceSampleSpace(1), "vaultPriceFeed.setPriceSampleSpace")
-  await sendTxn(vaultPriceFeed.setIsAmmEnabled(false), "vaultPriceFeed.setIsAmmEnabled")
 
-  for (const [i, tokenItem] of tokenArr.entries()) {
+  const vaultPriceFeed = await contractAt("VaultPriceFeed", VAULT_PRICE_FEED,)
+  const vault = await contractAt("Vault", VAULT)
+
+
+  for (const tokenItem of tokenArr) {
     if (tokenItem.spreadBasisPoints === undefined) { continue }
     await sendTxn(vaultPriceFeed.setSpreadBasisPoints(
       tokenItem.address, // _token
@@ -54,14 +46,18 @@ async function main() {
     ), `vaultPriceFeed.setSpreadBasisPoints(${tokenItem.name}) ${tokenItem.spreadBasisPoints}`)
   }
 
-  for (const token of tokenArr) {
 
-    await sendTxn(vaultPriceFeed.setTokenConfig(
+
+  for (const token of tokenArr) {
+    await sendTxn(vault.setTokenConfig(
       token.address, // _token
-      token.priceFeed, // _priceFeed
-      token.priceDecimals, // _priceDecimals
-      token.isStrictStable // _isStrictStable
-    ), `vaultPriceFeed.setTokenConfig(${token.name}) ${token.address} ${token.priceFeed}`)
+      token.decimals, // _tokenDecimals
+      token.tokenWeight, // _tokenWeight
+      token.minProfitBps, // _minProfitBps
+      expandDecimals(token.maxUsdgAmount, 30), // _maxUsdgAmount
+      token.isStable, // _isStable
+      token.isShortable // _isShortable
+    ), `vault.setTokenConfig(${token.name}) ${token.address}`)
   }
 
   await sendTxn(vaultPriceFeed.setGov(vaultPriceFeedTimelock.address), "vaultPriceFeed.setGov")

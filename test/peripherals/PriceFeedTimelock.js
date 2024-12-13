@@ -14,8 +14,8 @@ describe("PriceFeedTimelock", function () {
   const provider = waffle.provider
   const [wallet, user0, user1, user2, user3, rewardManager, tokenManager, mintReceiver, positionRouter] = provider.getWallets()
   let vault
-  let nlpManager
-  let nlp
+  let slpManager
+  let slp
   let vaultUtils
   let vaultPriceFeed
   let usdg
@@ -48,8 +48,8 @@ describe("PriceFeedTimelock", function () {
     router = await deployContract("Router", [vault.address, usdg.address, bnb.address])
     vaultPriceFeed = await deployContract("VaultPriceFeed", [])
 
-    nlp = await deployContract("NLP", [])
-    nlpManager = await deployContract("NlpManager", [vault.address, usdg.address, nlp.address, ethers.constants.AddressZero, 24 * 60 * 60])
+    slp = await deployContract("SLP", [])
+    slpManager = await deployContract("SlpManager", [vault.address, usdg.address, slp.address, ethers.constants.AddressZero, 24 * 60 * 60])
 
     const initVaultResult = await initVault(vault, router, usdg, vaultPriceFeed)
     vaultUtils = initVaultResult.vaultUtils
@@ -76,8 +76,8 @@ describe("PriceFeedTimelock", function () {
       5 * 24 * 60 * 60, // buffer
       tokenManager.address, // tokenManager
       mintReceiver.address, // mintReceiver
-      nlpManager.address, // nlpManager
-      nlpManager.address, // prevNlpManager
+      slpManager.address, // slpManager
+      slpManager.address, // prevSlpManager
       user0.address, // rewardRouter
       expandDecimals(1000, 18), // maxTokenSupply
       50, // marginFeeBasisPoints 0.5%

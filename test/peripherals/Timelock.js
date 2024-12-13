@@ -14,8 +14,8 @@ describe("Timelock", function () {
   const provider = waffle.provider
   const [wallet, user0, user1, user2, user3, rewardManager, tokenManager, mintReceiver, positionRouter] = provider.getWallets()
   let vault
-  let nlpManager
-  let nlp
+  let slpManager
+  let slp
   let vaultUtils
   let vaultPriceFeed
   let usdg
@@ -31,8 +31,8 @@ describe("Timelock", function () {
   let timelock
   let fastPriceEvents
   let fastPriceFeed
-  let feeNlpTracker
-  let stakedNlpTracker
+  let feeSlpTracker
+  let stakedSlpTracker
   let rewardRouter
 
   beforeEach(async () => {
@@ -50,8 +50,8 @@ describe("Timelock", function () {
     router = await deployContract("Router", [vault.address, usdg.address, bnb.address])
     vaultPriceFeed = await deployContract("VaultPriceFeed", [])
 
-    nlp = await deployContract("NLP", [])
-    nlpManager = await deployContract("NlpManager", [vault.address, usdg.address, nlp.address, ethers.constants.AddressZero, 24 * 60 * 60])
+    slp = await deployContract("SLP", [])
+    slpManager = await deployContract("SlpManager", [vault.address, usdg.address, slp.address, ethers.constants.AddressZero, 24 * 60 * 60])
 
     const initVaultResult = await initVault(vault, router, usdg, vaultPriceFeed)
     vaultUtils = initVaultResult.vaultUtils
@@ -67,8 +67,8 @@ describe("Timelock", function () {
 
     await vault.setPriceFeed(user3.address)
 
-    feeNlpTracker = await deployContract("RewardTracker", ["Fee NLP", "fNLP"])
-    stakedNlpTracker = await deployContract("RewardTracker", ["Fee + Staked NLP", "fsNLP"])
+    feeSlpTracker = await deployContract("RewardTracker", ["Fee SLP", "fSLP"])
+    stakedSlpTracker = await deployContract("RewardTracker", ["Fee + Staked SLP", "fsSLP"])
 
     rewardRouter = await deployContract("RewardRouterV2", [])
     await rewardRouter.initialize(
@@ -80,8 +80,8 @@ describe("Timelock", function () {
       AddressZero,
       AddressZero,
       AddressZero,
-      feeNlpTracker.address,
-      stakedNlpTracker.address,
+      feeSlpTracker.address,
+      stakedSlpTracker.address,
       AddressZero,
       AddressZero,
       AddressZero,
@@ -93,8 +93,8 @@ describe("Timelock", function () {
       5 * 24 * 60 * 60, // buffer
       tokenManager.address, // tokenManager
       mintReceiver.address, // mintReceiver
-      nlpManager.address, // nlpManager
-      nlpManager.address, // prevNlpManager
+      slpManager.address, // slpManager
+      slpManager.address, // prevSlpManager
       rewardRouter.address, // rewardRouter
       expandDecimals(1000, 18), // maxTokenSupply
       50, // marginFeeBasisPoints 0.5%
@@ -157,8 +157,8 @@ describe("Timelock", function () {
       5 * 24 * 60 * 60 + 1, // buffer
       tokenManager.address, // tokenManager
       mintReceiver.address, // mintReceiver
-      nlpManager.address, // nlpManager
-      nlpManager.address, // prevNlpManager
+      slpManager.address, // slpManager
+      slpManager.address, // prevSlpManager
       user0.address, // rewardRouter
       1000, // maxTokenSupply
       10, // marginFeeBasisPoints
@@ -239,27 +239,27 @@ describe("Timelock", function () {
 
   it("updateUsdgSupply", async () => {
     await usdg.addVault(wallet.address)
-    await usdg.mint(nlpManager.address, 1000)
+    await usdg.mint(slpManager.address, 1000)
 
-    expect(await usdg.balanceOf(nlpManager.address)).eq(1000)
+    expect(await usdg.balanceOf(slpManager.address)).eq(1000)
     expect(await usdg.totalSupply()).eq(1000)
 
-    await expect(timelock.connect(user0).updateUsdgSupply(nlpManager.address, 500))
+    await expect(timelock.connect(user0).updateUsdgSupply(slpManager.address, 500))
       .to.be.revertedWith("forbidden")
 
-    await expect(timelock.updateUsdgSupply(nlpManager.address, 500))
+    await expect(timelock.updateUsdgSupply(slpManager.address, 500))
       .to.be.revertedWith("YieldToken: forbidden")
 
     await usdg.setGov(timelock.address)
 
-    await timelock.updateUsdgSupply(nlpManager.address, 500)
+    await timelock.updateUsdgSupply(slpManager.address, 500)
 
-    expect(await usdg.balanceOf(nlpManager.address)).eq(500)
+    expect(await usdg.balanceOf(slpManager.address)).eq(500)
     expect(await usdg.totalSupply()).eq(500)
 
-    await timelock.updateUsdgSupply(nlpManager.address, 2000)
+    await timelock.updateUsdgSupply(slpManager.address, 2000)
 
-    expect(await usdg.balanceOf(nlpManager.address)).eq(2000)
+    expect(await usdg.balanceOf(slpManager.address)).eq(2000)
     expect(await usdg.totalSupply()).eq(2000)
   })
 
@@ -269,8 +269,8 @@ describe("Timelock", function () {
       3 * 24 * 60 * 60, // _buffer
       tokenManager.address, // _tokenManager
       mintReceiver.address, // _mintReceiver
-      user0.address, // _nlpManager
-      user0.address, // _prevNlpManager
+      user0.address, // _slpManager
+      user0.address, // _prevSlpManager
       user1.address, // _rewardRouter
       1000, // _maxTokenSupply
       10, // _marginFeeBasisPoints
@@ -709,8 +709,8 @@ describe("Timelock", function () {
       5 * 24 * 60 * 60, // buffer
       tokenManager.address, // tokenManager
       mintReceiver.address, // mintReceiver
-      nlpManager.address, // nlpManager
-      nlpManager.address, // prevNlpManager
+      slpManager.address, // slpManager
+      slpManager.address, // prevSlpManager
       rewardRouter.address, // rewardRouter
       expandDecimals(1000, 18), // maxTokenSupply
       50, // marginFeeBasisPoints 0.5%
@@ -722,8 +722,8 @@ describe("Timelock", function () {
       5 * 24 * 60 * 60, // buffer
       tokenManager.address, // tokenManager
       mintReceiver.address, // mintReceiver
-      nlpManager.address, // nlpManager
-      nlpManager.address, // prevNlpManager
+      slpManager.address, // slpManager
+      slpManager.address, // prevSlpManager
       rewardRouter.address, // rewardRouter
       expandDecimals(1000, 18), // maxTokenSupply
       50, // marginFeeBasisPoints 0.5%
@@ -1236,30 +1236,30 @@ describe("Timelock", function () {
   })
 
   it("setShortsTrackerAveragePriceWeight", async () => {
-    await nlpManager.setGov(timelock.address)
-    expect(await nlpManager.gov()).eq(timelock.address)
+    await slpManager.setGov(timelock.address)
+    expect(await slpManager.gov()).eq(timelock.address)
 
     await expect(timelock.connect(user0).setShortsTrackerAveragePriceWeight(1234))
       .to.be.revertedWith("forbidden")
 
-    expect(await nlpManager.shortsTrackerAveragePriceWeight()).eq(0)
+    expect(await slpManager.shortsTrackerAveragePriceWeight()).eq(0)
     await timelock.setShortsTrackerAveragePriceWeight(1234)
-    expect(await nlpManager.shortsTrackerAveragePriceWeight()).eq(1234)
+    expect(await slpManager.shortsTrackerAveragePriceWeight()).eq(1234)
   })
 
-  it("setNlpCooldownDuration", async () => {
-    await nlpManager.setGov(timelock.address)
-    expect(await nlpManager.gov()).eq(timelock.address)
+  it("setSlpCooldownDuration", async () => {
+    await slpManager.setGov(timelock.address)
+    expect(await slpManager.gov()).eq(timelock.address)
 
-    await expect(timelock.connect(user0).setNlpCooldownDuration(3600))
+    await expect(timelock.connect(user0).setSlpCooldownDuration(3600))
       .to.be.revertedWith("forbidden")
 
-    await expect(timelock.connect(wallet).setNlpCooldownDuration(3 * 60 * 60))
+    await expect(timelock.connect(wallet).setSlpCooldownDuration(3 * 60 * 60))
       .to.be.revertedWith("invalid _cooldownDuration")
 
-    expect(await nlpManager.cooldownDuration()).eq(86400)
-    await timelock.setNlpCooldownDuration(3600)
-    expect(await nlpManager.cooldownDuration()).eq(3600)
+    expect(await slpManager.cooldownDuration()).eq(86400)
+    await timelock.setSlpCooldownDuration(3600)
+    expect(await slpManager.cooldownDuration()).eq(3600)
   })
 
   it("multicall", async () => {

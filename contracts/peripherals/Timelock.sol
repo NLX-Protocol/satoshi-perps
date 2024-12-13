@@ -14,7 +14,7 @@ import "../access/interfaces/IGovRequester.sol";
 import "../access/Governable.sol";
 import "../core/interfaces/IVault.sol";
 import "../core/interfaces/IVaultUtils.sol";
-import "../core/interfaces/INlpManager.sol";
+import "../core/interfaces/ISlpManager.sol";
 import "../referrals/interfaces/IReferralStorage.sol";
 import "../tokens/interfaces/IYieldToken.sol";
 import "../tokens/interfaces/IBaseToken.sol";
@@ -39,8 +39,8 @@ contract Timelock is ITimelock, BasicMulticall {
 
     address public tokenManager;
     address public mintReceiver;
-    address public nlpManager;
-    address public prevNlpManager;
+    address public slpManager;
+    address public prevSlpManager;
     address public rewardRouter;
     uint256 public maxTokenSupply;
 
@@ -107,8 +107,8 @@ contract Timelock is ITimelock, BasicMulticall {
         uint256 _buffer,
         address _tokenManager,
         address _mintReceiver,
-        address _nlpManager,
-        address _prevNlpManager,
+        address _slpManager,
+        address _prevSlpManager,
         address _rewardRouter,
         uint256 _maxTokenSupply,
         uint256 _marginFeeBasisPoints,
@@ -119,8 +119,8 @@ contract Timelock is ITimelock, BasicMulticall {
         buffer = _buffer;
         tokenManager = _tokenManager;
         mintReceiver = _mintReceiver;
-        nlpManager = _nlpManager;
-        prevNlpManager = _prevNlpManager;
+        slpManager = _slpManager;
+        prevSlpManager = _prevSlpManager;
         rewardRouter = _rewardRouter;
         maxTokenSupply = _maxTokenSupply;
 
@@ -342,32 +342,32 @@ contract Timelock is ITimelock, BasicMulticall {
         }
     }
 
-    function updateUsdgSupply(address _nlpManager, uint256 usdgAmount) external onlyKeeperAndAbove {
-        require(_nlpManager == nlpManager || _nlpManager == prevNlpManager, "invalid _nlpManager");
+    function updateUsdgSupply(address _slpManager, uint256 usdgAmount) external onlyKeeperAndAbove {
+        require(_slpManager == slpManager || _slpManager == prevSlpManager, "invalid _slpManager");
 
-        address usdg = INlpManager(_nlpManager).usdg();
-        uint256 balance = IERC20(usdg).balanceOf(_nlpManager);
+        address usdg = ISlpManager(_slpManager).usdg();
+        uint256 balance = IERC20(usdg).balanceOf(_slpManager);
 
         IUSDG(usdg).addVault(address(this));
 
         if (usdgAmount > balance) {
             uint256 mintAmount = usdgAmount.sub(balance);
-            IUSDG(usdg).mint(_nlpManager, mintAmount);
+            IUSDG(usdg).mint(_slpManager, mintAmount);
         } else {
             uint256 burnAmount = balance.sub(usdgAmount);
-            IUSDG(usdg).burn(_nlpManager, burnAmount);
+            IUSDG(usdg).burn(_slpManager, burnAmount);
         }
 
         IUSDG(usdg).removeVault(address(this));
     }
 
     function setShortsTrackerAveragePriceWeight(uint256 _shortsTrackerAveragePriceWeight) external onlyAdmin {
-        INlpManager(nlpManager).setShortsTrackerAveragePriceWeight(_shortsTrackerAveragePriceWeight);
+        ISlpManager(slpManager).setShortsTrackerAveragePriceWeight(_shortsTrackerAveragePriceWeight);
     }
 
-    function setNlpCooldownDuration(uint256 _cooldownDuration) external onlyAdmin {
+    function setSlpCooldownDuration(uint256 _cooldownDuration) external onlyAdmin {
         require(_cooldownDuration < 2 hours, "invalid _cooldownDuration");
-        INlpManager(nlpManager).setCooldownDuration(_cooldownDuration);
+        ISlpManager(slpManager).setCooldownDuration(_cooldownDuration);
     }
 
     function setMaxGlobalShortSize(address _vault, address _token, uint256 _amount) external onlyAdmin {

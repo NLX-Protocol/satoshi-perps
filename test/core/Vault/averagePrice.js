@@ -24,8 +24,8 @@ describe("Vault.averagePrice", function () {
   let distributor0
   let yieldTracker0
 
-  let nlpManager
-  let nlp
+  let slpManager
+  let slp
 
   beforeEach(async () => {
     bnb = await deployContract("Token", [])
@@ -73,8 +73,8 @@ describe("Vault.averagePrice", function () {
       false // _hasDynamicFees
     )
 
-    nlp = await deployContract("NLP", [])
-    nlpManager = await deployContract("NlpManager", [vault.address, usdg.address, nlp.address, ethers.constants.AddressZero, 24 * 60 * 60])
+    slp = await deployContract("SLP", [])
+    slpManager = await deployContract("SlpManager", [vault.address, usdg.address, slp.address, ethers.constants.AddressZero, 24 * 60 * 60])
   })
 
   it("position.averagePrice, buyPrice != markPrice", async () => {
@@ -99,8 +99,8 @@ describe("Vault.averagePrice", function () {
     await vault.connect(user0).increasePosition(user0.address, btc.address, btc.address, toUsd(90), true)
     let blockTime = await getBlockTime(provider)
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("99702400000000000000") // 99.7024
-    expect(await nlpManager.getAumInUsdg(true)).eq("100192710000000000000") // 100.19271
+    expect(await slpManager.getAumInUsdg(false)).eq("99702400000000000000") // 99.7024
+    expect(await slpManager.getAumInUsdg(true)).eq("100192710000000000000") // 100.19271
 
     let position = await vault.getPosition(user0.address, btc.address, btc.address, true)
     expect(position[0]).eq(toUsd(90)) // size
@@ -114,8 +114,8 @@ describe("Vault.averagePrice", function () {
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(46100))
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(47100))
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("102202981000000000000") // 102.202981
-    expect(await nlpManager.getAumInUsdg(true)).eq("103183601000000000000") // 103.183601
+    expect(await slpManager.getAumInUsdg(false)).eq("102202981000000000000") // 102.202981
+    expect(await slpManager.getAumInUsdg(true)).eq("103183601000000000000") // 103.183601
 
     let leverage = await vault.getPositionLeverage(user0.address, btc.address, btc.address, true)
     expect(leverage).eq(90817) // ~9X leverage
@@ -139,8 +139,8 @@ describe("Vault.averagePrice", function () {
     await vault.connect(user0).increasePosition(user0.address, btc.address, btc.address, toUsd(10), true)
     blockTime = await getBlockTime(provider)
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("102203938000000000000") // 102.203938
-    expect(await nlpManager.getAumInUsdg(true)).eq("102740698000000000000") // 102.740698
+    expect(await slpManager.getAumInUsdg(false)).eq("102203938000000000000") // 102.203938
+    expect(await slpManager.getAumInUsdg(true)).eq("102740698000000000000") // 102.740698
 
     position = await vault.getPosition(user0.address, btc.address, btc.address, true)
     expect(position[0]).eq(toUsd(100)) // size
@@ -194,13 +194,13 @@ describe("Vault.averagePrice", function () {
     await expect(vault.connect(user0).increasePosition(user0.address, btc.address, btc.address, toUsd(110), true))
       .to.be.revertedWith("Vault: reserve exceeds pool")
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("99700000000000000000") // 99.7
-    expect(await nlpManager.getAumInUsdg(true)).eq("102192500000000000000") // 102.1925
+    expect(await slpManager.getAumInUsdg(false)).eq("99700000000000000000") // 99.7
+    expect(await slpManager.getAumInUsdg(true)).eq("102192500000000000000") // 102.1925
 
     await vault.connect(user0).increasePosition(user0.address, btc.address, btc.address, toUsd(90), true)
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("99702400000000000000") // 99.7024
-    expect(await nlpManager.getAumInUsdg(true)).eq("100192710000000000000") // 100.19271
+    expect(await slpManager.getAumInUsdg(false)).eq("99702400000000000000") // 99.7024
+    expect(await slpManager.getAumInUsdg(true)).eq("100192710000000000000") // 100.19271
 
     let position = await vault.getPosition(user0.address, btc.address, btc.address, true)
     expect(position[0]).eq(toUsd(90)) // size
@@ -213,8 +213,8 @@ describe("Vault.averagePrice", function () {
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(45100))
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(45100))
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("102202981000000000000") // 102.202981
-    expect(await nlpManager.getAumInUsdg(true)).eq("102202981000000000000") // 102.202981
+    expect(await slpManager.getAumInUsdg(false)).eq("102202981000000000000") // 102.202981
+    expect(await slpManager.getAumInUsdg(true)).eq("102202981000000000000") // 102.202981
 
     let leverage = await vault.getPositionLeverage(user0.address, btc.address, btc.address, true)
     expect(leverage).eq(90817) // ~9X leverage
@@ -234,8 +234,8 @@ describe("Vault.averagePrice", function () {
 
     await vault.connect(user0).increasePosition(user0.address, btc.address, btc.address, toUsd(10), true)
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("102203487000000000000") // 102.203487
-    expect(await nlpManager.getAumInUsdg(true)).eq("102203487000000000000") // 102.203487
+    expect(await slpManager.getAumInUsdg(false)).eq("102203487000000000000") // 102.203487
+    expect(await slpManager.getAumInUsdg(true)).eq("102203487000000000000") // 102.203487
 
     position = await vault.getPosition(user0.address, btc.address, btc.address, true)
     expect(position[0]).eq(toUsd(100)) // size
@@ -616,8 +616,8 @@ describe("Vault.averagePrice", function () {
     await dai.connect(user0).transfer(vault.address, expandDecimals(50, 18))
     await vault.connect(user0).increasePosition(user0.address, dai.address, btc.address, toUsd(90), false)
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("100697000000000000000") // 100.697
-    expect(await nlpManager.getAumInUsdg(true)).eq("100697000000000000000") // 100.697
+    expect(await slpManager.getAumInUsdg(false)).eq("100697000000000000000") // 100.697
+    expect(await slpManager.getAumInUsdg(true)).eq("100697000000000000000") // 100.697
 
     let position = await vault.getPosition(user0.address, dai.address, btc.address, false)
     expect(position[0]).eq(toUsd(90)) // size
@@ -630,8 +630,8 @@ describe("Vault.averagePrice", function () {
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(50000))
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(50000))
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("123197000000000000000") // 123.197
-    expect(await nlpManager.getAumInUsdg(true)).eq("123197000000000000000") // 123.197
+    expect(await slpManager.getAumInUsdg(false)).eq("123197000000000000000") // 123.197
+    expect(await slpManager.getAumInUsdg(true)).eq("123197000000000000000") // 123.197
 
     let delta = await vault.getPositionDelta(user0.address, dai.address, btc.address, false)
     expect(delta[0]).eq(false)
@@ -639,8 +639,8 @@ describe("Vault.averagePrice", function () {
 
     await vault.connect(user0).increasePosition(user0.address, dai.address, btc.address, toUsd(10), false)
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("123197000000000000000") // 123.197
-    expect(await nlpManager.getAumInUsdg(true)).eq("123197000000000000000") // 123.197
+    expect(await slpManager.getAumInUsdg(false)).eq("123197000000000000000") // 123.197
+    expect(await slpManager.getAumInUsdg(true)).eq("123197000000000000000") // 123.197
 
     position = await vault.getPosition(user0.address, dai.address, btc.address, false)
     expect(position[0]).eq(toUsd(100)) // size
@@ -672,8 +672,8 @@ describe("Vault.averagePrice", function () {
     await dai.connect(user0).transfer(vault.address, expandDecimals(50, 18))
     await vault.connect(user0).increasePosition(user0.address, dai.address, btc.address, toUsd(90), false)
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("100697000000000000000") // 100.697
-    expect(await nlpManager.getAumInUsdg(true)).eq("100697000000000000000") // 100.697
+    expect(await slpManager.getAumInUsdg(false)).eq("100697000000000000000") // 100.697
+    expect(await slpManager.getAumInUsdg(true)).eq("100697000000000000000") // 100.697
 
     let position = await vault.getPosition(user0.address, dai.address, btc.address, false)
     expect(position[0]).eq(toUsd(90)) // size
@@ -686,8 +686,8 @@ describe("Vault.averagePrice", function () {
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(30000))
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(30000))
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("78197000000000000000") // 78.197
-    expect(await nlpManager.getAumInUsdg(true)).eq("78197000000000000000") // 78.197
+    expect(await slpManager.getAumInUsdg(false)).eq("78197000000000000000") // 78.197
+    expect(await slpManager.getAumInUsdg(true)).eq("78197000000000000000") // 78.197
 
     let delta = await vault.getPositionDelta(user0.address, dai.address, btc.address, false)
     expect(delta[0]).eq(true)
@@ -695,8 +695,8 @@ describe("Vault.averagePrice", function () {
 
     await vault.connect(user0).increasePosition(user0.address, dai.address, btc.address, toUsd(10), false)
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("78197000000000000000") // 78.197
-    expect(await nlpManager.getAumInUsdg(true)).eq("78197000000000000000") // 78.197
+    expect(await slpManager.getAumInUsdg(false)).eq("78197000000000000000") // 78.197
+    expect(await slpManager.getAumInUsdg(true)).eq("78197000000000000000") // 78.197
 
     position = await vault.getPosition(user0.address, dai.address, btc.address, false)
     expect(position[0]).eq(toUsd(100)) // size
@@ -728,8 +728,8 @@ describe("Vault.averagePrice", function () {
     await dai.connect(user0).transfer(vault.address, expandDecimals(50, 18))
     await vault.connect(user0).increasePosition(user0.address, dai.address, btc.address, toUsd(90), false)
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("100697000000000000000") // 100.697
-    expect(await nlpManager.getAumInUsdg(true)).eq("100697000000000000000") // 100.697
+    expect(await slpManager.getAumInUsdg(false)).eq("100697000000000000000") // 100.697
+    expect(await slpManager.getAumInUsdg(true)).eq("100697000000000000000") // 100.697
 
     let position = await vault.getPosition(user0.address, dai.address, btc.address, false)
     expect(position[0]).eq(toUsd(90)) // size
@@ -742,8 +742,8 @@ describe("Vault.averagePrice", function () {
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(39700))
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(39700))
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("100022000000000000000") // 100.022
-    expect(await nlpManager.getAumInUsdg(true)).eq("100022000000000000000") // 100.022
+    expect(await slpManager.getAumInUsdg(false)).eq("100022000000000000000") // 100.022
+    expect(await slpManager.getAumInUsdg(true)).eq("100022000000000000000") // 100.022
 
     let delta = await vault.getPositionDelta(user0.address, dai.address, btc.address, false)
     expect(delta[0]).eq(true)
@@ -751,8 +751,8 @@ describe("Vault.averagePrice", function () {
 
     await vault.connect(user0).increasePosition(user0.address, dai.address, btc.address, toUsd(10), false)
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("100022000000000000000") // 100.022
-    expect(await nlpManager.getAumInUsdg(true)).eq("100022000000000000000") // 100.022
+    expect(await slpManager.getAumInUsdg(false)).eq("100022000000000000000") // 100.022
+    expect(await slpManager.getAumInUsdg(true)).eq("100022000000000000000") // 100.022
 
     position = await vault.getPosition(user0.address, dai.address, btc.address, false)
     expect(position[0]).eq(toUsd(100)) // size
@@ -769,8 +769,8 @@ describe("Vault.averagePrice", function () {
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(39000))
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(39000))
 
-    expect(await nlpManager.getAumInUsdg(false)).eq("98270677581863979848") // 98.270677581863979848
-    expect(await nlpManager.getAumInUsdg(true)).eq("98270677581863979848") // 98.270677581863979848
+    expect(await slpManager.getAumInUsdg(false)).eq("98270677581863979848") // 98.270677581863979848
+    expect(await slpManager.getAumInUsdg(true)).eq("98270677581863979848") // 98.270677581863979848
 
     delta = await vault.getPositionDelta(user0.address, dai.address, btc.address, false)
     expect(delta[0]).eq(true)

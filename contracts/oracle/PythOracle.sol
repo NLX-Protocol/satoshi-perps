@@ -48,6 +48,9 @@ contract PythOracle is AccessControlledV8, OracleInterface {
     /// @notice Emit when a token config is added
     event TokenConfigAdded(address indexed asset, bytes32 indexed pythId, uint64 indexed maxStalePeriod);
 
+    /// @notice Emit when a price is updated for a token
+    event PriceUpdated(address indexed asset, uint publishTime, int64 price, int32 expo);
+
     modifier notNullAddress(address someone) {
         if (someone == address(0)) revert("can't be zero address");
         _;
@@ -137,16 +140,21 @@ contract PythOracle is AccessControlledV8, OracleInterface {
      */
     function updatePythPrices(address[] memory tokens, bytes[] memory pythUpdateData) external payable {
 
+        require(pythUpdateData.length > 0, "Price update data cannot be empty"); 
         uint256 updateFee = underlyingPythOracle.getUpdateFee(pythUpdateData);
         require(updateFee <= msg.value, "Not enough funds to update price feeds");
 
         underlyingPythOracle.updatePriceFeeds{value: updateFee}(pythUpdateData);
 
         // Iterate through each token and store the updated price
-        for (uint256 i; i < tokens.length; i++) {
-            PythStructs.Price memory updatedPrice = underlyingPythOracle.getPrice(tokenConfigs[tokens[i]].pythId);
+        uint256 tokensLength = tokens.length;
+        for (uint256 i; i < tokensLength;) {
+            PythStructs.Price memory updatedPrice = underlyingPythOracle.getPriceNoOlderThan(tokenConfigs[tokens[i]].pythId, tokenConfigs[tokens[i]].maxStalePeriod);
             address asset = tokens[i];
             storedPythPrices[asset] = updatedPrice;
+            emit PriceUpdated(asset, updatedPrice.publishTime, updatedPrice.price, updatedPrice.expo);
+
+            unchecked { ++i; }
         }
 
         uint256 excess = msg.value - updateFee;
@@ -162,9 +170,14 @@ contract PythOracle is AccessControlledV8, OracleInterface {
      * @return pythIds Array of price feed IDs corresponding to the tokens
      */
     function getPriceFeedIds(address[] memory tokens) external view returns (bytes32[] memory pythIds) {
-        pythIds = new bytes32[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+
+        uint256 tokensLength = tokens.length;
+        pythIds = new bytes32[](tokensLength);
+        for (uint256 i = 0; i < tokensLength;) {
             pythIds[i] = tokenConfigs[tokens[i]].pythId;
+
+            unchecked { ++i; }
+
         }
     }
 

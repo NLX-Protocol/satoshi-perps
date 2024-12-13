@@ -17,8 +17,8 @@ describe("RewardRouterV2", function () {
   let timelock
 
   let vault
-  let nlpManager
-  let nlp
+  let slpManager
+  let slp
   let usdg
   let router
   let vaultPriceFeed
@@ -44,13 +44,13 @@ describe("RewardRouterV2", function () {
   let feeGmxTracker
   let feeGmxDistributor
 
-  let feeNlpTracker
-  let feeNlpDistributor
-  let stakedNlpTracker
-  let stakedNlpDistributor
+  let feeSlpTracker
+  let feeSlpDistributor
+  let stakedSlpTracker
+  let stakedSlpDistributor
 
   let gmxVester
-  let nlpVester
+  let slpVester
 
   let govToken
 
@@ -76,18 +76,18 @@ describe("RewardRouterV2", function () {
     usdg = await deployContract("USDG", [vault.address])
     router = await deployContract("Router", [vault.address, usdg.address, bnb.address])
     vaultPriceFeed = await deployContract("VaultPriceFeed", [])
-    nlp = await deployContract("NLP", [])
+    slp = await deployContract("SLP", [])
 
     await initVault(vault, router, usdg, vaultPriceFeed)
-    nlpManager = await deployContract("NlpManager", [vault.address, usdg.address, nlp.address, ethers.constants.AddressZero, 24 * 60 * 60])
+    slpManager = await deployContract("SlpManager", [vault.address, usdg.address, slp.address, ethers.constants.AddressZero, 24 * 60 * 60])
 
     timelock = await deployContract("Timelock", [
       wallet.address, // _admin
       10, // _buffer
       tokenManager.address, // _tokenManager
       tokenManager.address, // _mintReceiver
-      nlpManager.address, // _nlpManager
-      nlpManager.address, // _prevNlpManager
+      slpManager.address, // _slpManager
+      slpManager.address, // _prevSlpManager
       user0.address, // _rewardRouter
       expandDecimals(1000000, 18), // _maxTokenSupply
       10, // marginFeeBasisPoints
@@ -108,9 +108,9 @@ describe("RewardRouterV2", function () {
     await bnbPriceFeed.setLatestAnswer(toChainlinkPrice(300))
     await vault.setTokenConfig(...getBnbConfig(bnb, bnbPriceFeed))
 
-    await nlp.setInPrivateTransferMode(true)
-    await nlp.setMinter(nlpManager.address, true)
-    await nlpManager.setInPrivateMode(true)
+    await slp.setInPrivateTransferMode(true)
+    await slp.setMinter(slpManager.address, true)
+    await slpManager.setInPrivateMode(true)
 
     gmx = await deployContract("GMX", []);
     esGmx = await deployContract("EsGMX", []);
@@ -132,16 +132,16 @@ describe("RewardRouterV2", function () {
     await feeGmxTracker.initialize([bonusGmxTracker.address, bnGmx.address], feeGmxDistributor.address)
     await feeGmxDistributor.updateLastDistributionTime()
 
-    // NLP
-    feeNlpTracker = await deployContract("RewardTracker", ["Fee NLP", "fNLP"])
-    feeNlpDistributor = await deployContract("RewardDistributor", [eth.address, feeNlpTracker.address])
-    await feeNlpTracker.initialize([nlp.address], feeNlpDistributor.address)
-    await feeNlpDistributor.updateLastDistributionTime()
+    // SLP
+    feeSlpTracker = await deployContract("RewardTracker", ["Fee SLP", "fSLP"])
+    feeSlpDistributor = await deployContract("RewardDistributor", [eth.address, feeSlpTracker.address])
+    await feeSlpTracker.initialize([slp.address], feeSlpDistributor.address)
+    await feeSlpDistributor.updateLastDistributionTime()
 
-    stakedNlpTracker = await deployContract("RewardTracker", ["Fee + Staked NLP", "fsNLP"])
-    stakedNlpDistributor = await deployContract("RewardDistributor", [esGmx.address, stakedNlpTracker.address])
-    await stakedNlpTracker.initialize([feeNlpTracker.address], stakedNlpDistributor.address)
-    await stakedNlpDistributor.updateLastDistributionTime()
+    stakedSlpTracker = await deployContract("RewardTracker", ["Fee + Staked SLP", "fsSLP"])
+    stakedSlpDistributor = await deployContract("RewardDistributor", [esGmx.address, stakedSlpTracker.address])
+    await stakedSlpTracker.initialize([feeSlpTracker.address], stakedSlpDistributor.address)
+    await stakedSlpDistributor.updateLastDistributionTime()
 
     gmxVester = await deployContract("Vester", [
       "Vested GMX", // _name
@@ -153,14 +153,14 @@ describe("RewardRouterV2", function () {
       stakedGmxTracker.address, // _rewardTracker
     ])
 
-    nlpVester = await deployContract("Vester", [
-      "Vested NLP", // _name
-      "vNLP", // _symbol
+    slpVester = await deployContract("Vester", [
+      "Vested SLP", // _name
+      "vSLP", // _symbol
       vestingDuration, // _vestingDuration
       esGmx.address, // _esToken
-      stakedNlpTracker.address, // _pairToken
+      stakedSlpTracker.address, // _pairToken
       gmx.address, // _claimableToken
-      stakedNlpTracker.address, // _rewardTracker
+      stakedSlpTracker.address, // _rewardTracker
     ])
 
     await stakedGmxTracker.setInPrivateTransferMode(true)
@@ -171,10 +171,10 @@ describe("RewardRouterV2", function () {
     await feeGmxTracker.setInPrivateTransferMode(true)
     await feeGmxTracker.setInPrivateStakingMode(true)
 
-    await feeNlpTracker.setInPrivateTransferMode(true)
-    await feeNlpTracker.setInPrivateStakingMode(true)
-    await stakedNlpTracker.setInPrivateTransferMode(true)
-    await stakedNlpTracker.setInPrivateStakingMode(true)
+    await feeSlpTracker.setInPrivateTransferMode(true)
+    await feeSlpTracker.setInPrivateStakingMode(true)
+    await stakedSlpTracker.setInPrivateTransferMode(true)
+    await stakedSlpTracker.setInPrivateStakingMode(true)
 
     await esGmx.setInPrivateTransferMode(true)
     await bnGmx.setInPrivateTransferMode(true)
@@ -187,15 +187,15 @@ describe("RewardRouterV2", function () {
       gmx.address,
       esGmx.address,
       bnGmx.address,
-      nlp.address,
+      slp.address,
       stakedGmxTracker.address,
       bonusGmxTracker.address,
       feeGmxTracker.address,
-      feeNlpTracker.address,
-      stakedNlpTracker.address,
-      nlpManager.address,
+      feeSlpTracker.address,
+      stakedSlpTracker.address,
+      slpManager.address,
       gmxVester.address,
-      nlpVester.address,
+      slpVester.address,
       govToken.address
     )
 
@@ -207,17 +207,17 @@ describe("RewardRouterV2", function () {
     // allow feeGmxTracker to stake bnGmx
     await bnGmx.setHandler(feeGmxTracker.address, true)
 
-    // allow stakedNlpTracker to stake feeNlpTracker
-    await feeNlpTracker.setHandler(stakedNlpTracker.address, true)
-    // allow feeNlpTracker to stake Nlp
-    await nlp.setHandler(feeNlpTracker.address, true)
+    // allow stakedSlpTracker to stake feeSlpTracker
+    await feeSlpTracker.setHandler(stakedSlpTracker.address, true)
+    // allow feeSlpTracker to stake Slp
+    await slp.setHandler(feeSlpTracker.address, true)
 
     // mint esGmx for distributors
     await esGmx.setMinter(wallet.address, true)
     await esGmx.mint(stakedGmxDistributor.address, expandDecimals(50000, 18))
     await stakedGmxDistributor.setTokensPerInterval("20667989410000000") // 0.02066798941 esGmx per second
-    await esGmx.mint(stakedNlpDistributor.address, expandDecimals(50000, 18))
-    await stakedNlpDistributor.setTokensPerInterval("20667989410000000") // 0.02066798941 esGmx per second
+    await esGmx.mint(stakedSlpDistributor.address, expandDecimals(50000, 18))
+    await stakedSlpDistributor.setTokensPerInterval("20667989410000000") // 0.02066798941 esGmx per second
 
     // mint bnGmx for distributor
     await bnGmx.setMinter(wallet.address, true)
@@ -228,44 +228,44 @@ describe("RewardRouterV2", function () {
 
     await esGmx.setHandler(rewardRouter.address, true)
     await esGmx.setHandler(stakedGmxDistributor.address, true)
-    await esGmx.setHandler(stakedNlpDistributor.address, true)
+    await esGmx.setHandler(stakedSlpDistributor.address, true)
     await esGmx.setHandler(stakedGmxTracker.address, true)
-    await esGmx.setHandler(stakedNlpTracker.address, true)
+    await esGmx.setHandler(stakedSlpTracker.address, true)
     await esGmx.setHandler(gmxVester.address, true)
-    await esGmx.setHandler(nlpVester.address, true)
+    await esGmx.setHandler(slpVester.address, true)
 
     await bnGmx.setHandler(bonusGmxDistributor.address, true)
     await bnGmx.setHandler(bonusGmxTracker.address, true)
 
-    await nlpManager.setHandler(rewardRouter.address, true)
+    await slpManager.setHandler(rewardRouter.address, true)
     await stakedGmxTracker.setHandler(rewardRouter.address, true)
     await bonusGmxTracker.setHandler(rewardRouter.address, true)
     await feeGmxTracker.setHandler(rewardRouter.address, true)
-    await feeNlpTracker.setHandler(rewardRouter.address, true)
-    await stakedNlpTracker.setHandler(rewardRouter.address, true)
+    await feeSlpTracker.setHandler(rewardRouter.address, true)
+    await stakedSlpTracker.setHandler(rewardRouter.address, true)
 
     await bnGmx.setMinter(rewardRouter.address, true)
     await esGmx.setMinter(gmxVester.address, true)
-    await esGmx.setMinter(nlpVester.address, true)
+    await esGmx.setMinter(slpVester.address, true)
 
     await gmxVester.setHandler(rewardRouter.address, true)
-    await nlpVester.setHandler(rewardRouter.address, true)
+    await slpVester.setHandler(rewardRouter.address, true)
 
     await feeGmxTracker.setHandler(gmxVester.address, true)
-    await stakedNlpTracker.setHandler(nlpVester.address, true)
+    await stakedSlpTracker.setHandler(slpVester.address, true)
 
-    await nlpManager.setGov(timelock.address)
+    await slpManager.setGov(timelock.address)
     await stakedGmxTracker.setGov(timelock.address)
     await bonusGmxTracker.setGov(timelock.address)
     await feeGmxTracker.setGov(timelock.address)
-    await feeNlpTracker.setGov(timelock.address)
-    await stakedNlpTracker.setGov(timelock.address)
+    await feeSlpTracker.setGov(timelock.address)
+    await stakedSlpTracker.setGov(timelock.address)
     await stakedGmxDistributor.setGov(timelock.address)
-    await stakedNlpDistributor.setGov(timelock.address)
+    await stakedSlpDistributor.setGov(timelock.address)
     await esGmx.setGov(timelock.address)
     await bnGmx.setGov(timelock.address)
     await gmxVester.setGov(timelock.address)
-    await nlpVester.setGov(timelock.address)
+    await slpVester.setGov(timelock.address)
 
     await rewardRouter.setMaxBoostBasisPoints(20_000)
   })
@@ -278,34 +278,34 @@ describe("RewardRouterV2", function () {
     expect(await rewardRouter.esGmx()).eq(esGmx.address)
     expect(await rewardRouter.bnGmx()).eq(bnGmx.address)
 
-    expect(await rewardRouter.nlp()).eq(nlp.address)
+    expect(await rewardRouter.slp()).eq(slp.address)
 
     expect(await rewardRouter.stakedGmxTracker()).eq(stakedGmxTracker.address)
     expect(await rewardRouter.bonusGmxTracker()).eq(bonusGmxTracker.address)
     expect(await rewardRouter.feeGmxTracker()).eq(feeGmxTracker.address)
 
-    expect(await rewardRouter.feeNlpTracker()).eq(feeNlpTracker.address)
-    expect(await rewardRouter.stakedNlpTracker()).eq(stakedNlpTracker.address)
+    expect(await rewardRouter.feeSlpTracker()).eq(feeSlpTracker.address)
+    expect(await rewardRouter.stakedSlpTracker()).eq(stakedSlpTracker.address)
 
-    expect(await rewardRouter.nlpManager()).eq(nlpManager.address)
+    expect(await rewardRouter.slpManager()).eq(slpManager.address)
 
     expect(await rewardRouter.gmxVester()).eq(gmxVester.address)
-    expect(await rewardRouter.nlpVester()).eq(nlpVester.address)
+    expect(await rewardRouter.slpVester()).eq(slpVester.address)
 
     await expect(rewardRouter.initialize(
       bnb.address,
       gmx.address,
       esGmx.address,
       bnGmx.address,
-      nlp.address,
+      slp.address,
       stakedGmxTracker.address,
       bonusGmxTracker.address,
       feeGmxTracker.address,
-      feeNlpTracker.address,
-      stakedNlpTracker.address,
-      nlpManager.address,
+      feeSlpTracker.address,
+      stakedSlpTracker.address,
+      slpManager.address,
       gmxVester.address,
-      nlpVester.address,
+      slpVester.address,
       govToken.address
     )).to.be.revertedWith("already initialized")
   })
@@ -528,29 +528,29 @@ describe("RewardRouterV2", function () {
       .to.be.revertedWith("RewardTracker: _amount exceeds depositBalance")
   })
 
-  it("mintAndStakeNlp, unstakeAndRedeemNlp, compound, batchCompoundForAccounts", async () => {
-    await eth.mint(feeNlpDistributor.address, expandDecimals(100, 18))
-    await feeNlpDistributor.setTokensPerInterval("41335970000000") // 0.00004133597 ETH per second
+  it("mintAndStakeSlp, unstakeAndRedeemSlp, compound, batchCompoundForAccounts", async () => {
+    await eth.mint(feeSlpDistributor.address, expandDecimals(100, 18))
+    await feeSlpDistributor.setTokensPerInterval("41335970000000") // 0.00004133597 ETH per second
 
     await bnb.mint(user1.address, expandDecimals(1, 18))
-    await bnb.connect(user1).approve(nlpManager.address, expandDecimals(1, 18))
-    const tx0 = await rewardRouter.connect(user1).mintAndStakeNlp(
+    await bnb.connect(user1).approve(slpManager.address, expandDecimals(1, 18))
+    const tx0 = await rewardRouter.connect(user1).mintAndStakeSlp(
       bnb.address,
       expandDecimals(1, 18),
       expandDecimals(299, 18),
       expandDecimals(299, 18)
     )
-    await reportGasUsed(provider, tx0, "mintAndStakeNlp gas used")
+    await reportGasUsed(provider, tx0, "mintAndStakeSlp gas used")
 
-    expect(await feeNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
-    expect(await feeNlpTracker.depositBalances(user1.address, nlp.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.depositBalances(user1.address, slp.address)).eq(expandDecimals(2991, 17))
 
-    expect(await stakedNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
-    expect(await stakedNlpTracker.depositBalances(user1.address, feeNlpTracker.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.depositBalances(user1.address, feeSlpTracker.address)).eq(expandDecimals(2991, 17))
 
     await bnb.mint(user1.address, expandDecimals(2, 18))
-    await bnb.connect(user1).approve(nlpManager.address, expandDecimals(2, 18))
-    await rewardRouter.connect(user1).mintAndStakeNlp(
+    await bnb.connect(user1).approve(slpManager.address, expandDecimals(2, 18))
+    await rewardRouter.connect(user1).mintAndStakeSlp(
       bnb.address,
       expandDecimals(2, 18),
       expandDecimals(299, 18),
@@ -560,56 +560,56 @@ describe("RewardRouterV2", function () {
     await increaseTime(provider, 24 * 60 * 60 + 1)
     await mineBlock(provider)
 
-    expect(await feeNlpTracker.claimable(user1.address)).gt("3560000000000000000") // 3.56, 100 / 28 => ~3.57
-    expect(await feeNlpTracker.claimable(user1.address)).lt("3580000000000000000") // 3.58
+    expect(await feeSlpTracker.claimable(user1.address)).gt("3560000000000000000") // 3.56, 100 / 28 => ~3.57
+    expect(await feeSlpTracker.claimable(user1.address)).lt("3580000000000000000") // 3.58
 
-    expect(await stakedNlpTracker.claimable(user1.address)).gt(expandDecimals(1785, 18)) // 50000 / 28 => ~1785
-    expect(await stakedNlpTracker.claimable(user1.address)).lt(expandDecimals(1786, 18))
+    expect(await stakedSlpTracker.claimable(user1.address)).gt(expandDecimals(1785, 18)) // 50000 / 28 => ~1785
+    expect(await stakedSlpTracker.claimable(user1.address)).lt(expandDecimals(1786, 18))
 
     await bnb.mint(user2.address, expandDecimals(1, 18))
-    await bnb.connect(user2).approve(nlpManager.address, expandDecimals(1, 18))
-    await rewardRouter.connect(user2).mintAndStakeNlp(
+    await bnb.connect(user2).approve(slpManager.address, expandDecimals(1, 18))
+    await rewardRouter.connect(user2).mintAndStakeSlp(
       bnb.address,
       expandDecimals(1, 18),
       expandDecimals(299, 18),
       expandDecimals(299, 18)
     )
 
-    await expect(rewardRouter.connect(user2).unstakeAndRedeemNlp(
+    await expect(rewardRouter.connect(user2).unstakeAndRedeemSlp(
       bnb.address,
       expandDecimals(299, 18),
       "990000000000000000", // 0.99
       user2.address
-    )).to.be.revertedWith("NlpManager: cooldown duration not yet passed")
+    )).to.be.revertedWith("SlpManager: cooldown duration not yet passed")
 
-    expect(await feeNlpTracker.stakedAmounts(user1.address)).eq("897300000000000000000") // 897.3
-    expect(await stakedNlpTracker.stakedAmounts(user1.address)).eq("897300000000000000000")
+    expect(await feeSlpTracker.stakedAmounts(user1.address)).eq("897300000000000000000") // 897.3
+    expect(await stakedSlpTracker.stakedAmounts(user1.address)).eq("897300000000000000000")
     expect(await bnb.balanceOf(user1.address)).eq(0)
 
-    const tx1 = await rewardRouter.connect(user1).unstakeAndRedeemNlp(
+    const tx1 = await rewardRouter.connect(user1).unstakeAndRedeemSlp(
       bnb.address,
       expandDecimals(299, 18),
       "990000000000000000", // 0.99
       user1.address
     )
-    await reportGasUsed(provider, tx1, "unstakeAndRedeemNlp gas used")
+    await reportGasUsed(provider, tx1, "unstakeAndRedeemSlp gas used")
 
-    expect(await feeNlpTracker.stakedAmounts(user1.address)).eq("598300000000000000000") // 598.3
-    expect(await stakedNlpTracker.stakedAmounts(user1.address)).eq("598300000000000000000")
+    expect(await feeSlpTracker.stakedAmounts(user1.address)).eq("598300000000000000000") // 598.3
+    expect(await stakedSlpTracker.stakedAmounts(user1.address)).eq("598300000000000000000")
     expect(await bnb.balanceOf(user1.address)).eq("993676666666666666") // ~0.99
 
     await increaseTime(provider, 24 * 60 * 60)
     await mineBlock(provider)
 
-    expect(await feeNlpTracker.claimable(user1.address)).gt("5940000000000000000") // 5.94, 3.57 + 100 / 28 / 3 * 2 => ~5.95
-    expect(await feeNlpTracker.claimable(user1.address)).lt("5960000000000000000")
-    expect(await feeNlpTracker.claimable(user2.address)).gt("1180000000000000000") // 1.18, 100 / 28 / 3 => ~1.19
-    expect(await feeNlpTracker.claimable(user2.address)).lt("1200000000000000000")
+    expect(await feeSlpTracker.claimable(user1.address)).gt("5940000000000000000") // 5.94, 3.57 + 100 / 28 / 3 * 2 => ~5.95
+    expect(await feeSlpTracker.claimable(user1.address)).lt("5960000000000000000")
+    expect(await feeSlpTracker.claimable(user2.address)).gt("1180000000000000000") // 1.18, 100 / 28 / 3 => ~1.19
+    expect(await feeSlpTracker.claimable(user2.address)).lt("1200000000000000000")
 
-    expect(await stakedNlpTracker.claimable(user1.address)).gt(expandDecimals(1785 + 1190, 18))
-    expect(await stakedNlpTracker.claimable(user1.address)).lt(expandDecimals(1786 + 1191, 18))
-    expect(await stakedNlpTracker.claimable(user2.address)).gt(expandDecimals(595, 18))
-    expect(await stakedNlpTracker.claimable(user2.address)).lt(expandDecimals(596, 18))
+    expect(await stakedSlpTracker.claimable(user1.address)).gt(expandDecimals(1785 + 1190, 18))
+    expect(await stakedSlpTracker.claimable(user1.address)).lt(expandDecimals(1786 + 1191, 18))
+    expect(await stakedSlpTracker.claimable(user2.address)).gt(expandDecimals(595, 18))
+    expect(await stakedSlpTracker.claimable(user2.address)).lt(expandDecimals(596, 18))
 
     expect(await esGmx.balanceOf(user1.address)).eq(0)
     await rewardRouter.connect(user1).claimEsGmx()
@@ -659,48 +659,48 @@ describe("RewardRouterV2", function () {
     expect(await feeGmxTracker.depositBalances(user1.address, bnGmx.address)).gt("12900000000000000000") // 12.9
     expect(await feeGmxTracker.depositBalances(user1.address, bnGmx.address)).lt("13100000000000000000") // 13.1
 
-    expect(await feeNlpTracker.stakedAmounts(user1.address)).eq("598300000000000000000") // 598.3
-    expect(await stakedNlpTracker.stakedAmounts(user1.address)).eq("598300000000000000000")
+    expect(await feeSlpTracker.stakedAmounts(user1.address)).eq("598300000000000000000") // 598.3
+    expect(await stakedSlpTracker.stakedAmounts(user1.address)).eq("598300000000000000000")
     expect(await bnb.balanceOf(user1.address)).eq("993676666666666666") // ~0.99
   })
 
-  it("mintAndStakeNlpETH, unstakeAndRedeemNlpETH", async () => {
+  it("mintAndStakeSlpETH, unstakeAndRedeemSlpETH", async () => {
     const receiver0 = newWallet()
-    await expect(rewardRouter.connect(user0).mintAndStakeNlpETH(expandDecimals(300, 18), expandDecimals(300, 18), { value: 0 }))
+    await expect(rewardRouter.connect(user0).mintAndStakeSlpETH(expandDecimals(300, 18), expandDecimals(300, 18), { value: 0 }))
       .to.be.revertedWith("invalid msg.value")
 
-    await expect(rewardRouter.connect(user0).mintAndStakeNlpETH(expandDecimals(300, 18), expandDecimals(300, 18), { value: expandDecimals(1, 18) }))
-      .to.be.revertedWith("NlpManager: insufficient USDG output")
+    await expect(rewardRouter.connect(user0).mintAndStakeSlpETH(expandDecimals(300, 18), expandDecimals(300, 18), { value: expandDecimals(1, 18) }))
+      .to.be.revertedWith("SlpManager: insufficient USDG output")
 
-    await expect(rewardRouter.connect(user0).mintAndStakeNlpETH(expandDecimals(299, 18), expandDecimals(300, 18), { value: expandDecimals(1, 18) }))
-      .to.be.revertedWith("NlpManager: insufficient NLP output")
+    await expect(rewardRouter.connect(user0).mintAndStakeSlpETH(expandDecimals(299, 18), expandDecimals(300, 18), { value: expandDecimals(1, 18) }))
+      .to.be.revertedWith("SlpManager: insufficient SLP output")
 
     expect(await bnb.balanceOf(user0.address)).eq(0)
     expect(await bnb.balanceOf(vault.address)).eq(0)
     expect(await bnb.totalSupply()).eq(0)
     expect(await provider.getBalance(bnb.address)).eq(0)
-    expect(await stakedNlpTracker.balanceOf(user0.address)).eq(0)
+    expect(await stakedSlpTracker.balanceOf(user0.address)).eq(0)
 
-    await rewardRouter.connect(user0).mintAndStakeNlpETH(expandDecimals(299, 18), expandDecimals(299, 18), { value: expandDecimals(1, 18) })
+    await rewardRouter.connect(user0).mintAndStakeSlpETH(expandDecimals(299, 18), expandDecimals(299, 18), { value: expandDecimals(1, 18) })
 
     expect(await bnb.balanceOf(user0.address)).eq(0)
     expect(await bnb.balanceOf(vault.address)).eq(expandDecimals(1, 18))
     expect(await provider.getBalance(bnb.address)).eq(expandDecimals(1, 18))
     expect(await bnb.totalSupply()).eq(expandDecimals(1, 18))
-    expect(await stakedNlpTracker.balanceOf(user0.address)).eq("299100000000000000000") // 299.1
+    expect(await stakedSlpTracker.balanceOf(user0.address)).eq("299100000000000000000") // 299.1
 
-    await expect(rewardRouter.connect(user0).unstakeAndRedeemNlpETH(expandDecimals(300, 18), expandDecimals(1, 18), receiver0.address))
+    await expect(rewardRouter.connect(user0).unstakeAndRedeemSlpETH(expandDecimals(300, 18), expandDecimals(1, 18), receiver0.address))
       .to.be.revertedWith("RewardTracker: _amount exceeds stakedAmount")
 
-    await expect(rewardRouter.connect(user0).unstakeAndRedeemNlpETH("299100000000000000000", expandDecimals(1, 18), receiver0.address))
-      .to.be.revertedWith("NlpManager: cooldown duration not yet passed")
+    await expect(rewardRouter.connect(user0).unstakeAndRedeemSlpETH("299100000000000000000", expandDecimals(1, 18), receiver0.address))
+      .to.be.revertedWith("SlpManager: cooldown duration not yet passed")
 
     await increaseTime(provider, 24 * 60 * 60 + 10)
 
-    await expect(rewardRouter.connect(user0).unstakeAndRedeemNlpETH("299100000000000000000", expandDecimals(1, 18), receiver0.address))
-      .to.be.revertedWith("NlpManager: insufficient output")
+    await expect(rewardRouter.connect(user0).unstakeAndRedeemSlpETH("299100000000000000000", expandDecimals(1, 18), receiver0.address))
+      .to.be.revertedWith("SlpManager: insufficient output")
 
-    await rewardRouter.connect(user0).unstakeAndRedeemNlpETH("299100000000000000000", "990000000000000000", receiver0.address)
+    await rewardRouter.connect(user0).unstakeAndRedeemSlpETH("299100000000000000000", "990000000000000000", receiver0.address)
     expect(await provider.getBalance(receiver0.address)).eq("994009000000000000") // 0.994009
     expect(await bnb.balanceOf(vault.address)).eq("5991000000000000") // 0.005991
     expect(await provider.getBalance(bnb.address)).eq("5991000000000000")
@@ -831,16 +831,16 @@ describe("RewardRouterV2", function () {
       .to.be.revertedWith("transfer not signalled")
   })
 
-  it("gmx, nlp: signalTransfer, acceptTransfer", async () =>{
+  it("gmx, slp: signalTransfer, acceptTransfer", async () =>{
     await gmx.setMinter(wallet.address, true)
     await gmx.mint(gmxVester.address, expandDecimals(10000, 18))
-    await gmx.mint(nlpVester.address, expandDecimals(10000, 18))
-    await eth.mint(feeNlpDistributor.address, expandDecimals(100, 18))
-    await feeNlpDistributor.setTokensPerInterval("41335970000000") // 0.00004133597 ETH per second
+    await gmx.mint(slpVester.address, expandDecimals(10000, 18))
+    await eth.mint(feeSlpDistributor.address, expandDecimals(100, 18))
+    await feeSlpDistributor.setTokensPerInterval("41335970000000") // 0.00004133597 ETH per second
 
     await bnb.mint(user1.address, expandDecimals(1, 18))
-    await bnb.connect(user1).approve(nlpManager.address, expandDecimals(1, 18))
-    await rewardRouter.connect(user1).mintAndStakeNlp(
+    await bnb.connect(user1).approve(slpManager.address, expandDecimals(1, 18))
+    await rewardRouter.connect(user1).mintAndStakeSlp(
       bnb.address,
       expandDecimals(1, 18),
       expandDecimals(299, 18),
@@ -848,8 +848,8 @@ describe("RewardRouterV2", function () {
     )
 
     await bnb.mint(user2.address, expandDecimals(1, 18))
-    await bnb.connect(user2).approve(nlpManager.address, expandDecimals(1, 18))
-    await rewardRouter.connect(user2).mintAndStakeNlp(
+    await bnb.connect(user2).approve(slpManager.address, expandDecimals(1, 18))
+    await rewardRouter.connect(user2).mintAndStakeSlp(
       bnb.address,
       expandDecimals(1, 18),
       expandDecimals(299, 18),
@@ -909,11 +909,11 @@ describe("RewardRouterV2", function () {
     expect(await feeGmxTracker.depositBalances(user2.address, bnGmx.address)).eq(0)
     expect(await feeGmxTracker.depositBalances(user3.address, bnGmx.address)).eq(0)
 
-    expect(await feeNlpTracker.depositBalances(user2.address, nlp.address)).eq("299100000000000000000") // 299.1
-    expect(await feeNlpTracker.depositBalances(user3.address, nlp.address)).eq(0)
+    expect(await feeSlpTracker.depositBalances(user2.address, slp.address)).eq("299100000000000000000") // 299.1
+    expect(await feeSlpTracker.depositBalances(user3.address, slp.address)).eq(0)
 
-    expect(await stakedNlpTracker.depositBalances(user2.address, feeNlpTracker.address)).eq("299100000000000000000") // 299.1
-    expect(await stakedNlpTracker.depositBalances(user3.address, feeNlpTracker.address)).eq(0)
+    expect(await stakedSlpTracker.depositBalances(user2.address, feeSlpTracker.address)).eq("299100000000000000000") // 299.1
+    expect(await stakedSlpTracker.depositBalances(user3.address, feeSlpTracker.address)).eq(0)
 
     expect(await gmxVester.transferredAverageStakedAmounts(user3.address)).eq(0)
     expect(await gmxVester.transferredCumulativeRewards(user3.address)).eq(0)
@@ -938,11 +938,11 @@ describe("RewardRouterV2", function () {
     expect(await feeGmxTracker.depositBalances(user3.address, bnGmx.address)).gt("547000000000000000") // 0.547
     expect(await feeGmxTracker.depositBalances(user3.address, bnGmx.address)).lt("549000000000000000") // 0.548
 
-    expect(await feeNlpTracker.depositBalances(user2.address, nlp.address)).eq(0)
-    expect(await feeNlpTracker.depositBalances(user3.address, nlp.address)).eq("299100000000000000000") // 299.1
+    expect(await feeSlpTracker.depositBalances(user2.address, slp.address)).eq(0)
+    expect(await feeSlpTracker.depositBalances(user3.address, slp.address)).eq("299100000000000000000") // 299.1
 
-    expect(await stakedNlpTracker.depositBalances(user2.address, feeNlpTracker.address)).eq(0)
-    expect(await stakedNlpTracker.depositBalances(user3.address, feeNlpTracker.address)).eq("299100000000000000000") // 299.1
+    expect(await stakedSlpTracker.depositBalances(user2.address, feeSlpTracker.address)).eq(0)
+    expect(await stakedSlpTracker.depositBalances(user3.address, feeSlpTracker.address)).eq("299100000000000000000") // 299.1
 
     expect(await gmxVester.transferredAverageStakedAmounts(user3.address)).eq(expandDecimals(200, 18))
     expect(await gmxVester.transferredCumulativeRewards(user3.address)).gt(expandDecimals(892, 18))
@@ -1031,30 +1031,30 @@ describe("RewardRouterV2", function () {
     expect(await gmx.balanceOf(user1.address)).gt(expandDecimals(204, 18))
     expect(await gmx.balanceOf(user1.address)).lt(expandDecimals(206, 18))
 
-    expect(await nlpVester.getMaxVestableAmount(user3.address)).gt(expandDecimals(1785, 18))
-    expect(await nlpVester.getMaxVestableAmount(user3.address)).lt(expandDecimals(1787, 18))
+    expect(await slpVester.getMaxVestableAmount(user3.address)).gt(expandDecimals(1785, 18))
+    expect(await slpVester.getMaxVestableAmount(user3.address)).lt(expandDecimals(1787, 18))
 
-    expect(await nlpVester.getPairAmount(user3.address, expandDecimals(1785, 18))).gt(expandDecimals(298, 18))
-    expect(await nlpVester.getPairAmount(user3.address, expandDecimals(1785, 18))).lt(expandDecimals(300, 18))
+    expect(await slpVester.getPairAmount(user3.address, expandDecimals(1785, 18))).gt(expandDecimals(298, 18))
+    expect(await slpVester.getPairAmount(user3.address, expandDecimals(1785, 18))).lt(expandDecimals(300, 18))
 
-    expect(await stakedNlpTracker.balanceOf(user3.address)).eq("299100000000000000000")
+    expect(await stakedSlpTracker.balanceOf(user3.address)).eq("299100000000000000000")
 
     expect(await esGmx.balanceOf(user3.address)).gt(expandDecimals(1785, 18))
     expect(await esGmx.balanceOf(user3.address)).lt(expandDecimals(1787, 18))
 
     expect(await gmx.balanceOf(user3.address)).eq(0)
 
-    await nlpVester.connect(user3).deposit(expandDecimals(1785, 18))
+    await slpVester.connect(user3).deposit(expandDecimals(1785, 18))
 
-    expect(await stakedNlpTracker.balanceOf(user3.address)).gt(0)
-    expect(await stakedNlpTracker.balanceOf(user3.address)).lt(expandDecimals(1, 18))
+    expect(await stakedSlpTracker.balanceOf(user3.address)).gt(0)
+    expect(await stakedSlpTracker.balanceOf(user3.address)).lt(expandDecimals(1, 18))
 
     expect(await esGmx.balanceOf(user3.address)).gt(0)
     expect(await esGmx.balanceOf(user3.address)).lt(expandDecimals(1, 18))
 
     expect(await gmx.balanceOf(user3.address)).eq(0)
 
-    await expect(rewardRouter.connect(user3).unstakeAndRedeemNlp(
+    await expect(rewardRouter.connect(user3).unstakeAndRedeemSlp(
       bnb.address,
       expandDecimals(1, 18),
       0,
@@ -1064,9 +1064,9 @@ describe("RewardRouterV2", function () {
     await increaseTime(provider, 24 * 60 * 60)
     await mineBlock(provider)
 
-    await nlpVester.connect(user3).withdraw()
+    await slpVester.connect(user3).withdraw()
 
-    expect(await stakedNlpTracker.balanceOf(user3.address)).eq("299100000000000000000")
+    expect(await stakedSlpTracker.balanceOf(user3.address)).eq("299100000000000000000")
 
     expect(await esGmx.balanceOf(user3.address)).gt(expandDecimals(1785 - 5, 18))
     expect(await esGmx.balanceOf(user3.address)).lt(expandDecimals(1787 - 5, 18))
@@ -1181,7 +1181,7 @@ describe("RewardRouterV2", function () {
 
     await timelock.signalSetHandler(esGmx.address, esGmxBatchSender.address, true)
     await timelock.signalSetHandler(gmxVester.address, esGmxBatchSender.address, true)
-    await timelock.signalSetHandler(nlpVester.address, esGmxBatchSender.address, true)
+    await timelock.signalSetHandler(slpVester.address, esGmxBatchSender.address, true)
     await timelock.signalMint(esGmx.address, wallet.address, expandDecimals(1000, 18))
 
     await increaseTime(provider, 20)
@@ -1189,7 +1189,7 @@ describe("RewardRouterV2", function () {
 
     await timelock.setHandler(esGmx.address, esGmxBatchSender.address, true)
     await timelock.setHandler(gmxVester.address, esGmxBatchSender.address, true)
-    await timelock.setHandler(nlpVester.address, esGmxBatchSender.address, true)
+    await timelock.setHandler(slpVester.address, esGmxBatchSender.address, true)
     await timelock.processMint(esGmx.address, wallet.address, expandDecimals(1000, 18))
 
     await esGmxBatchSender.connect(wallet).send(
@@ -1220,40 +1220,40 @@ describe("RewardRouterV2", function () {
     expect(await gmxVester.getPairAmount(user3.address, expandDecimals(1884 + 200, 18))).gt(expandDecimals(7936, 18))
     expect(await gmxVester.getPairAmount(user3.address, expandDecimals(1884 + 200, 18))).lt(expandDecimals(7937, 18))
 
-    expect(await nlpVester.transferredAverageStakedAmounts(user4.address)).eq(0)
-    expect(await nlpVester.transferredCumulativeRewards(user4.address)).eq(0)
-    expect(await nlpVester.bonusRewards(user4.address)).eq(0)
-    expect(await nlpVester.getCombinedAverageStakedAmount(user4.address)).eq(0)
-    expect(await nlpVester.getMaxVestableAmount(user4.address)).eq(0)
-    expect(await nlpVester.getPairAmount(user4.address, expandDecimals(10, 18))).eq(0)
+    expect(await slpVester.transferredAverageStakedAmounts(user4.address)).eq(0)
+    expect(await slpVester.transferredCumulativeRewards(user4.address)).eq(0)
+    expect(await slpVester.bonusRewards(user4.address)).eq(0)
+    expect(await slpVester.getCombinedAverageStakedAmount(user4.address)).eq(0)
+    expect(await slpVester.getMaxVestableAmount(user4.address)).eq(0)
+    expect(await slpVester.getPairAmount(user4.address, expandDecimals(10, 18))).eq(0)
 
     await esGmxBatchSender.connect(wallet).send(
-      nlpVester.address,
+      slpVester.address,
       320,
       [user4.address],
       [expandDecimals(10, 18)]
     )
 
-    expect(await nlpVester.transferredAverageStakedAmounts(user4.address)).eq(expandDecimals(3200, 18))
-    expect(await nlpVester.transferredCumulativeRewards(user4.address)).eq(expandDecimals(10, 18))
-    expect(await nlpVester.bonusRewards(user4.address)).eq(0)
-    expect(await nlpVester.getCombinedAverageStakedAmount(user4.address)).eq(expandDecimals(3200, 18))
-    expect(await nlpVester.getMaxVestableAmount(user4.address)).eq(expandDecimals(10, 18))
-    expect(await nlpVester.getPairAmount(user4.address, expandDecimals(10, 18))).eq(expandDecimals(3200, 18))
+    expect(await slpVester.transferredAverageStakedAmounts(user4.address)).eq(expandDecimals(3200, 18))
+    expect(await slpVester.transferredCumulativeRewards(user4.address)).eq(expandDecimals(10, 18))
+    expect(await slpVester.bonusRewards(user4.address)).eq(0)
+    expect(await slpVester.getCombinedAverageStakedAmount(user4.address)).eq(expandDecimals(3200, 18))
+    expect(await slpVester.getMaxVestableAmount(user4.address)).eq(expandDecimals(10, 18))
+    expect(await slpVester.getPairAmount(user4.address, expandDecimals(10, 18))).eq(expandDecimals(3200, 18))
 
     await esGmxBatchSender.connect(wallet).send(
-      nlpVester.address,
+      slpVester.address,
       320,
       [user4.address],
       [expandDecimals(10, 18)]
     )
 
-    expect(await nlpVester.transferredAverageStakedAmounts(user4.address)).eq(expandDecimals(6400, 18))
-    expect(await nlpVester.transferredCumulativeRewards(user4.address)).eq(expandDecimals(20, 18))
-    expect(await nlpVester.bonusRewards(user4.address)).eq(0)
-    expect(await nlpVester.getCombinedAverageStakedAmount(user4.address)).eq(expandDecimals(6400, 18))
-    expect(await nlpVester.getMaxVestableAmount(user4.address)).eq(expandDecimals(20, 18))
-    expect(await nlpVester.getPairAmount(user4.address, expandDecimals(10, 18))).eq(expandDecimals(3200, 18))
+    expect(await slpVester.transferredAverageStakedAmounts(user4.address)).eq(expandDecimals(6400, 18))
+    expect(await slpVester.transferredCumulativeRewards(user4.address)).eq(expandDecimals(20, 18))
+    expect(await slpVester.bonusRewards(user4.address)).eq(0)
+    expect(await slpVester.getCombinedAverageStakedAmount(user4.address)).eq(expandDecimals(6400, 18))
+    expect(await slpVester.getMaxVestableAmount(user4.address)).eq(expandDecimals(20, 18))
+    expect(await slpVester.getPairAmount(user4.address, expandDecimals(10, 18))).eq(expandDecimals(3200, 18))
   })
 
   it("handleRewards", async () => {
@@ -1266,90 +1266,90 @@ describe("RewardRouterV2", function () {
       gmx.address,
       esGmx.address,
       bnGmx.address,
-      nlp.address,
+      slp.address,
       stakedGmxTracker.address,
       bonusGmxTracker.address,
       feeGmxTracker.address,
-      feeNlpTracker.address,
-      stakedNlpTracker.address,
-      nlpManager.address,
+      feeSlpTracker.address,
+      stakedSlpTracker.address,
+      slpManager.address,
       gmxVester.address,
-      nlpVester.address,
+      slpVester.address,
       govToken.address
     )
 
     await rewardRouterV2.setMaxBoostBasisPoints(20_000)
 
-    await timelock.signalSetGov(nlpManager.address, timelockV2.address)
+    await timelock.signalSetGov(slpManager.address, timelockV2.address)
     await timelock.signalSetGov(stakedGmxTracker.address, timelockV2.address)
     await timelock.signalSetGov(bonusGmxTracker.address, timelockV2.address)
     await timelock.signalSetGov(feeGmxTracker.address, timelockV2.address)
-    await timelock.signalSetGov(feeNlpTracker.address, timelockV2.address)
-    await timelock.signalSetGov(stakedNlpTracker.address, timelockV2.address)
+    await timelock.signalSetGov(feeSlpTracker.address, timelockV2.address)
+    await timelock.signalSetGov(stakedSlpTracker.address, timelockV2.address)
     await timelock.signalSetGov(stakedGmxDistributor.address, timelockV2.address)
-    await timelock.signalSetGov(stakedNlpDistributor.address, timelockV2.address)
+    await timelock.signalSetGov(stakedSlpDistributor.address, timelockV2.address)
     await timelock.signalSetGov(esGmx.address, timelockV2.address)
     await timelock.signalSetGov(bnGmx.address, timelockV2.address)
     await timelock.signalSetGov(gmxVester.address, timelockV2.address)
-    await timelock.signalSetGov(nlpVester.address, timelockV2.address)
+    await timelock.signalSetGov(slpVester.address, timelockV2.address)
 
     await increaseTime(provider, 20)
     await mineBlock(provider)
 
-    await timelock.connect(timelockV2).setGov(nlpManager.address)
+    await timelock.connect(timelockV2).setGov(slpManager.address)
     await timelock.connect(timelockV2).setGov(stakedGmxTracker.address)
     await timelock.connect(timelockV2).setGov(bonusGmxTracker.address)
     await timelock.connect(timelockV2).setGov(feeGmxTracker.address)
-    await timelock.connect(timelockV2).setGov(feeNlpTracker.address)
-    await timelock.connect(timelockV2).setGov(stakedNlpTracker.address)
+    await timelock.connect(timelockV2).setGov(feeSlpTracker.address)
+    await timelock.connect(timelockV2).setGov(stakedSlpTracker.address)
     await timelock.connect(timelockV2).setGov(stakedGmxDistributor.address)
-    await timelock.connect(timelockV2).setGov(stakedNlpDistributor.address)
+    await timelock.connect(timelockV2).setGov(stakedSlpDistributor.address)
     await timelock.connect(timelockV2).setGov(esGmx.address)
     await timelock.connect(timelockV2).setGov(bnGmx.address)
     await timelock.connect(timelockV2).setGov(gmxVester.address)
-    await timelock.connect(timelockV2).setGov(nlpVester.address)
+    await timelock.connect(timelockV2).setGov(slpVester.address)
 
     await esGmx.setHandler(rewardRouterV2.address, true)
     await esGmx.setHandler(stakedGmxDistributor.address, true)
-    await esGmx.setHandler(stakedNlpDistributor.address, true)
+    await esGmx.setHandler(stakedSlpDistributor.address, true)
     await esGmx.setHandler(stakedGmxTracker.address, true)
-    await esGmx.setHandler(stakedNlpTracker.address, true)
+    await esGmx.setHandler(stakedSlpTracker.address, true)
     await esGmx.setHandler(gmxVester.address, true)
-    await esGmx.setHandler(nlpVester.address, true)
+    await esGmx.setHandler(slpVester.address, true)
 
-    await nlpManager.setHandler(rewardRouterV2.address, true)
+    await slpManager.setHandler(rewardRouterV2.address, true)
     await stakedGmxTracker.setHandler(rewardRouterV2.address, true)
     await bonusGmxTracker.setHandler(rewardRouterV2.address, true)
     await feeGmxTracker.setHandler(rewardRouterV2.address, true)
-    await feeNlpTracker.setHandler(rewardRouterV2.address, true)
-    await stakedNlpTracker.setHandler(rewardRouterV2.address, true)
+    await feeSlpTracker.setHandler(rewardRouterV2.address, true)
+    await stakedSlpTracker.setHandler(rewardRouterV2.address, true)
 
     await esGmx.setHandler(rewardRouterV2.address, true)
     await bnGmx.setMinter(rewardRouterV2.address, true)
     await esGmx.setMinter(gmxVester.address, true)
-    await esGmx.setMinter(nlpVester.address, true)
+    await esGmx.setMinter(slpVester.address, true)
 
     await gmxVester.setHandler(rewardRouterV2.address, true)
-    await nlpVester.setHandler(rewardRouterV2.address, true)
+    await slpVester.setHandler(rewardRouterV2.address, true)
 
     await feeGmxTracker.setHandler(gmxVester.address, true)
-    await stakedNlpTracker.setHandler(nlpVester.address, true)
+    await stakedSlpTracker.setHandler(slpVester.address, true)
 
     await eth.deposit({ value: expandDecimals(10, 18) })
 
     await gmx.setMinter(wallet.address, true)
     await gmx.mint(gmxVester.address, expandDecimals(10000, 18))
-    await gmx.mint(nlpVester.address, expandDecimals(10000, 18))
+    await gmx.mint(slpVester.address, expandDecimals(10000, 18))
 
-    await eth.mint(feeNlpDistributor.address, expandDecimals(50, 18))
-    await feeNlpDistributor.setTokensPerInterval("41335970000000") // 0.00004133597 ETH per second
+    await eth.mint(feeSlpDistributor.address, expandDecimals(50, 18))
+    await feeSlpDistributor.setTokensPerInterval("41335970000000") // 0.00004133597 ETH per second
 
     await eth.mint(feeGmxDistributor.address, expandDecimals(50, 18))
     await feeGmxDistributor.setTokensPerInterval("41335970000000") // 0.00004133597 ETH per second
 
     await bnb.mint(user1.address, expandDecimals(1, 18))
-    await bnb.connect(user1).approve(nlpManager.address, expandDecimals(1, 18))
-    await rewardRouterV2.connect(user1).mintAndStakeNlp(
+    await bnb.connect(user1).approve(slpManager.address, expandDecimals(1, 18))
+    await rewardRouterV2.connect(user1).mintAndStakeSlp(
       bnb.address,
       expandDecimals(1, 18),
       expandDecimals(299, 18),
@@ -1368,7 +1368,7 @@ describe("RewardRouterV2", function () {
     expect(await gmx.balanceOf(user1.address)).eq(0)
     expect(await esGmx.balanceOf(user1.address)).eq(0)
     expect(await bnGmx.balanceOf(user1.address)).eq(0)
-    expect(await nlp.balanceOf(user1.address)).eq(0)
+    expect(await slp.balanceOf(user1.address)).eq(0)
     expect(await eth.balanceOf(user1.address)).eq(0)
 
     expect(await stakedGmxTracker.depositBalances(user1.address, gmx.address)).eq(expandDecimals(200, 18))
@@ -1388,7 +1388,7 @@ describe("RewardRouterV2", function () {
     expect(await gmx.balanceOf(user1.address)).eq(0)
     expect(await esGmx.balanceOf(user1.address)).eq(0)
     expect(await bnGmx.balanceOf(user1.address)).eq(0)
-    expect(await nlp.balanceOf(user1.address)).eq(0)
+    expect(await slp.balanceOf(user1.address)).eq(0)
     expect(await eth.balanceOf(user1.address)).gt(expandDecimals(7, 18))
     expect(await eth.balanceOf(user1.address)).lt(expandDecimals(8, 18))
 
@@ -1420,7 +1420,7 @@ describe("RewardRouterV2", function () {
     expect(await gmx.balanceOf(user1.address)).eq(0)
     expect(await esGmx.balanceOf(user1.address)).eq(0)
     expect(await bnGmx.balanceOf(user1.address)).eq(0)
-    expect(await nlp.balanceOf(user1.address)).eq(0)
+    expect(await slp.balanceOf(user1.address)).eq(0)
     expect(await eth.balanceOf(user1.address)).gt(expandDecimals(7, 18))
     expect(await eth.balanceOf(user1.address)).lt(expandDecimals(8, 18))
 
@@ -1446,7 +1446,7 @@ describe("RewardRouterV2", function () {
     expect(await esGmx.balanceOf(user1.address)).gt(expandDecimals(3571, 18))
     expect(await esGmx.balanceOf(user1.address)).lt(expandDecimals(3572, 18))
     expect(await bnGmx.balanceOf(user1.address)).eq(0)
-    expect(await nlp.balanceOf(user1.address)).eq(0)
+    expect(await slp.balanceOf(user1.address)).eq(0)
     expect(await eth.balanceOf(user1.address)).gt(expandDecimals(7, 18))
     expect(await eth.balanceOf(user1.address)).lt(expandDecimals(8, 18))
 
@@ -1457,7 +1457,7 @@ describe("RewardRouterV2", function () {
     expect(await feeGmxTracker.depositBalances(user1.address, bnGmx.address)).lt("560000000000000000") // 0.56
 
     await gmxVester.connect(user1).deposit(expandDecimals(365, 18))
-    await nlpVester.connect(user1).deposit(expandDecimals(365 * 2, 18))
+    await slpVester.connect(user1).deposit(expandDecimals(365 * 2, 18))
 
     expect(await ethBalance1.sub(ethBalance0)).gt(expandDecimals(7, 18))
     expect(await ethBalance1.sub(ethBalance0)).lt(expandDecimals(8, 18))
@@ -1465,7 +1465,7 @@ describe("RewardRouterV2", function () {
     expect(await esGmx.balanceOf(user1.address)).gt(expandDecimals(3571 - 365 * 3, 18))
     expect(await esGmx.balanceOf(user1.address)).lt(expandDecimals(3572 - 365 * 3, 18))
     expect(await bnGmx.balanceOf(user1.address)).eq(0)
-    expect(await nlp.balanceOf(user1.address)).eq(0)
+    expect(await slp.balanceOf(user1.address)).eq(0)
     expect(await eth.balanceOf(user1.address)).gt(expandDecimals(7, 18))
     expect(await eth.balanceOf(user1.address)).lt(expandDecimals(8, 18))
 
@@ -1495,7 +1495,7 @@ describe("RewardRouterV2", function () {
     expect(await esGmx.balanceOf(user1.address)).gt(expandDecimals(3571 - 365 * 3, 18))
     expect(await esGmx.balanceOf(user1.address)).lt(expandDecimals(3572 - 365 * 3, 18))
     expect(await bnGmx.balanceOf(user1.address)).eq(0)
-    expect(await nlp.balanceOf(user1.address)).eq(0)
+    expect(await slp.balanceOf(user1.address)).eq(0)
     expect(await eth.balanceOf(user1.address)).gt(expandDecimals(7, 18))
     expect(await eth.balanceOf(user1.address)).lt(expandDecimals(8, 18))
 
@@ -1506,122 +1506,122 @@ describe("RewardRouterV2", function () {
     expect(await feeGmxTracker.depositBalances(user1.address, bnGmx.address)).lt("560000000000000000") // 0.56
   })
 
-  it("StakedNlp", async () => {
-    await eth.mint(feeNlpDistributor.address, expandDecimals(100, 18))
-    await feeNlpDistributor.setTokensPerInterval("41335970000000") // 0.00004133597 ETH per second
+  it("StakedSlp", async () => {
+    await eth.mint(feeSlpDistributor.address, expandDecimals(100, 18))
+    await feeSlpDistributor.setTokensPerInterval("41335970000000") // 0.00004133597 ETH per second
 
     await bnb.mint(user1.address, expandDecimals(1, 18))
-    await bnb.connect(user1).approve(nlpManager.address, expandDecimals(1, 18))
-    await rewardRouter.connect(user1).mintAndStakeNlp(
+    await bnb.connect(user1).approve(slpManager.address, expandDecimals(1, 18))
+    await rewardRouter.connect(user1).mintAndStakeSlp(
       bnb.address,
       expandDecimals(1, 18),
       expandDecimals(299, 18),
       expandDecimals(299, 18)
     )
 
-    expect(await feeNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
-    expect(await feeNlpTracker.depositBalances(user1.address, nlp.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.depositBalances(user1.address, slp.address)).eq(expandDecimals(2991, 17))
 
-    expect(await stakedNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
-    expect(await stakedNlpTracker.depositBalances(user1.address, feeNlpTracker.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.depositBalances(user1.address, feeSlpTracker.address)).eq(expandDecimals(2991, 17))
 
-    const stakedNlp = await deployContract("StakedNlp", [nlp.address, nlpManager.address, stakedNlpTracker.address, feeNlpTracker.address])
+    const stakedSlp = await deployContract("StakedSlp", [slp.address, slpManager.address, stakedSlpTracker.address, feeSlpTracker.address])
 
-    await expect(stakedNlp.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
-      .to.be.revertedWith("StakedNlp: transfer amount exceeds allowance")
+    await expect(stakedSlp.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
+      .to.be.revertedWith("StakedSlp: transfer amount exceeds allowance")
 
-    await stakedNlp.connect(user1).approve(user2.address, expandDecimals(2991, 17))
+    await stakedSlp.connect(user1).approve(user2.address, expandDecimals(2991, 17))
 
-    await expect(stakedNlp.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
-      .to.be.revertedWith("StakedNlp: cooldown duration not yet passed")
+    await expect(stakedSlp.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
+      .to.be.revertedWith("StakedSlp: cooldown duration not yet passed")
 
     await increaseTime(provider, 24 * 60 * 60 + 10)
     await mineBlock(provider)
 
-    await expect(stakedNlp.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
+    await expect(stakedSlp.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
       .to.be.revertedWith("RewardTracker: forbidden")
 
-    await timelock.signalSetHandler(stakedNlpTracker.address, stakedNlp.address, true)
+    await timelock.signalSetHandler(stakedSlpTracker.address, stakedSlp.address, true)
     await increaseTime(provider, 20)
     await mineBlock(provider)
-    await timelock.setHandler(stakedNlpTracker.address, stakedNlp.address, true)
+    await timelock.setHandler(stakedSlpTracker.address, stakedSlp.address, true)
 
-    await expect(stakedNlp.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
+    await expect(stakedSlp.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
       .to.be.revertedWith("RewardTracker: forbidden")
 
-    await timelock.signalSetHandler(feeNlpTracker.address, stakedNlp.address, true)
+    await timelock.signalSetHandler(feeSlpTracker.address, stakedSlp.address, true)
     await increaseTime(provider, 20)
     await mineBlock(provider)
-    await timelock.setHandler(feeNlpTracker.address, stakedNlp.address, true)
+    await timelock.setHandler(feeSlpTracker.address, stakedSlp.address, true)
 
-    expect(await feeNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
-    expect(await feeNlpTracker.depositBalances(user1.address, nlp.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.depositBalances(user1.address, slp.address)).eq(expandDecimals(2991, 17))
 
-    expect(await stakedNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
-    expect(await stakedNlpTracker.depositBalances(user1.address, feeNlpTracker.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.depositBalances(user1.address, feeSlpTracker.address)).eq(expandDecimals(2991, 17))
 
-    expect(await feeNlpTracker.stakedAmounts(user3.address)).eq(0)
-    expect(await feeNlpTracker.depositBalances(user3.address, nlp.address)).eq(0)
+    expect(await feeSlpTracker.stakedAmounts(user3.address)).eq(0)
+    expect(await feeSlpTracker.depositBalances(user3.address, slp.address)).eq(0)
 
-    expect(await stakedNlpTracker.stakedAmounts(user3.address)).eq(0)
-    expect(await stakedNlpTracker.depositBalances(user3.address, feeNlpTracker.address)).eq(0)
+    expect(await stakedSlpTracker.stakedAmounts(user3.address)).eq(0)
+    expect(await stakedSlpTracker.depositBalances(user3.address, feeSlpTracker.address)).eq(0)
 
-    await stakedNlp.connect(user2).transferFrom(user1.address, user3. address, expandDecimals(2991, 17))
+    await stakedSlp.connect(user2).transferFrom(user1.address, user3. address, expandDecimals(2991, 17))
 
-    expect(await feeNlpTracker.stakedAmounts(user1.address)).eq(0)
-    expect(await feeNlpTracker.depositBalances(user1.address, nlp.address)).eq(0)
+    expect(await feeSlpTracker.stakedAmounts(user1.address)).eq(0)
+    expect(await feeSlpTracker.depositBalances(user1.address, slp.address)).eq(0)
 
-    expect(await stakedNlpTracker.stakedAmounts(user1.address)).eq(0)
-    expect(await stakedNlpTracker.depositBalances(user1.address, feeNlpTracker.address)).eq(0)
+    expect(await stakedSlpTracker.stakedAmounts(user1.address)).eq(0)
+    expect(await stakedSlpTracker.depositBalances(user1.address, feeSlpTracker.address)).eq(0)
 
-    expect(await feeNlpTracker.stakedAmounts(user3.address)).eq(expandDecimals(2991, 17))
-    expect(await feeNlpTracker.depositBalances(user3.address, nlp.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.stakedAmounts(user3.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.depositBalances(user3.address, slp.address)).eq(expandDecimals(2991, 17))
 
-    expect(await stakedNlpTracker.stakedAmounts(user3.address)).eq(expandDecimals(2991, 17))
-    expect(await stakedNlpTracker.depositBalances(user3.address, feeNlpTracker.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.stakedAmounts(user3.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.depositBalances(user3.address, feeSlpTracker.address)).eq(expandDecimals(2991, 17))
 
-    await expect(stakedNlp.connect(user2).transferFrom(user3.address, user1.address, expandDecimals(3000, 17)))
-      .to.be.revertedWith("StakedNlp: transfer amount exceeds allowance")
+    await expect(stakedSlp.connect(user2).transferFrom(user3.address, user1.address, expandDecimals(3000, 17)))
+      .to.be.revertedWith("StakedSlp: transfer amount exceeds allowance")
 
-    await stakedNlp.connect(user3).approve(user2.address, expandDecimals(3000, 17))
+    await stakedSlp.connect(user3).approve(user2.address, expandDecimals(3000, 17))
 
-    await expect(stakedNlp.connect(user2).transferFrom(user3.address, user1.address, expandDecimals(3000, 17)))
+    await expect(stakedSlp.connect(user2).transferFrom(user3.address, user1.address, expandDecimals(3000, 17)))
       .to.be.revertedWith("RewardTracker: _amount exceeds stakedAmount")
 
-    await stakedNlp.connect(user2).transferFrom(user3.address, user1.address, expandDecimals(1000, 17))
+    await stakedSlp.connect(user2).transferFrom(user3.address, user1.address, expandDecimals(1000, 17))
 
-    expect(await feeNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(1000, 17))
-    expect(await feeNlpTracker.depositBalances(user1.address, nlp.address)).eq(expandDecimals(1000, 17))
+    expect(await feeSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(1000, 17))
+    expect(await feeSlpTracker.depositBalances(user1.address, slp.address)).eq(expandDecimals(1000, 17))
 
-    expect(await stakedNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(1000, 17))
-    expect(await stakedNlpTracker.depositBalances(user1.address, feeNlpTracker.address)).eq(expandDecimals(1000, 17))
+    expect(await stakedSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(1000, 17))
+    expect(await stakedSlpTracker.depositBalances(user1.address, feeSlpTracker.address)).eq(expandDecimals(1000, 17))
 
-    expect(await feeNlpTracker.stakedAmounts(user3.address)).eq(expandDecimals(1991, 17))
-    expect(await feeNlpTracker.depositBalances(user3.address, nlp.address)).eq(expandDecimals(1991, 17))
+    expect(await feeSlpTracker.stakedAmounts(user3.address)).eq(expandDecimals(1991, 17))
+    expect(await feeSlpTracker.depositBalances(user3.address, slp.address)).eq(expandDecimals(1991, 17))
 
-    expect(await stakedNlpTracker.stakedAmounts(user3.address)).eq(expandDecimals(1991, 17))
-    expect(await stakedNlpTracker.depositBalances(user3.address, feeNlpTracker.address)).eq(expandDecimals(1991, 17))
+    expect(await stakedSlpTracker.stakedAmounts(user3.address)).eq(expandDecimals(1991, 17))
+    expect(await stakedSlpTracker.depositBalances(user3.address, feeSlpTracker.address)).eq(expandDecimals(1991, 17))
 
-    await stakedNlp.connect(user3).transfer(user1.address, expandDecimals(1500, 17))
+    await stakedSlp.connect(user3).transfer(user1.address, expandDecimals(1500, 17))
 
-    expect(await feeNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2500, 17))
-    expect(await feeNlpTracker.depositBalances(user1.address, nlp.address)).eq(expandDecimals(2500, 17))
+    expect(await feeSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2500, 17))
+    expect(await feeSlpTracker.depositBalances(user1.address, slp.address)).eq(expandDecimals(2500, 17))
 
-    expect(await stakedNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2500, 17))
-    expect(await stakedNlpTracker.depositBalances(user1.address, feeNlpTracker.address)).eq(expandDecimals(2500, 17))
+    expect(await stakedSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2500, 17))
+    expect(await stakedSlpTracker.depositBalances(user1.address, feeSlpTracker.address)).eq(expandDecimals(2500, 17))
 
-    expect(await feeNlpTracker.stakedAmounts(user3.address)).eq(expandDecimals(491, 17))
-    expect(await feeNlpTracker.depositBalances(user3.address, nlp.address)).eq(expandDecimals(491, 17))
+    expect(await feeSlpTracker.stakedAmounts(user3.address)).eq(expandDecimals(491, 17))
+    expect(await feeSlpTracker.depositBalances(user3.address, slp.address)).eq(expandDecimals(491, 17))
 
-    expect(await stakedNlpTracker.stakedAmounts(user3.address)).eq(expandDecimals(491, 17))
-    expect(await stakedNlpTracker.depositBalances(user3.address, feeNlpTracker.address)).eq(expandDecimals(491, 17))
+    expect(await stakedSlpTracker.stakedAmounts(user3.address)).eq(expandDecimals(491, 17))
+    expect(await stakedSlpTracker.depositBalances(user3.address, feeSlpTracker.address)).eq(expandDecimals(491, 17))
 
-    await expect(stakedNlp.connect(user3).transfer(user1.address, expandDecimals(492, 17)))
+    await expect(stakedSlp.connect(user3).transfer(user1.address, expandDecimals(492, 17)))
       .to.be.revertedWith("RewardTracker: _amount exceeds stakedAmount")
 
     expect(await bnb.balanceOf(user1.address)).eq(0)
 
-    await rewardRouter.connect(user1).unstakeAndRedeemNlp(
+    await rewardRouter.connect(user1).unstakeAndRedeemSlp(
       bnb.address,
       expandDecimals(2500, 17),
       "830000000000000000", // 0.83
@@ -1630,11 +1630,11 @@ describe("RewardRouterV2", function () {
 
     expect(await bnb.balanceOf(user1.address)).eq("830833333333333333")
 
-    await usdg.addVault(nlpManager.address)
+    await usdg.addVault(slpManager.address)
 
     expect(await bnb.balanceOf(user3.address)).eq("0")
 
-    await rewardRouter.connect(user3).unstakeAndRedeemNlp(
+    await rewardRouter.connect(user3).unstakeAndRedeemSlp(
       bnb.address,
       expandDecimals(491, 17),
       "160000000000000000", // 0.16
@@ -1644,93 +1644,93 @@ describe("RewardRouterV2", function () {
     expect(await bnb.balanceOf(user3.address)).eq("163175666666666666")
   })
 
-  it("FeeNlp", async () => {
-    await eth.mint(feeNlpDistributor.address, expandDecimals(100, 18))
-    await feeNlpDistributor.setTokensPerInterval("41335970000000") // 0.00004133597 ETH per second
+  it("FeeSlp", async () => {
+    await eth.mint(feeSlpDistributor.address, expandDecimals(100, 18))
+    await feeSlpDistributor.setTokensPerInterval("41335970000000") // 0.00004133597 ETH per second
 
     await bnb.mint(user1.address, expandDecimals(1, 18))
-    await bnb.connect(user1).approve(nlpManager.address, expandDecimals(1, 18))
-    await rewardRouter.connect(user1).mintAndStakeNlp(
+    await bnb.connect(user1).approve(slpManager.address, expandDecimals(1, 18))
+    await rewardRouter.connect(user1).mintAndStakeSlp(
       bnb.address,
       expandDecimals(1, 18),
       expandDecimals(299, 18),
       expandDecimals(299, 18)
     )
 
-    expect(await feeNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
-    expect(await feeNlpTracker.depositBalances(user1.address, nlp.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.depositBalances(user1.address, slp.address)).eq(expandDecimals(2991, 17))
 
-    expect(await stakedNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
-    expect(await stakedNlpTracker.depositBalances(user1.address, feeNlpTracker.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.depositBalances(user1.address, feeSlpTracker.address)).eq(expandDecimals(2991, 17))
 
-    const nlpBalance = await deployContract("NlpBalance", [nlpManager.address, stakedNlpTracker.address])
+    const slpBalance = await deployContract("SlpBalance", [slpManager.address, stakedSlpTracker.address])
 
-    await expect(nlpBalance.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
-      .to.be.revertedWith("NlpBalance: transfer amount exceeds allowance")
+    await expect(slpBalance.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
+      .to.be.revertedWith("SlpBalance: transfer amount exceeds allowance")
 
-    await nlpBalance.connect(user1).approve(user2.address, expandDecimals(2991, 17))
+    await slpBalance.connect(user1).approve(user2.address, expandDecimals(2991, 17))
 
-    await expect(nlpBalance.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
-      .to.be.revertedWith("NlpBalance: cooldown duration not yet passed")
+    await expect(slpBalance.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
+      .to.be.revertedWith("SlpBalance: cooldown duration not yet passed")
 
     await increaseTime(provider, 24 * 60 * 60 + 10)
     await mineBlock(provider)
 
-    await expect(nlpBalance.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
+    await expect(slpBalance.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17)))
       .to.be.revertedWith("RewardTracker: transfer amount exceeds allowance")
 
-    await timelock.signalSetHandler(stakedNlpTracker.address, nlpBalance.address, true)
+    await timelock.signalSetHandler(stakedSlpTracker.address, slpBalance.address, true)
     await increaseTime(provider, 20)
     await mineBlock(provider)
-    await timelock.setHandler(stakedNlpTracker.address, nlpBalance.address, true)
+    await timelock.setHandler(stakedSlpTracker.address, slpBalance.address, true)
 
-    expect(await feeNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
-    expect(await feeNlpTracker.depositBalances(user1.address, nlp.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.depositBalances(user1.address, slp.address)).eq(expandDecimals(2991, 17))
 
-    expect(await stakedNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
-    expect(await stakedNlpTracker.depositBalances(user1.address, feeNlpTracker.address)).eq(expandDecimals(2991, 17))
-    expect(await stakedNlpTracker.balanceOf(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.depositBalances(user1.address, feeSlpTracker.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.balanceOf(user1.address)).eq(expandDecimals(2991, 17))
 
-    expect(await feeNlpTracker.stakedAmounts(user3.address)).eq(0)
-    expect(await feeNlpTracker.depositBalances(user3.address, nlp.address)).eq(0)
+    expect(await feeSlpTracker.stakedAmounts(user3.address)).eq(0)
+    expect(await feeSlpTracker.depositBalances(user3.address, slp.address)).eq(0)
 
-    expect(await stakedNlpTracker.stakedAmounts(user3.address)).eq(0)
-    expect(await stakedNlpTracker.depositBalances(user3.address, feeNlpTracker.address)).eq(0)
-    expect(await stakedNlpTracker.balanceOf(user3.address)).eq(0)
+    expect(await stakedSlpTracker.stakedAmounts(user3.address)).eq(0)
+    expect(await stakedSlpTracker.depositBalances(user3.address, feeSlpTracker.address)).eq(0)
+    expect(await stakedSlpTracker.balanceOf(user3.address)).eq(0)
 
-    await nlpBalance.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17))
+    await slpBalance.connect(user2).transferFrom(user1.address, user3.address, expandDecimals(2991, 17))
 
-    expect(await feeNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
-    expect(await feeNlpTracker.depositBalances(user1.address, nlp.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await feeSlpTracker.depositBalances(user1.address, slp.address)).eq(expandDecimals(2991, 17))
 
-    expect(await stakedNlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
-    expect(await stakedNlpTracker.depositBalances(user1.address, feeNlpTracker.address)).eq(expandDecimals(2991, 17))
-    expect(await stakedNlpTracker.balanceOf(user1.address)).eq(0)
+    expect(await stakedSlpTracker.stakedAmounts(user1.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.depositBalances(user1.address, feeSlpTracker.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.balanceOf(user1.address)).eq(0)
 
-    expect(await feeNlpTracker.stakedAmounts(user3.address)).eq(0)
-    expect(await feeNlpTracker.depositBalances(user3.address, nlp.address)).eq(0)
+    expect(await feeSlpTracker.stakedAmounts(user3.address)).eq(0)
+    expect(await feeSlpTracker.depositBalances(user3.address, slp.address)).eq(0)
 
-    expect(await stakedNlpTracker.stakedAmounts(user3.address)).eq(0)
-    expect(await stakedNlpTracker.depositBalances(user3.address, feeNlpTracker.address)).eq(0)
-    expect(await stakedNlpTracker.balanceOf(user3.address)).eq(expandDecimals(2991, 17))
+    expect(await stakedSlpTracker.stakedAmounts(user3.address)).eq(0)
+    expect(await stakedSlpTracker.depositBalances(user3.address, feeSlpTracker.address)).eq(0)
+    expect(await stakedSlpTracker.balanceOf(user3.address)).eq(expandDecimals(2991, 17))
 
-    await expect(rewardRouter.connect(user1).unstakeAndRedeemNlp(
+    await expect(rewardRouter.connect(user1).unstakeAndRedeemSlp(
       bnb.address,
       expandDecimals(2991, 17),
       "0",
       user1.address
     )).to.be.revertedWith("RewardTracker: burn amount exceeds balance")
 
-    await nlpBalance.connect(user3).approve(user2.address, expandDecimals(3000, 17))
+    await slpBalance.connect(user3).approve(user2.address, expandDecimals(3000, 17))
 
-    await expect(nlpBalance.connect(user2).transferFrom(user3.address, user1.address, expandDecimals(2992, 17)))
+    await expect(slpBalance.connect(user2).transferFrom(user3.address, user1.address, expandDecimals(2992, 17)))
       .to.be.revertedWith("RewardTracker: transfer amount exceeds balance")
 
-    await nlpBalance.connect(user2).transferFrom(user3.address, user1.address, expandDecimals(2991, 17))
+    await slpBalance.connect(user2).transferFrom(user3.address, user1.address, expandDecimals(2991, 17))
 
     expect(await bnb.balanceOf(user1.address)).eq(0)
 
-    await rewardRouter.connect(user1).unstakeAndRedeemNlp(
+    await rewardRouter.connect(user1).unstakeAndRedeemSlp(
       bnb.address,
       expandDecimals(2991, 17),
       "0",
@@ -1966,15 +1966,15 @@ describe("RewardRouterV2", function () {
       gmx.address,
       esGmx.address,
       bnGmx.address,
-      nlp.address,
+      slp.address,
       stakedGmxTracker.address,
       bonusGmxTracker.address,
       feeGmxTracker.address,
-      feeNlpTracker.address,
-      stakedNlpTracker.address,
-      nlpManager.address,
+      feeSlpTracker.address,
+      stakedSlpTracker.address,
+      slpManager.address,
       gmxVester.address,
-      nlpVester.address,
+      slpVester.address,
       govToken.address
     )
 
@@ -1984,10 +1984,10 @@ describe("RewardRouterV2", function () {
       stakedGmxTracker.address,
       bonusGmxTracker.address,
       feeGmxTracker.address,
-      stakedNlpTracker.address,
-      feeNlpTracker.address,
+      stakedSlpTracker.address,
+      feeSlpTracker.address,
       gmxVester.address,
-      nlpVester.address,
+      slpVester.address,
       esGmx.address,
       bnGmx.address,
       rewardRouterV2.address,
@@ -2007,10 +2007,10 @@ describe("RewardRouterV2", function () {
     expect(await stakedGmxTracker.gov()).eq(timelock.address)
     expect(await bonusGmxTracker.gov()).eq(timelock.address)
     expect(await feeGmxTracker.gov()).eq(timelock.address)
-    expect(await stakedNlpTracker.gov()).eq(timelock.address)
-    expect(await feeNlpTracker.gov()).eq(timelock.address)
+    expect(await stakedSlpTracker.gov()).eq(timelock.address)
+    expect(await feeSlpTracker.gov()).eq(timelock.address)
     expect(await gmxVester.gov()).eq(timelock.address)
-    expect(await nlpVester.gov()).eq(timelock.address)
+    expect(await slpVester.gov()).eq(timelock.address)
     expect(await esGmx.gov()).eq(timelock.address)
     expect(await bnGmx.gov()).eq(timelock.address)
 
@@ -2019,10 +2019,10 @@ describe("RewardRouterV2", function () {
     expect(await stakedGmxTracker.gov()).eq(timelock.address)
     expect(await bonusGmxTracker.gov()).eq(timelock.address)
     expect(await feeGmxTracker.gov()).eq(timelock.address)
-    expect(await stakedNlpTracker.gov()).eq(timelock.address)
-    expect(await feeNlpTracker.gov()).eq(timelock.address)
+    expect(await stakedSlpTracker.gov()).eq(timelock.address)
+    expect(await feeSlpTracker.gov()).eq(timelock.address)
     expect(await gmxVester.gov()).eq(timelock.address)
-    expect(await nlpVester.gov()).eq(timelock.address)
+    expect(await slpVester.gov()).eq(timelock.address)
     expect(await esGmx.gov()).eq(timelock.address)
     expect(await bnGmx.gov()).eq(timelock.address)
 

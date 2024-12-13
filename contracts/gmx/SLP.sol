@@ -4,11 +4,11 @@ pragma solidity 0.6.12;
 
 import "../tokens/MintableBaseToken.sol";
 
-contract NLP is MintableBaseToken {
-    constructor() public MintableBaseToken("NLX LP", "NLP", 0) {
+contract SLP is MintableBaseToken {
+    constructor() public MintableBaseToken("Satoshi Perps LP", "SLP", 0) {
     }
 
     function id() external pure returns (string memory _name) {
-        return "NLP";
+        return "SLP";
     }
 }

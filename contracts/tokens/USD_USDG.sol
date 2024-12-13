@@ -5,7 +5,7 @@ pragma solidity 0.6.12;
 import "./interfaces/IUSDG.sol";
 import "./YieldToken.sol";
 
-contract USDGUSD is YieldToken, IUSDG {
+contract USD_USDG is YieldToken, IUSDG {
 
     mapping (address => bool) public vaults;
 

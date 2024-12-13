@@ -24,8 +24,8 @@ describe("Vault.sellUSDG", function () {
   let distributor0
   let yieldTracker0
 
-  let nlpManager
-  let nlp
+  let slpManager
+  let slp
 
   beforeEach(async () => {
     bnb = await deployContract("Token", [])
@@ -57,8 +57,8 @@ describe("Vault.sellUSDG", function () {
     await vaultPriceFeed.setTokenConfig(btc.address, btcPriceFeed.address, 8, false)
     await vaultPriceFeed.setTokenConfig(dai.address, daiPriceFeed.address, 8, false)
 
-    nlp = await deployContract("NLP", [])
-    nlpManager = await deployContract("NlpManager", [vault.address, usdg.address, nlp.address, ethers.constants.AddressZero, 24 * 60 * 60])
+    slp = await deployContract("SLP", [])
+    slpManager = await deployContract("SlpManager", [vault.address, usdg.address, slp.address, ethers.constants.AddressZero, 24 * 60 * 60])
   })
 
   it("sellUSDG", async () => {
@@ -73,7 +73,7 @@ describe("Vault.sellUSDG", function () {
 
     await bnb.mint(user0.address, 100)
 
-    expect(await nlpManager.getAumInUsdg(true)).eq(0)
+    expect(await slpManager.getAumInUsdg(true)).eq(0)
     expect(await usdg.balanceOf(user0.address)).eq(0)
     expect(await usdg.balanceOf(user1.address)).eq(0)
     expect(await vault.feeReserves(bnb.address)).eq(0)
@@ -88,7 +88,7 @@ describe("Vault.sellUSDG", function () {
     expect(await vault.usdgAmounts(bnb.address)).eq(29700)
     expect(await vault.poolAmounts(bnb.address)).eq(100 - 1)
     expect(await bnb.balanceOf(user0.address)).eq(0)
-    expect(await nlpManager.getAumInUsdg(true)).eq(29700)
+    expect(await slpManager.getAumInUsdg(true)).eq(29700)
 
     await expect(vault.connect(user0).sellUSDG(bnb.address, user1.address))
       .to.be.revertedWith("Vault: invalid usdgAmount")
@@ -113,7 +113,7 @@ describe("Vault.sellUSDG", function () {
     expect(await vault.poolAmounts(bnb.address)).eq(100 - 1 - 50)
     expect(await bnb.balanceOf(user0.address)).eq(0)
     expect(await bnb.balanceOf(user1.address)).eq(50 - 1) // (15000 / 300) => 50
-    expect(await nlpManager.getAumInUsdg(true)).eq(29700 - 15000)
+    expect(await slpManager.getAumInUsdg(true)).eq(29700 - 15000)
   })
 
   it("sellUSDG after a price increase", async () => {
@@ -122,7 +122,7 @@ describe("Vault.sellUSDG", function () {
 
     await bnb.mint(user0.address, 100)
 
-    expect(await nlpManager.getAumInUsdg(true)).eq(0)
+    expect(await slpManager.getAumInUsdg(true)).eq(0)
     expect(await usdg.balanceOf(user0.address)).eq(0)
     expect(await usdg.balanceOf(user1.address)).eq(0)
     expect(await vault.feeReserves(bnb.address)).eq(0)
@@ -139,13 +139,13 @@ describe("Vault.sellUSDG", function () {
     expect(await vault.usdgAmounts(bnb.address)).eq(29700)
     expect(await vault.poolAmounts(bnb.address)).eq(100 - 1)
     expect(await bnb.balanceOf(user0.address)).eq(0)
-    expect(await nlpManager.getAumInUsdg(true)).eq(29700)
+    expect(await slpManager.getAumInUsdg(true)).eq(29700)
 
     await bnbPriceFeed.setLatestAnswer(toChainlinkPrice(400))
     await bnbPriceFeed.setLatestAnswer(toChainlinkPrice(600))
     await bnbPriceFeed.setLatestAnswer(toChainlinkPrice(500))
 
-    expect(await nlpManager.getAumInUsdg(false)).eq(39600)
+    expect(await slpManager.getAumInUsdg(false)).eq(39600)
 
     await usdg.connect(user0).transfer(vault.address, 15000)
     await vault.connect(user0).sellUSDG(bnb.address, user1.address)
@@ -157,7 +157,7 @@ describe("Vault.sellUSDG", function () {
     expect(await vault.poolAmounts(bnb.address)).eq(100 - 1 - 25)
     expect(await bnb.balanceOf(user0.address)).eq(0)
     expect(await bnb.balanceOf(user1.address)).eq(25 - 1) // (15000 / 600) => 25
-    expect(await nlpManager.getAumInUsdg(false)).eq(29600)
+    expect(await slpManager.getAumInUsdg(false)).eq(29600)
   })
 
   it("sellUSDG redeem based on price", async () => {
@@ -173,10 +173,10 @@ describe("Vault.sellUSDG", function () {
     expect(await vault.poolAmounts(btc.address)).eq(0)
     expect(await btc.balanceOf(user0.address)).eq(expandDecimals(2, 8))
 
-    expect(await nlpManager.getAumInUsdg(true)).eq(0)
+    expect(await slpManager.getAumInUsdg(true)).eq(0)
     await btc.connect(user0).transfer(vault.address, expandDecimals(2, 8))
     await vault.connect(user0).buyUSDG(btc.address, user0.address)
-    expect(await nlpManager.getAumInUsdg(true)).eq("119640000000000000000000") // 119,640
+    expect(await slpManager.getAumInUsdg(true)).eq("119640000000000000000000") // 119,640
 
     expect(await usdg.balanceOf(user0.address)).eq("119640000000000000000000") // 119,640
     expect(await usdg.balanceOf(user1.address)).eq(0)
@@ -190,14 +190,14 @@ describe("Vault.sellUSDG", function () {
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(80000))
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(83000))
 
-    expect(await nlpManager.getAumInUsdg(false)).eq(expandDecimals(159520, 18)) // 199400000 / (10 ** 8) * 80,000
+    expect(await slpManager.getAumInUsdg(false)).eq(expandDecimals(159520, 18)) // 199400000 / (10 ** 8) * 80,000
     await usdg.connect(user0).transfer(vault.address, expandDecimals(10000, 18))
     await vault.connect(user0).sellUSDG(btc.address, user1.address)
 
     expect(await btc.balanceOf(user1.address)).eq("12012047") // 0.12012047 BTC, 0.12012047 * 83000 => 9969.999
     expect(await vault.feeReserves(btc.address)).eq("636145") // 0.00636145
     expect(await vault.poolAmounts(btc.address)).eq("187351808") // 199400000-(636145-600000)-12012047 => 187351808
-    expect(await nlpManager.getAumInUsdg(false)).eq("149881446400000000000000") // 149881.4464, 187351808 / (10 ** 8) * 80,000
+    expect(await slpManager.getAumInUsdg(false)).eq("149881446400000000000000") // 149881.4464, 187351808 / (10 ** 8) * 80,000
   })
 
   it("sellUSDG for stableTokens", async () => {
@@ -224,12 +224,12 @@ describe("Vault.sellUSDG", function () {
     expect(await vault.usdgAmounts(dai.address)).eq(0)
     expect(await vault.poolAmounts(dai.address)).eq(0)
     expect(await dai.balanceOf(user0.address)).eq(expandDecimals(10000, 18))
-    expect(await nlpManager.getAumInUsdg(true)).eq(0)
+    expect(await slpManager.getAumInUsdg(true)).eq(0)
 
     await dai.connect(user0).transfer(vault.address, expandDecimals(10000, 18))
     await vault.connect(user0).buyUSDG(dai.address, user0.address)
 
-    expect(await nlpManager.getAumInUsdg(true)).eq(expandDecimals(9996, 18))
+    expect(await slpManager.getAumInUsdg(true)).eq(expandDecimals(9996, 18))
     expect(await usdg.balanceOf(user0.address)).eq(expandDecimals(9996, 18))
     expect(await usdg.balanceOf(user1.address)).eq(0)
     expect(await vault.feeReserves(dai.address)).eq(expandDecimals(4, 18))
@@ -248,7 +248,7 @@ describe("Vault.sellUSDG", function () {
     await btc.connect(user0).transfer(vault.address, expandDecimals(1, 8))
     await vault.connect(user0).swap(btc.address, dai.address, user2.address)
 
-    expect(await nlpManager.getAumInUsdg(true)).eq(expandDecimals(9996, 18))
+    expect(await slpManager.getAumInUsdg(true)).eq(expandDecimals(9996, 18))
 
     expect(await vault.feeReserves(dai.address)).eq(expandDecimals(19, 18))
     expect(await vault.usdgAmounts(dai.address)).eq(expandDecimals(4996, 18))
@@ -272,6 +272,6 @@ describe("Vault.sellUSDG", function () {
     expect(await vault.usdgAmounts(dai.address)).eq(expandDecimals(996, 18))
     expect(await vault.poolAmounts(dai.address)).eq(expandDecimals(996, 18))
 
-    expect(await nlpManager.getAumInUsdg(true)).eq(expandDecimals(5996, 18))
+    expect(await slpManager.getAumInUsdg(true)).eq(expandDecimals(5996, 18))
   })
 })

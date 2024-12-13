@@ -3,12 +3,31 @@ const { expandDecimals } = require("../../test/shared/utilities")
 
 async function main() {
   const addresses = {}
-  addresses.aBTC = (await callWithRetries(deployContract, ["FaucetToken", ["Bitcoin", "aBTC", 18, expandDecimals(1, 18)]])).address
-  addresses.COREBTC = (await callWithRetries(deployContract, ["FaucetToken", ["Bitcoin", "COREBTC", 8, expandDecimals(1, 8)]])).address
-  addresses.solvBTC = (await callWithRetries(deployContract, ["FaucetToken", ["Bitcoin", "solvBTC", 18, expandDecimals(1, 18)]])).address
-  addresses.USDT = (await callWithRetries(deployContract, ["FaucetToken", ["Tether", "USDT", 6, expandDecimals(1000, 6)]])).address
-  addresses.USDC = (await callWithRetries(deployContract, ["FaucetToken", ["USDC Coin", "USDC", 6, expandDecimals(1000, 6)]])).address
-  addresses.USDE = (await callWithRetries(deployContract, ["FaucetToken", ["USDE Coin", "USDE", 6, expandDecimals(1000, 6)]])).address
+
+  // SYNTHETICS
+  addresses["BTC"] = (await callWithRetries(deployContract, ["SyntheticToken", ["Bitcoin", "BTC"]])).address
+  addresses["GOLD"] = (await callWithRetries(deployContract, ["SyntheticToken", ["GOLD", "GOLD"]])).address
+  addresses["OIL"] = (await callWithRetries(deployContract, ["SyntheticToken", ["OIL", "OIL"]])).address
+  addresses["CORE"] = (await callWithRetries(deployContract, ["SyntheticToken", ["CORE", "CORE"]])).address
+  addresses["ETH"] = (await callWithRetries(deployContract, ["SyntheticToken", ["ETH", "ETH"]])).address
+  addresses["SOL"] = (await callWithRetries(deployContract, ["SyntheticToken", ["SOL", "SOL"]])).address
+  addresses["BNB"] = (await callWithRetries(deployContract, ["SyntheticToken", ["BNB", "BNB"]])).address
+  addresses["DOGE"] = (await callWithRetries(deployContract, ["SyntheticToken", ["DOGE", "DOGE"]])).address
+  addresses["TRX"] = (await callWithRetries(deployContract, ["SyntheticToken", ["TRX", "TRX"]])).address
+  addresses["SUI"] = (await callWithRetries(deployContract, ["SyntheticToken", ["SUI", "SUI"]])).address
+  addresses["AVAX"] = (await callWithRetries(deployContract, ["SyntheticToken", ["AVAX", "AVAX"]])).address
+  addresses["XRP"] = (await callWithRetries(deployContract, ["SyntheticToken", ["XRP", "XRP"]])).address
+  addresses["SHIB"] = (await callWithRetries(deployContract, ["SyntheticToken", ["SHIB", "SHIB"]])).address
+  addresses["BONK"] = (await callWithRetries(deployContract, ["SyntheticToken", ["BONK", "BONK"]])).address
+  addresses["FLOKI"] = (await callWithRetries(deployContract, ["SyntheticToken", ["FLOKI", "FLOKI"]])).address
+  addresses["ENA"] = (await callWithRetries(deployContract, ["SyntheticToken", ["ENA", "ENA"]])).address
+  addresses["LINK"] = (await callWithRetries(deployContract, ["SyntheticToken", ["LINK", "LINK"]])).address
+  addresses["POPCAT"] = (await callWithRetries(deployContract, ["SyntheticToken", ["POPCAT", "POPCAT"]])).address
+
+  // COLLATERAL TOKENS
+  addresses["SolvBTC.CORE"] = (await callWithRetries(deployContract, ["FaucetToken", ["SolvBTC.CORE", "SolvBTC.CORE", 18, expandDecimals(1, 18)]])).address
+
+  // Native Token
   addresses.WCORE = (await callWithRetries(deployContract, ["WCORE", []])).address
 
   writeTmpAddresses(addresses)

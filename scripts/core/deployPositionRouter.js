@@ -8,23 +8,19 @@ const tokens = require('./tokens')[network];
 
 
 
+// ------------BTC MARKETS
+const vault = await contractAt("Vault", "0xadFfd30C98181d5D647EaF0a969421f0f73d9028")
+const shortsTracker = await contractAt("ShortsTracker", "0x43A17FB99C044150a98fb159C2D58Ce8fBC02153")
+const positionKeepers = [
+  "0x77B6935623878F8f9dce8E1A28d4A8A7E89A37b6",
+  "0x0666992F2D2fD045e9b876B5490F5470452aFBD3",
+  "0x73CbB4801bFE4AD34d8B0Fd3dab8bE0E9e9d2579"
+]
 
 async function main() {
 
   const wallet = (await ethers.getSigners())[0]
 
-
-  // // ------------BTC MARKETS
-  // const vault = await contractAt("Vault", "0xB3992C9eaE205CC5AD8c95F79131d429287aE1e7")
-  // const shortsTracker = await contractAt("ShortsTracker", "0xEE4e97f7Fb8c15e3B5F5755202e3b8f92dC6173a")
-
-  // // ------------CORE MARKETS
-  // const vault = await contractAt("Vault", "0x026a7149B3591b9811B5500041ba143a74c71344")
-  // const shortsTracker = await contractAt("ShortsTracker", "0x83C1699a78C9071AFc2ad1d2c1C4b0013Dc073ad")
-
-  // ------------USD MARKETS
-  const vault = await contractAt("Vault", "0x4204d09EC45e305Ecf06dC872B928e345F664678")
-  const shortsTracker = await contractAt("ShortsTracker", "0x000E4E3AdBB355E8ffb14f4dA5c5b021FAE2B0BC")
 
 
 
@@ -61,28 +57,24 @@ async function main() {
 
   await sendTxn(positionRouter.setDelayValues(0, 180, 30 * 60), "positionRouter.setDelayValues")
   await sendTxn(positionRouter.setAdmin(wallet.address), "positionRouter.setAdmin")
-  await sendTxn(positionRouter.setGov(await vault.gov()), "positionRouter.setGov")
-
-  console.log("vault gov: " + await vault.gov());
-  const vaultTimelock = await contractAt("Timelock", await vault.gov())
-
-  await sendTxn(vaultTimelock.setContractHandler(positionRouter.address, true), "positionRouter.setContractHandler")
+  for (const positionKeeper in positionKeepers){
+    await sendTxn(positionRouter.setPositionKeeper(positionKeeper), "positionRouter.setPositionKeeper")
+  }
 
 
   // deploy shortsTrackerTimelock
   const buffer = 0 // 0 seconds
   const updateDelay = 300 // 300 seconds, 5 minutes
   const maxAveragePriceChange = 20 // 0.2%
-  const shortsTrackerTimelock = await deployContract("ShortsTrackerTimelock", [wallet.address, buffer, updateDelay, maxAveragePriceChange])
+  const shortsTrackerTimelock = await deployContract("ShortsTrackerTimelock", [wallet.address, buffer, updateDelay, maxAveragePriceChange]) 
 
-  await sendTxn(shortsTracker.setGov(shortsTrackerTimelock.address), "shortsTracker.setGov")
-  await sendTxn(referralStorage.setGov(await vault.gov()), "referralStorage.setGov")
+  await sendTxn(shortsTracker.setGov(shortsTrackerTimelock.address), "shortsTracker.setGov") 
 
   const addresses = {
-    referralStorageUsd: referralStorage.address,
-    positionUtilsUsd: positionUtils.address,
-    positionRouterUsd: positionRouter.address,
-    shortsTrackerTimelockUsd: shortsTrackerTimelock.address,
+    referralStorageBTC: referralStorage.address,
+    positionUtilsBTC: positionUtils.address,
+    positionRouterBTC: positionRouter.address,
+    shortsTrackerTimelockBTC: shortsTrackerTimelock.address, 
   }
 
   writeTmpAddresses(addresses)

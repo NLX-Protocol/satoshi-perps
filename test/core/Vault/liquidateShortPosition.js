@@ -12,9 +12,9 @@ describe("Vault.liquidateShortPosition", function () {
   const provider = waffle.provider
   const [wallet, user0, user1, user2, user3] = provider.getWallets()
   let vault
-  let nlpManager
+  let slpManager
   let vaultPriceFeed
-  let nlp
+  let slp
   let usdg
   let router
   let bnb
@@ -42,13 +42,13 @@ describe("Vault.liquidateShortPosition", function () {
     solPriceFeed = await deployContract("PriceFeed", [])
 
     vault = await deployContract("Vault", [])
-    nlp = await deployContract("NLP", [])
+    slp = await deployContract("SLP", [])
     usdg = await deployContract("USDG", [vault.address])
     router = await deployContract("Router", [vault.address, usdg.address, bnb.address])
     vaultPriceFeed = await deployContract("VaultPriceFeed", [])
 
     await initVault(vault, router, usdg, vaultPriceFeed)
-    nlpManager = await deployContract("NlpManager", [vault.address, usdg.address, nlp.address, ethers.constants.AddressZero, 24 * 60 * 60])
+    slpManager = await deployContract("SlpManager", [vault.address, usdg.address, slp.address, ethers.constants.AddressZero, 24 * 60 * 60])
 
     distributor0 = await deployContract("TimeDistributor", [])
     yieldTracker0 = await deployContract("YieldTracker", [usdg.address])
@@ -95,7 +95,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(0)
     expect(await vault.globalShortAveragePrices(btc.address)).eq(0)
-    expect(await nlpManager.getAumInUsdg(true)).eq(0)
+    expect(await slpManager.getAumInUsdg(true)).eq(0)
 
     await dai.mint(user0.address, expandDecimals(1000, 18))
     await dai.connect(user0).transfer(vault.address, expandDecimals(100, 18))
@@ -113,7 +113,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(toUsd(90))
     expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(40000))
-    expect(await nlpManager.getAumInUsdg(false)).eq("99960000000000000000") // 99.96
+    expect(await slpManager.getAumInUsdg(false)).eq("99960000000000000000") // 99.96
 
     expect((await vault.validateLiquidation(user0.address, dai.address, btc.address, false, false))[0]).eq(0)
 
@@ -172,7 +172,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(0)
     expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(40000))
-    expect(await nlpManager.getAumInUsdg(true)).eq("104780000000000000000") // 104.78
+    expect(await slpManager.getAumInUsdg(true)).eq("104780000000000000000") // 104.78
 
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(50000))
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(50000))
@@ -183,7 +183,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(toUsd(100))
     expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(50000))
-    expect(await nlpManager.getAumInUsdg(true)).eq("104780000000000000000") // 104.78
+    expect(await slpManager.getAumInUsdg(true)).eq("104780000000000000000") // 104.78
 
     position = await vault.getPosition(user0.address, dai.address, btc.address, false)
     await validateVaultBalance(expect, vault, dai, position[1].mul(expandDecimals(10, 18)).div(expandDecimals(10, 30)))
@@ -217,7 +217,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(0)
     expect(await vault.globalShortAveragePrices(btc.address)).eq(0)
-    expect(await nlpManager.getAumInUsdg(true)).eq(0)
+    expect(await slpManager.getAumInUsdg(true)).eq(0)
 
     await sol.mint(user0.address, expandDecimals(1000, 18))
     await sol.connect(user0).transfer(vault.address, expandDecimals(100, 18))
@@ -235,7 +235,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(toUsd(900))
     expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(40000))
-    expect(await nlpManager.getAumInUsdg(false)).eq("14094000000000000000000") // 14094
+    expect(await slpManager.getAumInUsdg(false)).eq("14094000000000000000000") // 14094
 
     expect((await vault.validateLiquidation(user0.address, sol.address, btc.address, false, false))[0]).eq(0)
 
@@ -296,7 +296,7 @@ describe("Vault.liquidateShortPosition", function () {
   
       expect(await vault.globalShortSizes(btc.address)).eq(0)
       expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(40000))
-      expect(await nlpManager.getAumInUsdg(true)).eq("15737200000000000000050")
+      expect(await slpManager.getAumInUsdg(true)).eq("15737200000000000000050")
   
       await btcPriceFeed.setLatestAnswer(toChainlinkPrice(50000))
       await btcPriceFeed.setLatestAnswer(toChainlinkPrice(50000))
@@ -307,7 +307,7 @@ describe("Vault.liquidateShortPosition", function () {
   
       expect(await vault.globalShortSizes(btc.address)).eq(toUsd(10000))
       expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(50000))
-      expect(await nlpManager.getAumInUsdg(true)).eq("5737200000000000000150") // 104.78
+      expect(await slpManager.getAumInUsdg(true)).eq("5737200000000000000150") // 104.78
   
       position = await vault.getPosition(user0.address, sol.address, btc.address, false)
       // await validateVaultBalance(expect, vault, sol)
@@ -344,7 +344,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(0)
     expect(await vault.globalShortAveragePrices(btc.address)).eq(0)
-    expect(await nlpManager.getAumInUsdg(true)).eq(0)
+    expect(await slpManager.getAumInUsdg(true)).eq(0)
 
     await dai.mint(user0.address, expandDecimals(1001, 18))
     await dai.connect(user0).transfer(vault.address, expandDecimals(1001, 18))
@@ -363,7 +363,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(toUsd(1000))
     expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(40000))
-    expect(await nlpManager.getAumInUsdg(false)).eq("1000599600000000000000") // 1000.5996
+    expect(await slpManager.getAumInUsdg(false)).eq("1000599600000000000000") // 1000.5996
 
     expect((await vault.validateLiquidation(user0.address, dai.address, btc.address, false, false))[0]).eq(0)
 
@@ -420,7 +420,7 @@ describe("Vault.liquidateShortPosition", function () {
     expect(await dai.balanceOf(user2.address)).eq(0)
     expect(await vault.globalShortSizes(btc.address)).eq(toUsd(1000))
     expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(40000))
-    expect(await nlpManager.getAumInUsdg(true)).eq("1090599600000000000000") // 1090.5996
+    expect(await slpManager.getAumInUsdg(true)).eq("1090599600000000000000") // 1090.5996
 
     const tx = await vault.liquidatePosition(user0.address, dai.address, btc.address, false, user2.address)
     await reportGasUsed(provider, tx, "liquidatePosition gas used")
@@ -443,7 +443,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(0)
     expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(40000))
-    expect(await nlpManager.getAumInUsdg(true)).eq("1090599600000000000000") // 1090.5996
+    expect(await slpManager.getAumInUsdg(true)).eq("1090599600000000000000") // 1090.5996
 
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(50000))
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(50000))
@@ -455,7 +455,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(toUsd(100))
     expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(50000))
-    expect(await nlpManager.getAumInUsdg(true)).eq("1090599600000000000000") // 1090.5996
+    expect(await slpManager.getAumInUsdg(true)).eq("1090599600000000000000") // 1090.5996
 
     position = await vault.getPosition(user0.address, dai.address, btc.address, false)
     await validateVaultBalance(expect, vault, dai, position[1].mul(expandDecimals(10, 18)).div(expandDecimals(10, 30)))
@@ -491,7 +491,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(0)
     expect(await vault.globalShortAveragePrices(btc.address)).eq(0)
-    expect(await nlpManager.getAumInUsdg(true)).eq(0)
+    expect(await slpManager.getAumInUsdg(true)).eq(0)
 
     await dai.mint(user0.address, expandDecimals(1001, 18))
     await dai.connect(user0).transfer(vault.address, expandDecimals(1001, 18))
@@ -510,7 +510,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(toUsd(1000))
     expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(40000))
-    expect(await nlpManager.getAumInUsdg(false)).eq("1000599600000000000000") // 1000.5996
+    expect(await slpManager.getAumInUsdg(false)).eq("1000599600000000000000") // 1000.5996
 
     expect((await vault.validateLiquidation(user0.address, dai.address, btc.address, false, false))[0]).eq(0)
 
@@ -559,7 +559,7 @@ describe("Vault.liquidateShortPosition", function () {
     expect(await dai.balanceOf(user2.address)).eq(0)
     expect(await vault.globalShortSizes(btc.address)).eq(toUsd(1000))
     expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(40000))
-    expect(await nlpManager.getAumInUsdg(true)).eq("1125599600000000000000") // 1125.5996
+    expect(await slpManager.getAumInUsdg(true)).eq("1125599600000000000000") // 1125.5996
 
     const tx = await vault.liquidatePosition(user0.address, dai.address, btc.address, false, user2.address)
     await reportGasUsed(provider, tx, "liquidatePosition gas used")
@@ -582,7 +582,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(0)
     expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(40000))
-    expect(await nlpManager.getAumInUsdg(true)).eq("1093599600000000000000") // 1093.5996
+    expect(await slpManager.getAumInUsdg(true)).eq("1093599600000000000000") // 1093.5996
 
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(50000))
     await btcPriceFeed.setLatestAnswer(toChainlinkPrice(50000))
@@ -594,7 +594,7 @@ describe("Vault.liquidateShortPosition", function () {
 
     expect(await vault.globalShortSizes(btc.address)).eq(toUsd(100))
     expect(await vault.globalShortAveragePrices(btc.address)).eq(toNormalizedPrice(50000))
-    expect(await nlpManager.getAumInUsdg(true)).eq("1093599600000000000000") // 1093.5996
+    expect(await slpManager.getAumInUsdg(true)).eq("1093599600000000000000") // 1093.5996
 
     position = await vault.getPosition(user0.address, dai.address, btc.address, false)
     await validateVaultBalance(expect, vault, dai, position[1].mul(expandDecimals(10, 18)).div(expandDecimals(10, 30)))

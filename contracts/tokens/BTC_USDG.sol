@@ -5,16 +5,16 @@ pragma solidity 0.6.12;
 import "./interfaces/IUSDG.sol";
 import "./YieldToken.sol";
 
-contract USDGCORE is YieldToken, IUSDG {
+contract BTC_USDG is YieldToken, IUSDG {
 
     mapping (address => bool) public vaults;
 
     modifier onlyVault() {
-        require(vaults[msg.sender], "USDG-CORE: forbidden");
+        require(vaults[msg.sender], "BTC-USDG: forbidden");
         _;
     }
 
-    constructor(address _vault) public YieldToken("CORE USD Gambit", "USDG-CORE", 0) {
+    constructor(address _vault) public YieldToken("BTC USD Gambit", "BTC-USDG", 0) {
         vaults[_vault] = true;
     }
 

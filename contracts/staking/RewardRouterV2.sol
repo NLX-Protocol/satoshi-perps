@@ -13,7 +13,7 @@ import "./interfaces/IRewardRouterV2.sol";
 import "./interfaces/IVester.sol";
 import "../tokens/interfaces/IMintable.sol";
 import "../tokens/interfaces/IWETH.sol";
-import "../core/interfaces/INlpManager.sol";
+import "../core/interfaces/ISlpManager.sol";
 import "../access/Governable.sol";
 
 contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
@@ -37,19 +37,19 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
     address public esGmx;
     address public bnGmx;
 
-    address public nlp; 
+    address public slp; 
 
     address public stakedGmxTracker;
     address public bonusGmxTracker;
     address public feeGmxTracker;
 
-    address public override stakedNlpTracker;
-    address public override feeNlpTracker;
+    address public override stakedSlpTracker;
+    address public override feeSlpTracker;
 
-    address public nlpManager;
+    address public slpManager;
 
     address public gmxVester;
-    address public nlpVester;
+    address public slpVester;
 
     uint256 public maxBoostBasisPoints;
     bool public inStrictTransferMode;
@@ -62,8 +62,8 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
     event StakeGmx(address account, address token, uint256 amount);
     event UnstakeGmx(address account, address token, uint256 amount);
 
-    event StakeNlp(address account, uint256 amount);
-    event UnstakeNlp(address account, uint256 amount);
+    event StakeSlp(address account, uint256 amount);
+    event UnstakeSlp(address account, uint256 amount);
 
     receive() external payable {
         require(msg.sender == weth, "Router: invalid sender");
@@ -74,15 +74,15 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
         address _gmx,
         address _esGmx,
         address _bnGmx,
-        address _nlp,
+        address _slp,
         address _stakedGmxTracker,
         address _bonusGmxTracker,
         address _feeGmxTracker,
-        address _feeNlpTracker,
-        address _stakedNlpTracker,
-        address _nlpManager,
+        address _feeSlpTracker,
+        address _stakedSlpTracker,
+        address _slpManager,
         address _gmxVester,
-        address _nlpVester,
+        address _slpVester,
         address _govToken
     ) external onlyGov {
         require(!isInitialized, "already initialized");
@@ -94,19 +94,19 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
         esGmx = _esGmx;
         bnGmx = _bnGmx;
 
-        nlp = _nlp;
+        slp = _slp;
 
         stakedGmxTracker = _stakedGmxTracker;
         bonusGmxTracker = _bonusGmxTracker;
         feeGmxTracker = _feeGmxTracker;
 
-        feeNlpTracker = _feeNlpTracker;
-        stakedNlpTracker = _stakedNlpTracker;
+        feeSlpTracker = _feeSlpTracker;
+        stakedSlpTracker = _stakedSlpTracker;
 
-        nlpManager = _nlpManager;
+        slpManager = _slpManager;
 
         gmxVester = _gmxVester;
-        nlpVester = _nlpVester;
+        slpVester = _slpVester;
 
         govToken = _govToken;
     }
@@ -155,62 +155,62 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
         _unstakeGmx(msg.sender, esGmx, _amount, true);
     }
 
-    function mintAndStakeNlp(address _token, uint256 _amount, uint256 _minUsdg, uint256 _minNlp) external nonReentrant returns (uint256) {
+    function mintAndStakeSlp(address _token, uint256 _amount, uint256 _minUsdg, uint256 _minSlp) external nonReentrant returns (uint256) {
         require(_amount > 0, "invalid _amount");
 
         address account = msg.sender;
-        uint256 nlpAmount = INlpManager(nlpManager).addLiquidityForAccount(account, account, _token, _amount, _minUsdg, _minNlp);
-        IRewardTracker(feeNlpTracker).stakeForAccount(account, account, nlp, nlpAmount);
-        IRewardTracker(stakedNlpTracker).stakeForAccount(account, account, feeNlpTracker, nlpAmount);
+        uint256 slpAmount = ISlpManager(slpManager).addLiquidityForAccount(account, account, _token, _amount, _minUsdg, _minSlp);
+        IRewardTracker(feeSlpTracker).stakeForAccount(account, account, slp, slpAmount);
+        IRewardTracker(stakedSlpTracker).stakeForAccount(account, account, feeSlpTracker, slpAmount);
 
-        emit StakeNlp(account, nlpAmount);
+        emit StakeSlp(account, slpAmount);
 
-        return nlpAmount;
+        return slpAmount;
     }
 
-    function mintAndStakeNlpETH(uint256 _minUsdg, uint256 _minNlp) external payable nonReentrant returns (uint256) {
+    function mintAndStakeSlpETH(uint256 _minUsdg, uint256 _minSlp) external payable nonReentrant returns (uint256) {
         require(msg.value > 0, "invalid msg.value");
 
         IWETH(weth).deposit{value: msg.value}();
-        IERC20(weth).approve(nlpManager, msg.value);
+        IERC20(weth).approve(slpManager, msg.value);
 
         address account = msg.sender;
-        uint256 nlpAmount = INlpManager(nlpManager).addLiquidityForAccount(address(this), account, weth, msg.value, _minUsdg, _minNlp);
+        uint256 slpAmount = ISlpManager(slpManager).addLiquidityForAccount(address(this), account, weth, msg.value, _minUsdg, _minSlp);
 
-        IRewardTracker(feeNlpTracker).stakeForAccount(account, account, nlp, nlpAmount);
-        IRewardTracker(stakedNlpTracker).stakeForAccount(account, account, feeNlpTracker, nlpAmount);
+        IRewardTracker(feeSlpTracker).stakeForAccount(account, account, slp, slpAmount);
+        IRewardTracker(stakedSlpTracker).stakeForAccount(account, account, feeSlpTracker, slpAmount);
 
-        emit StakeNlp(account, nlpAmount);
+        emit StakeSlp(account, slpAmount);
 
-        return nlpAmount;
+        return slpAmount;
     }
 
-    function unstakeAndRedeemNlp(address _tokenOut, uint256 _nlpAmount, uint256 _minOut, address _receiver) external nonReentrant returns (uint256) {
-        require(_nlpAmount > 0, "invalid _nlpAmount");
+    function unstakeAndRedeemSlp(address _tokenOut, uint256 _slpAmount, uint256 _minOut, address _receiver) external nonReentrant returns (uint256) {
+        require(_slpAmount > 0, "invalid _slpAmount");
 
         address account = msg.sender;
-        IRewardTracker(stakedNlpTracker).unstakeForAccount(account, feeNlpTracker, _nlpAmount, account);
-        IRewardTracker(feeNlpTracker).unstakeForAccount(account, nlp, _nlpAmount, account);
-        uint256 amountOut = INlpManager(nlpManager).removeLiquidityForAccount(account, _tokenOut, _nlpAmount, _minOut, _receiver);
+        IRewardTracker(stakedSlpTracker).unstakeForAccount(account, feeSlpTracker, _slpAmount, account);
+        IRewardTracker(feeSlpTracker).unstakeForAccount(account, slp, _slpAmount, account);
+        uint256 amountOut = ISlpManager(slpManager).removeLiquidityForAccount(account, _tokenOut, _slpAmount, _minOut, _receiver);
 
-        emit UnstakeNlp(account, _nlpAmount);
+        emit UnstakeSlp(account, _slpAmount);
 
         return amountOut;
     }
 
-    function unstakeAndRedeemNlpETH(uint256 _nlpAmount, uint256 _minOut, address payable _receiver) external nonReentrant returns (uint256) {
-        require(_nlpAmount > 0, "invalid _nlpAmount");
+    function unstakeAndRedeemSlpETH(uint256 _slpAmount, uint256 _minOut, address payable _receiver) external nonReentrant returns (uint256) {
+        require(_slpAmount > 0, "invalid _slpAmount");
 
         address account = msg.sender;
-        IRewardTracker(stakedNlpTracker).unstakeForAccount(account, feeNlpTracker, _nlpAmount, account);
-        IRewardTracker(feeNlpTracker).unstakeForAccount(account, nlp, _nlpAmount, account);
-        uint256 amountOut = INlpManager(nlpManager).removeLiquidityForAccount(account, weth, _nlpAmount, _minOut, address(this));
+        IRewardTracker(stakedSlpTracker).unstakeForAccount(account, feeSlpTracker, _slpAmount, account);
+        IRewardTracker(feeSlpTracker).unstakeForAccount(account, slp, _slpAmount, account);
+        uint256 amountOut = ISlpManager(slpManager).removeLiquidityForAccount(account, weth, _slpAmount, _minOut, address(this));
 
         IWETH(weth).withdraw(amountOut);
 
         _receiver.sendValue(amountOut);
 
-        emit UnstakeNlp(account, _nlpAmount);
+        emit UnstakeSlp(account, _slpAmount);
 
         return amountOut;
     }
@@ -219,24 +219,24 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
         address account = msg.sender;
 
         IRewardTracker(feeGmxTracker).claimForAccount(account, account);
-        IRewardTracker(feeNlpTracker).claimForAccount(account, account);
+        IRewardTracker(feeSlpTracker).claimForAccount(account, account);
 
         IRewardTracker(stakedGmxTracker).claimForAccount(account, account);
-        IRewardTracker(stakedNlpTracker).claimForAccount(account, account);
+        IRewardTracker(stakedSlpTracker).claimForAccount(account, account);
     }
 
     function claimEsGmx() external nonReentrant {
         address account = msg.sender;
 
         IRewardTracker(stakedGmxTracker).claimForAccount(account, account);
-        IRewardTracker(stakedNlpTracker).claimForAccount(account, account);
+        IRewardTracker(stakedSlpTracker).claimForAccount(account, account);
     }
 
     function claimFees() external nonReentrant {
         address account = msg.sender;
 
         IRewardTracker(feeGmxTracker).claimForAccount(account, account);
-        IRewardTracker(feeNlpTracker).claimForAccount(account, account);
+        IRewardTracker(feeSlpTracker).claimForAccount(account, account);
     }
 
     function compound() external nonReentrant {
@@ -261,7 +261,7 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
         uint256 gmxAmount = 0;
         if (_shouldClaimGmx) {
             uint256 gmxAmount0 = IVester(gmxVester).claimForAccount(account, account);
-            uint256 gmxAmount1 = IVester(nlpVester).claimForAccount(account, account);
+            uint256 gmxAmount1 = IVester(slpVester).claimForAccount(account, account);
             gmxAmount = gmxAmount0.add(gmxAmount1);
         }
 
@@ -272,7 +272,7 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
         uint256 esGmxAmount = 0;
         if (_shouldClaimEsGmx) {
             uint256 esGmxAmount0 = IRewardTracker(stakedGmxTracker).claimForAccount(account, account);
-            uint256 esGmxAmount1 = IRewardTracker(stakedNlpTracker).claimForAccount(account, account);
+            uint256 esGmxAmount1 = IRewardTracker(stakedSlpTracker).claimForAccount(account, account);
             esGmxAmount = esGmxAmount0.add(esGmxAmount1);
         }
 
@@ -287,7 +287,7 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
         if (_shouldClaimWeth) {
             if (_shouldConvertWethToEth) {
                 uint256 weth0 = IRewardTracker(feeGmxTracker).claimForAccount(account, address(this));
-                uint256 weth1 = IRewardTracker(feeNlpTracker).claimForAccount(account, address(this));
+                uint256 weth1 = IRewardTracker(feeSlpTracker).claimForAccount(account, address(this));
 
                 uint256 wethAmount = weth0.add(weth1);
                 IWETH(weth).withdraw(wethAmount);
@@ -295,7 +295,7 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
                 payable(account).sendValue(wethAmount);
             } else {
                 IRewardTracker(feeGmxTracker).claimForAccount(account, account);
-                IRewardTracker(feeNlpTracker).claimForAccount(account, account);
+                IRewardTracker(feeSlpTracker).claimForAccount(account, account);
             }
         }
 
@@ -315,10 +315,10 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
     // is more than zero
     // it is possible for multiple transfers to be sent into a single account, using signalTransfer and
     // acceptTransfer, if those values have not been updated yet
-    // for nlp transfers it is also possible to transfer nlp into an account using the Stakednlp contract
+    // for slp transfers it is also possible to transfer slp into an account using the Stakedslp contract
     function signalTransfer(address _receiver) external nonReentrant {
         require(IERC20(gmxVester).balanceOf(msg.sender) == 0, "sender has vested tokens");
-        require(IERC20(nlpVester).balanceOf(msg.sender) == 0, "sender has vested tokens");
+        require(IERC20(slpVester).balanceOf(msg.sender) == 0, "sender has vested tokens");
 
         _validateReceiver(_receiver);
 
@@ -333,7 +333,7 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
 
     function acceptTransfer(address _sender) external nonReentrant {
         require(IERC20(gmxVester).balanceOf(_sender) == 0, "sender has vested tokens");
-        require(IERC20(nlpVester).balanceOf(_sender) == 0, "sender has vested tokens");
+        require(IERC20(slpVester).balanceOf(_sender) == 0, "sender has vested tokens");
 
         address receiver = msg.sender;
         require(pendingReceivers[_sender] == receiver, "transfer not signalled");
@@ -371,17 +371,17 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
             IMintable(bnGmx).mint(receiver, bnGmxBalance);
         }
 
-        uint256 nlpAmount = IRewardTracker(feeNlpTracker).depositBalances(_sender, nlp);
-        if (nlpAmount > 0) {
-            IRewardTracker(stakedNlpTracker).unstakeForAccount(_sender, feeNlpTracker, nlpAmount, _sender);
-            IRewardTracker(feeNlpTracker).unstakeForAccount(_sender, nlp, nlpAmount, _sender);
+        uint256 slpAmount = IRewardTracker(feeSlpTracker).depositBalances(_sender, slp);
+        if (slpAmount > 0) {
+            IRewardTracker(stakedSlpTracker).unstakeForAccount(_sender, feeSlpTracker, slpAmount, _sender);
+            IRewardTracker(feeSlpTracker).unstakeForAccount(_sender, slp, slpAmount, _sender);
 
-            IRewardTracker(feeNlpTracker).stakeForAccount(_sender, receiver, nlp, nlpAmount);
-            IRewardTracker(stakedNlpTracker).stakeForAccount(receiver, receiver, feeNlpTracker, nlpAmount);
+            IRewardTracker(feeSlpTracker).stakeForAccount(_sender, receiver, slp, slpAmount);
+            IRewardTracker(stakedSlpTracker).stakeForAccount(receiver, receiver, feeSlpTracker, slpAmount);
         }
 
         IVester(gmxVester).transferStakeValues(_sender, receiver);
-        IVester(nlpVester).transferStakeValues(_sender, receiver);
+        IVester(slpVester).transferStakeValues(_sender, receiver);
 
         _syncVotingPower(_sender);
         _syncVotingPower(receiver);
@@ -400,22 +400,22 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
         require(IVester(gmxVester).transferredAverageStakedAmounts(_receiver) == 0, "gmxVester.transferredAverageStakedAmounts > 0");
         require(IVester(gmxVester).transferredCumulativeRewards(_receiver) == 0, "gmxVester.transferredCumulativeRewards > 0");
 
-        require(IRewardTracker(stakedNlpTracker).averageStakedAmounts(_receiver) == 0, "stakedNlpTracker.averageStakedAmounts > 0");
-        require(IRewardTracker(stakedNlpTracker).cumulativeRewards(_receiver) == 0, "stakedNlpTracker.cumulativeRewards > 0");
+        require(IRewardTracker(stakedSlpTracker).averageStakedAmounts(_receiver) == 0, "stakedSlpTracker.averageStakedAmounts > 0");
+        require(IRewardTracker(stakedSlpTracker).cumulativeRewards(_receiver) == 0, "stakedSlpTracker.cumulativeRewards > 0");
 
-        require(IRewardTracker(feeNlpTracker).averageStakedAmounts(_receiver) == 0, "feeNlpTracker.averageStakedAmounts > 0");
-        require(IRewardTracker(feeNlpTracker).cumulativeRewards(_receiver) == 0, "feeNlpTracker.cumulativeRewards > 0");
+        require(IRewardTracker(feeSlpTracker).averageStakedAmounts(_receiver) == 0, "feeSlpTracker.averageStakedAmounts > 0");
+        require(IRewardTracker(feeSlpTracker).cumulativeRewards(_receiver) == 0, "feeSlpTracker.cumulativeRewards > 0");
 
-        require(IVester(nlpVester).transferredAverageStakedAmounts(_receiver) == 0, "gmxVester.transferredAverageStakedAmounts > 0");
-        require(IVester(nlpVester).transferredCumulativeRewards(_receiver) == 0, "gmxVester.transferredCumulativeRewards > 0");
+        require(IVester(slpVester).transferredAverageStakedAmounts(_receiver) == 0, "gmxVester.transferredAverageStakedAmounts > 0");
+        require(IVester(slpVester).transferredCumulativeRewards(_receiver) == 0, "gmxVester.transferredCumulativeRewards > 0");
 
         require(IERC20(gmxVester).balanceOf(_receiver) == 0, "gmxVester.balance > 0");
-        require(IERC20(nlpVester).balanceOf(_receiver) == 0, "nlpVester.balance > 0");
+        require(IERC20(slpVester).balanceOf(_receiver) == 0, "slpVester.balance > 0");
     }
 
     function _compound(address _account) private {
         _compoundGmx(_account);
-        _compoundNlp(_account);
+        _compoundSlp(_account);
         _syncVotingPower(_account);
     }
 
@@ -428,8 +428,8 @@ contract RewardRouterV2 is IRewardRouterV2, ReentrancyGuard, Governable {
         _stakeBnGmx(_account);
     }
 
-    function _compoundNlp(address _account) private {
-        uint256 esGmxAmount = IRewardTracker(stakedNlpTracker).claimForAccount(_account, _account);
+    function _compoundSlp(address _account) private {
+        uint256 esGmxAmount = IRewardTracker(stakedSlpTracker).claimForAccount(_account, _account);
         if (esGmxAmount > 0) {
             _stakeGmx(_account, _account, esGmx, esGmxAmount);
         }

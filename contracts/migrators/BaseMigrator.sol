@@ -14,10 +14,10 @@ contract BaseMigrator is IGovRequester {
     address public immutable stakedGmxTracker;
     address public immutable bonusGmxTracker;
     address public immutable feeGmxTracker;
-    address public immutable stakedNlpTracker;
-    address public immutable feeNlpTracker;
+    address public immutable stakedSlpTracker;
+    address public immutable feeSlpTracker;
     address public immutable gmxVester;
-    address public immutable nlpVester;
+    address public immutable slpVester;
     address public immutable esGmx;
     address public immutable bnGmx;
     address public immutable rewardRouter;
@@ -34,10 +34,10 @@ contract BaseMigrator is IGovRequester {
         address _stakedGmxTracker,
         address _bonusGmxTracker,
         address _feeGmxTracker,
-        address _stakedNlpTracker,
-        address _feeNlpTracker,
+        address _stakedSlpTracker,
+        address _feeSlpTracker,
         address _gmxVester,
-        address _nlpVester,
+        address _slpVester,
         address _esGmx,
         address _bnGmx,
         address _rewardRouter
@@ -47,10 +47,10 @@ contract BaseMigrator is IGovRequester {
         stakedGmxTracker = _stakedGmxTracker;
         bonusGmxTracker = _bonusGmxTracker;
         feeGmxTracker = _feeGmxTracker;
-        stakedNlpTracker = _stakedNlpTracker;
-        feeNlpTracker = _feeNlpTracker;
+        stakedSlpTracker = _stakedSlpTracker;
+        feeSlpTracker = _feeSlpTracker;
         gmxVester = _gmxVester;
-        nlpVester = _nlpVester;
+        slpVester = _slpVester;
         esGmx = _esGmx;
         bnGmx = _bnGmx;
 
@@ -65,10 +65,10 @@ contract BaseMigrator is IGovRequester {
         targets[0] = stakedGmxTracker;
         targets[1] = bonusGmxTracker;
         targets[2] = feeGmxTracker;
-        targets[3] = stakedNlpTracker;
-        targets[4] = feeNlpTracker;
+        targets[3] = stakedSlpTracker;
+        targets[4] = feeSlpTracker;
         targets[5] = gmxVester;
-        targets[6] = nlpVester;
+        targets[6] = slpVester;
         targets[7] = esGmx;
         targets[8] = bnGmx;
 
@@ -89,10 +89,10 @@ contract BaseMigrator is IGovRequester {
         Governable(stakedGmxTracker).setGov(mainGov);
         Governable(bonusGmxTracker).setGov(mainGov);
         Governable(feeGmxTracker).setGov(mainGov);
-        Governable(stakedNlpTracker).setGov(mainGov);
-        Governable(feeNlpTracker).setGov(mainGov);
+        Governable(stakedSlpTracker).setGov(mainGov);
+        Governable(feeSlpTracker).setGov(mainGov);
         Governable(gmxVester).setGov(mainGov);
-        Governable(nlpVester).setGov(mainGov);
+        Governable(slpVester).setGov(mainGov);
         Governable(esGmx).setGov(mainGov);
         Governable(bnGmx).setGov(mainGov);
 
@@ -105,10 +105,10 @@ contract BaseMigrator is IGovRequester {
         IHandlerTarget(stakedGmxTracker).setHandler(rewardRouter, isEnabled);
         IHandlerTarget(bonusGmxTracker).setHandler(rewardRouter, isEnabled);
         IHandlerTarget(feeGmxTracker).setHandler(rewardRouter, isEnabled);
-        IHandlerTarget(stakedNlpTracker).setHandler(rewardRouter, isEnabled);
-        IHandlerTarget(feeNlpTracker).setHandler(rewardRouter, isEnabled);
+        IHandlerTarget(stakedSlpTracker).setHandler(rewardRouter, isEnabled);
+        IHandlerTarget(feeSlpTracker).setHandler(rewardRouter, isEnabled);
         IHandlerTarget(gmxVester).setHandler(rewardRouter, isEnabled);
-        IHandlerTarget(nlpVester).setHandler(rewardRouter, isEnabled);
+        IHandlerTarget(slpVester).setHandler(rewardRouter, isEnabled);
         IHandlerTarget(esGmx).setHandler(rewardRouter, isEnabled);
         IMintable(bnGmx).setMinter(rewardRouter, isEnabled);
     }
