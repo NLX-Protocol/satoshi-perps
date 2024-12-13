@@ -97,20 +97,8 @@ contract PriceFeedTimelock {
         buffer = _buffer;
     }
 
-    function setIsAmmEnabled(address _priceFeed, bool _isEnabled) external onlyAdmin {
-        IVaultPriceFeed(_priceFeed).setIsAmmEnabled(_isEnabled);
-    }
-
-    function setIsSecondaryPriceEnabled(address _priceFeed, bool _isEnabled) external onlyAdmin {
-        IVaultPriceFeed(_priceFeed).setIsSecondaryPriceEnabled(_isEnabled);
-    }
-
     function setMaxStrictPriceDeviation(address _priceFeed, uint256 _maxStrictPriceDeviation) external onlyAdmin {
         IVaultPriceFeed(_priceFeed).setMaxStrictPriceDeviation(_maxStrictPriceDeviation);
-    }
-
-    function setUseV2Pricing(address _priceFeed, bool _useV2Pricing) external onlyAdmin {
-        IVaultPriceFeed(_priceFeed).setUseV2Pricing(_useV2Pricing);
     }
 
     function setAdjustment(address _priceFeed, address _token, bool _isAdditive, uint256 _adjustmentBps) external onlyKeeperAndAbove {

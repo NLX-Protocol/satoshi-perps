@@ -70,8 +70,6 @@ contract Vault is ReentrancyGuard, IVault {
     uint256 public override stableFundingRateFactor;
     uint256 public override totalTokenWeights;
 
-    bool public includeAmmPrice = true;
-    bool public useSwapPricing = false;
 
     bool public override inManagerMode = false;
     bool public override inPrivateLiquidationMode = false;
@@ -458,7 +456,6 @@ contract Vault is ReentrancyGuard, IVault {
     function buyUSDG(address _token, address _receiver) external override nonReentrant returns (uint256) {
         _validateManager();
         _validate(whitelistedTokens[_token], 16);
-        useSwapPricing = true;
 
         uint256 tokenAmount = _transferIn(_token);
         _validate(tokenAmount > 0, 17);
@@ -483,14 +480,12 @@ contract Vault is ReentrancyGuard, IVault {
 
         emit BuyUSDG(_receiver, _token, tokenAmount, mintAmount, feeBasisPoints);
 
-        useSwapPricing = false;
         return mintAmount;
     }
 
     function sellUSDG(address _token, address _receiver) external override nonReentrant returns (uint256) {
         _validateManager();
         _validate(whitelistedTokens[_token], 19);
-        useSwapPricing = true;
 
         uint256 usdgAmount = _transferIn(usdg);
         _validate(usdgAmount > 0, 20);
@@ -519,7 +514,6 @@ contract Vault is ReentrancyGuard, IVault {
 
         emit SellUSDG(_receiver, _token, usdgAmount, amountOut, feeBasisPoints);
 
-        useSwapPricing = false;
         return amountOut;
     }
 
@@ -529,7 +523,6 @@ contract Vault is ReentrancyGuard, IVault {
         _validate(whitelistedTokens[_tokenOut], 25);
         _validate(_tokenIn != _tokenOut, 26);
 
-        useSwapPricing = true;
 
         updateCumulativeFundingRate(_tokenIn, _tokenIn);
         updateCumulativeFundingRate(_tokenOut, _tokenOut);
@@ -562,7 +555,6 @@ contract Vault is ReentrancyGuard, IVault {
 
         emit Swap(_receiver, _tokenIn, _tokenOut, amountIn, amountOut, amountOutAfterFees, feeBasisPoints);
 
-        useSwapPricing = false;
         return amountOutAfterFees;
     }
 
@@ -709,8 +701,6 @@ contract Vault is ReentrancyGuard, IVault {
             _validate(isLiquidator[msg.sender], 34);
         }
 
-        // set includeAmmPrice to false to prevent manipulated liquidations
-        includeAmmPrice = false;
 
         updateCumulativeFundingRate(_collateralToken, _indexToken);
 
@@ -723,7 +713,6 @@ contract Vault is ReentrancyGuard, IVault {
         if (liquidationState == 2) {
             // max leverage exceeded but there is collateral remaining after deducting losses so decreasePosition instead
             _decreasePosition(_account, _collateralToken, _indexToken, 0, position.size, _isLong, _account);
-            includeAmmPrice = true;
             return;
         }
 
@@ -756,7 +745,6 @@ contract Vault is ReentrancyGuard, IVault {
         _decreasePoolAmount(_collateralToken, usdToTokenMin(_collateralToken, liquidationFeeUsd));
         _transferOut(_collateralToken, usdToTokenMin(_collateralToken, liquidationFeeUsd), _feeReceiver);
 
-        includeAmmPrice = true;
     }
 
     // note that if calling this function independently the cumulativeFundingRates used in getFundingFee will not be the latest value
@@ -766,11 +754,11 @@ contract Vault is ReentrancyGuard, IVault {
     }
 
     function getMaxPrice(address _token) public override view returns (uint256) {
-        return IVaultPriceFeed(priceFeed).getPrice(_token, true, includeAmmPrice, useSwapPricing);
+        return IVaultPriceFeed(priceFeed).getPrice(_token, true);
     }
 
     function getMinPrice(address _token) public override view returns (uint256) {
-        return IVaultPriceFeed(priceFeed).getPrice(_token, false, includeAmmPrice, useSwapPricing);
+        return IVaultPriceFeed(priceFeed).getPrice(_token, false);
     }
 
     function getRedemptionAmount(address _token, uint256 _usdgAmount) public override view returns (uint256) {

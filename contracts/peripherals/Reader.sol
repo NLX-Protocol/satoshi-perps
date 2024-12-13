@@ -260,8 +260,8 @@ contract Reader is Governable {
 
         for (uint256 i = 0; i < _tokens.length; i++) {
             address token = _tokens[i];
-            amounts[i * propsLength] = _priceFeed.getPrice(token, true, true, false);
-            amounts[i * propsLength + 1] = _priceFeed.getPrice(token, false, true, false);
+            amounts[i * propsLength] = _priceFeed.getPrice(token, true);
+            amounts[i * propsLength + 1] = _priceFeed.getPrice(token, false);
             amounts[i * propsLength + 2] = _priceFeed.getPrimaryPrice(token, true);
             amounts[i * propsLength + 3] = _priceFeed.getPrimaryPrice(token, false);
             amounts[i * propsLength + 4] = _priceFeed.isAdjustmentAdditive(token) ? 1 : 0;
