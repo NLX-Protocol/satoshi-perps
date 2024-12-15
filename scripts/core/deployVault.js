@@ -22,10 +22,9 @@ async function main() {
   const vaultPriceFeed = await deployContract("VaultPriceFeed", [])
 
   await sendTxn(vaultPriceFeed.setMaxStrictPriceDeviation(expandDecimals(1, 28)), "vaultPriceFeed.setMaxStrictPriceDeviation") // 0.05 USD
-  await sendTxn(vaultPriceFeed.setIsAmmEnabled(false), "vaultPriceFeed.setIsAmmEnabled")
 
   const slpBTC = await deployContract("SLPBTC", [])
-  await sendTxn(slpBTC.setInPrivateTransferMode(true), "slpBTC.setInPrivateTransferMode")
+  // await sendTxn(slpBTC.setInPrivateTransferMode(true), "slpBTC.setInPrivateTransferMode")
 
 
   const shortsTracker = await deployContract("ShortsTracker", [vault.address], "ShortsTracker",)
@@ -96,7 +95,7 @@ async function main() {
   const addresses = {
     btcUsdg: btcUsdg.address,
     slpBTC: slpBTC.address,
-    btcVault: vault.address,
+    vaultBTC: vault.address,
     routerBTC: router.address,
     vaultPriceFeedBTC: vaultPriceFeed.address,
     slpManagerBTC: slpManager.address,

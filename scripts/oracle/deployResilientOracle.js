@@ -3,16 +3,17 @@ const { writeTmpAddresses, sendTxn, verifyUpgradeable, deployContract, contractA
 const { expandDecimals } = require("../../test/shared/utilities");
 const tokens = require('../core/tokens')[network.name];
 
-const VAULT = "0xadFfd30C98181d5D647EaF0a969421f0f73d9028" //BTC
-const VAULT_PRICE_FEED = "0xfD38B765A6dC05C42f8B369f421Ce6E9663ebF7D"
+const VAULT = "0x20192f037BfC79f667Ca0e444D87E8a7cC7f6345" //BTC
+const VAULT_PRICE_FEED = "0x8e25a01c287A52596b1a7d744CDBeFF1A1e8Ba21"
+//pyth contract address
 const PRICE_FEED_CONTRACT_ADDRESS = "0x8D254a21b3C86D32F7179855531CE99164721933"
 
 async function main() {
 
   const {
-    BTC, GOLD, OIL, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC
+    BTC, GOLD, OIL, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC, nativeToken
   } = tokens
-  const tokenArr = [BTC, GOLD, OIL, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC]
+  const tokenArr = [BTC, GOLD, OIL, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC, nativeToken]
   const pythMaxStalePeriod = 60 * 60 * 24
 
   const vaultPriceFeed = await contractAt("VaultPriceFeed", VAULT_PRICE_FEED)
@@ -124,7 +125,7 @@ async function main() {
 
 
   await sendTxn(vaultPriceFeed.setMaxStrictPriceDeviation(expandDecimals(5, 28)), "vaultPriceFeed.setMaxStrictPriceDeviation") // 0.01 USD
-  await sendTxn(vaultPriceFeed.setIsAmmEnabled(false), "vaultPriceFeed.setIsAmmEnabled")
+  // await sendTxn(vaultPriceFeed.setIsAmmEnabled(false), "vaultPriceFeed.setIsAmmEnabled")
   await sendTxn(vaultPriceFeed.setResilientOracle(resilientOracle.address), "vaultPriceFeed.setResilientOracle")
 
 

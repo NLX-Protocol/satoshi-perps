@@ -6,8 +6,8 @@ async function main() {
 
   // SYNTHETICS
   addresses["BTC"] = (await callWithRetries(deployContract, ["SyntheticToken", ["Bitcoin", "BTC"]])).address
-  addresses["GOLD"] = (await callWithRetries(deployContract, ["SyntheticToken", ["GOLD", "GOLD"]])).address
-  addresses["OIL"] = (await callWithRetries(deployContract, ["SyntheticToken", ["OIL", "OIL"]])).address
+  // addresses["GOLD"] = (await callWithRetries(deployContract, ["SyntheticToken", ["GOLD", "GOLD"]])).address
+  // addresses["OIL"] = (await callWithRetries(deployContract, ["SyntheticToken", ["OIL", "OIL"]])).address
   addresses["CORE"] = (await callWithRetries(deployContract, ["SyntheticToken", ["CORE", "CORE"]])).address
   addresses["ETH"] = (await callWithRetries(deployContract, ["SyntheticToken", ["ETH", "ETH"]])).address
   addresses["SOL"] = (await callWithRetries(deployContract, ["SyntheticToken", ["SOL", "SOL"]])).address

@@ -37,7 +37,7 @@ contract Vault is ReentrancyGuard, IVault {
     uint256 public constant MAX_FUNDING_RATE_FACTOR = 10000; // 1%
 
     bool public override isInitialized;
-    bool public override isSwapEnabled = true;
+    bool public override isSwapEnabled = false;
     bool public override isLeverageEnabled = true;
 
     IVaultUtils public vaultUtils;
@@ -52,7 +52,7 @@ contract Vault is ReentrancyGuard, IVault {
 
     uint256 public override whitelistedTokenCount;
 
-    uint256 public override maxLeverage = 200 * 10000; // 200x
+    uint256 public override maxLeverage = 250 * 10000; // 250x
 
     uint256 public override liquidationFeeUsd;
     uint256 public override taxBasisPoints = 50; // 0.5%
@@ -209,7 +209,7 @@ contract Vault is ReentrancyGuard, IVault {
     event IncreaseGuaranteedUsd(address token, uint256 amount);
     event DecreaseGuaranteedUsd(address token, uint256 amount);
 
-    event WithdrawNonWhitelistedToken(address token, uint256 amount, address receiver);
+    event RescueFunds(address indexed token, uint256 amount, address indexed receiver);
     // once the parameters are verified to be working correctly,
     // gov should be set to a timelock contract or a governance contract
     constructor() public {
@@ -435,32 +435,16 @@ contract Vault is ReentrancyGuard, IVault {
     // the governance controlling this function should have a timelock
     function upgradeVault(address _newVault, address _token, uint256 _amount) external override{
         _onlyGov();
+
+        uint256 ethBalance = address(this).balance;
+        if (ethBalance > 0) {
+            (bool success, ) = _newVault.call{value: ethBalance}("");
+            require(success, "ETH Transfer failed");
+        }
         IERC20(_token).safeTransfer(_newVault, _amount);
     }
 
-    function withdrawNonWhitelistedAsset(
-        address _token,
-        address _receiver
-    ) external override nonReentrant {
-        _onlyGov();
-        require(!whitelistedTokens[_token], "Vault: token is whitelisted");
 
-        uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
-        require(tokenBalance > 0, "Vault: no tokens to withdraw");
-
-        _transferOut(_token, tokenBalance, _receiver);
-        emit WithdrawNonWhitelistedToken(_token, tokenBalance, _receiver);
-    }
-
-     // the governance controlling this function should have a timelock
-    function withdrawETH(address payable _receiver) external override nonReentrant {
-        _onlyGov();
-        uint256 ethBalance = address(this).balance;
-        require(ethBalance > 0, "Vault: no ETH to withdraw");
-
-        (bool success, ) = _receiver.call{value: ethBalance}("");
-        require(success, "Vault: ETH transfer failed");
-    }
     // deposit into the pool without minting USDG tokens
     // useful in allowing the pool to become over-collaterised
     function directPoolDeposit(address _token) external override nonReentrant {
@@ -1092,7 +1076,7 @@ contract Vault is ReentrancyGuard, IVault {
 
     function _validateTokens(address _collateralToken, address _indexToken, bool _isLong) private view {
         if (_isLong) {
-            _validate(_collateralToken == _indexToken, 42);
+            // _validate(_collateralToken == _indexToken, 42);
             _validate(whitelistedTokens[_collateralToken], 43);
             _validate(!stableTokens[_collateralToken], 44);
             return;

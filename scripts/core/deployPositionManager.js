@@ -13,15 +13,15 @@ async function main() {
 
   // -------------------BTC --------------------
   const positionManagerAddress = undefined
-  const vault = await contractAt("Vault", "0xadFfd30C98181d5D647EaF0a969421f0f73d9028")
+  const vault = await contractAt("Vault", "0x20192f037BfC79f667Ca0e444D87E8a7cC7f6345")
   const timelock = await contractAt("Timelock", await vault.gov())
   const router = await contractAt("Router", await vault.router())
-  const shortsTracker = await contractAt("ShortsTracker", "0x43A17FB99C044150a98fb159C2D58Ce8fBC02153")
+  const shortsTracker = await contractAt("ShortsTracker", "0x936C54e4E9530e26a2655D09182898b75DE566cF")
   const shortsTrackerTimelock = await contractAt("ShortsTrackerTimelock", await shortsTracker.gov())
   const weth = await contractAt("WETH", tokens.nativeToken.address)
-  const orderBook = await contractAt("OrderBook", "0x3b0399fea8a51cE89Da2A88914285CE8A44C0575")
-  const referralStorage = await contractAt("ReferralStorage", "0x03C101158D4f57b8bf39d7a371c0aE6A71F80454")
-  const positionUtils = await contractAt("PositionUtils", "0xBfb1BD3132EF4d2854704451EA310a204551c1F5")
+  const orderBook = await contractAt("OrderBook", "0x762D4046fE8Cd4EA194930CD5cC9073B086A1968")
+  const referralStorage = await contractAt("ReferralStorage", "0x0db0429B421295590E1328Ba877cb22ba59637e5")
+  const positionUtils = await contractAt("PositionUtils", "0xe128bD2BCeE14260f4262ff9276f8ba0b27415c8")
 
 
   const orderKeepers = [

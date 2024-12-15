@@ -7,14 +7,14 @@ const tokens = require('./tokens')[network];
 
 
 
-const VAULT = "0xadFfd30C98181d5D647EaF0a969421f0f73d9028" //BTC
-const VAULT_PRICE_FEED = "0xfD38B765A6dC05C42f8B369f421Ce6E9663ebF7D"
+const VAULT = "0x20192f037BfC79f667Ca0e444D87E8a7cC7f6345" //BTC
+const VAULT_PRICE_FEED = "0x8e25a01c287A52596b1a7d744CDBeFF1A1e8Ba21"
 
 async function main() {
   const wallet = (await ethers.getSigners())[0]
 
   const {
-    BTC, GOLD, OIL, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC
+    BTC,  CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC
   } = tokens
 
   const vaultPriceFeedTimelock = await deployContract("PriceFeedTimelock", [
@@ -26,7 +26,7 @@ async function main() {
   // ----------BTC market----------
 
 
-  const tokenArr = [BTC, GOLD, OIL, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC]
+  const tokenArr = [BTC,  CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC]
 
   const addresses = {
     vaultPriceFeedTimelockBTC: vaultPriceFeedTimelock.address,

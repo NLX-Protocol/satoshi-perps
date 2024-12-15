@@ -78,8 +78,8 @@ module.exports = {
     "core-testnet": {
       url: CORE_TESTNET_URL,
       chainId: 1115,
-      gasLimit:26000000,
-      // gasPrice: 10000000000,
+      // gasLimit:26000000,
+      gasPrice: 10000000000,
       accounts: getEnvAccounts(CORE_TESTNET_DEPLOY_KEY),
     },
     bsc: {

@@ -45,8 +45,6 @@ interface IVault {
     function setIsLeverageEnabled(bool _isLeverageEnabled) external;
     function setMaxGasPrice(uint256 _maxGasPrice) external;
     function upgradeVault(address _receiver, address _token, uint256 _amount) external;
-    function withdrawNonWhitelistedAsset(address _token, address _receiver) external;
-    function withdrawETH(address payable _receiver) external;
     function setUsdgAmount(address _token, uint256 _amount) external;
     function setBufferAmount(address _token, uint256 _amount) external;
     function setMaxGlobalShortSize(address _token, uint256 _amount) external;

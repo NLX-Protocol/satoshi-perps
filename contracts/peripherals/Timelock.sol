@@ -58,6 +58,7 @@ contract Timelock is ITimelock, BasicMulticall {
     event SignalPendingAction(bytes32 action);
     event SignalApprove(address token, address spender, uint256 amount, bytes32 action);
     event SignalUpgradeVault(address vault, address receiver, address token, uint256 amount, bytes32 action);
+    event SignalRescueFunds(address vault, address token, address receiver, bytes32 action);
     event SignalWithdrawToken(address target, address token, address receiver, uint256 amount, bytes32 action);
     event SignalMint(address token, address receiver, uint256 amount, bytes32 action);
     event SignalSetGov(address target, address gov, bytes32 action);
@@ -416,12 +417,7 @@ contract Timelock is ITimelock, BasicMulticall {
         IVault(_vault).upgradeVault(_receiver, _token, _amount);
     }
 
-    function withdrawNonWhitelistedAsset(address _vault, address _token, address _receiver) external onlyAdmin {
-        IVault(_vault).withdrawNonWhitelistedAsset(_receiver, _token);
-    }
-    function withdrawETH(address _vault, address _receiver) external onlyAdmin {
-        IVault(_vault).withdrawETH(payable(_receiver));
-    }
+
     function withdrawFees(address _vault, address _token, address _receiver) external onlyAdmin {
         IVault(_vault).withdrawFees(_token, _receiver);
     }

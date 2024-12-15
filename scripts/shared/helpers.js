@@ -12,7 +12,8 @@ const {
   AVAX_URL,
   ARBITRUM_DEPLOY_KEY,
   AVAX_DEPLOY_KEY
-} = require("../../env.json")
+} = require("../../env.json");
+const { ethers } = require('hardhat');
 
 const providers = {
   arbitrum: new ethers.providers.JsonRpcProvider(ARBITRUM_URL),
@@ -114,6 +115,8 @@ async function deployContract(name, args, label, options) {
 
   const contractFactory = await ethers.getContractFactory(name, contractFactoryOptions)
   let contract
+  
+
   
   if (options) {
     delete options.libraries

@@ -9,8 +9,6 @@ const tokens = require('./tokens')[network];
 
 
 // ------------BTC MARKETS
-const vault = await contractAt("Vault", "0xadFfd30C98181d5D647EaF0a969421f0f73d9028")
-const shortsTracker = await contractAt("ShortsTracker", "0x43A17FB99C044150a98fb159C2D58Ce8fBC02153")
 const positionKeepers = [
   "0x77B6935623878F8f9dce8E1A28d4A8A7E89A37b6",
   "0x0666992F2D2fD045e9b876B5490F5470452aFBD3",
@@ -18,6 +16,8 @@ const positionKeepers = [
 ]
 
 async function main() {
+  const vault = await contractAt("Vault", "0x20192f037BfC79f667Ca0e444D87E8a7cC7f6345")
+  const shortsTracker = await contractAt("ShortsTracker", "0x936C54e4E9530e26a2655D09182898b75DE566cF")
 
   const wallet = (await ethers.getSigners())[0]
 
@@ -57,8 +57,10 @@ async function main() {
 
   await sendTxn(positionRouter.setDelayValues(0, 180, 30 * 60), "positionRouter.setDelayValues")
   await sendTxn(positionRouter.setAdmin(wallet.address), "positionRouter.setAdmin")
-  for (const positionKeeper in positionKeepers){
-    await sendTxn(positionRouter.setPositionKeeper(positionKeeper), "positionRouter.setPositionKeeper")
+  for (const positionKeeper of positionKeepers){
+    console.log({ positionKeeper});
+    
+    await sendTxn(positionRouter.setPositionKeeper(positionKeeper, true), "positionRouter.setPositionKeeper")
   }
 
 
