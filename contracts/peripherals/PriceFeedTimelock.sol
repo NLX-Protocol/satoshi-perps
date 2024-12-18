@@ -78,6 +78,10 @@ contract PriceFeedTimelock {
         admin = _admin;
     }
 
+    function setTokenManger(address _tokenManager) external onlyTokenManager {
+        tokenManager = _tokenManager;
+    }
+
     function setExternalAdmin(address _target, address _admin) external onlyAdmin {
         require(_target != address(this), "Timelock: invalid _target");
         IAdmin(_target).setAdmin(_admin);

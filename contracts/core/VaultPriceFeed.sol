@@ -4,7 +4,6 @@ import "../libraries/math/SafeMath.sol";
 
 import "./interfaces/IVaultPriceFeed.sol";
 import "../oracle/interfaces/AggregatorV3Interface.sol";
-import "../oracle/interfaces/ISecondaryPriceFeed.sol";
 import "../oracle/interfaces/IResilientOracle.sol";
 import "../oracle/interfaces/IChainlinkFlags.sol";
 import "../amm/interfaces/IPancakePair.sol";
@@ -25,7 +24,6 @@ contract VaultPriceFeed is IVaultPriceFeed {
     address public gov;
 
     uint256 public maxStrictPriceDeviation = 0;
-    address public secondaryPriceFeed;
     uint256 public spreadThresholdBasisPoints = 30;
 
 
@@ -162,9 +160,5 @@ contract VaultPriceFeed is IVaultPriceFeed {
         return price;
     }
 
-    function getSecondaryPrice(address _token, uint256 _referencePrice, bool _maximise) public view returns (uint256) {
-        if (secondaryPriceFeed == address(0)) { return _referencePrice; }
-        return ISecondaryPriceFeed(secondaryPriceFeed).getPrice(_token, _referencePrice, _maximise);
-    }
 
 }

@@ -7,8 +7,8 @@ const tokens = require('./tokens')[network];
 
 
 
-const VAULT = "0x20192f037BfC79f667Ca0e444D87E8a7cC7f6345" //BTC
-const VAULT_PRICE_FEED = "0x8e25a01c287A52596b1a7d744CDBeFF1A1e8Ba21"
+const VAULT = "0x8D1F4c528FD879A83aa41d4e1261c210Dd6e28d0" //BTC
+const VAULT_PRICE_FEED = "0x01Ae480E600E3c3ABd0c70627C94dcc8528a9598"
 
 async function main() {
   const wallet = (await ethers.getSigners())[0]

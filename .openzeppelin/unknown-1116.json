@@ -1,0 +1,575 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x78b0E459aF522D79A571b30Ba3De6C1A972457F7",
+    "txHash": "0x5e09d8fa228568013b7ee58537b1c1cb671e812399577a207a12549a23f6fc96"
+  },
+  "proxies": [
+    {
+      "address": "0x2CCC7574fC10ACf25664c7F639623432002F9dDF",
+      "txHash": "0x6b7f1d2ffe4a10c891cf86c5d32f8c5524f91765a9cbc53ad39779d4254e1726",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xeE6CFe0E287384B0e31B2023eeAeC8873B018766",
+      "txHash": "0x24d4531c3e850d4e2899da3445124536254abd4d9243932ae00df54856f4cde6",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xa0a57903b7d6A05F5AF3DFc7C53Dbad9d0B6BE9E",
+      "txHash": "0x1c8bc15fcfad7a9fd0a3c6cd54ae8a88469b331f22ec5a4ff369656f8881c948",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "55c84eea5e1ba108ae40ca05bbce0855728712a9cdfb5e0e142fdfbc54d715e2": {
+      "address": "0xc8Ec59D41eA7c0E165d0aDa6CA97366693aA89bd",
+      "txHash": "0x96e459c12f4d886dce447f467eaff5f398bfc9fbe07d2f3d5e0fb2ff6f2ea5a8",
+      "layout": {
+        "solcVersion": "0.8.25",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:40"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_pendingOwner",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_address",
+            "contract": "Ownable2StepUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol:21"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "Ownable2StepUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol:70"
+          },
+          {
+            "label": "_accessControlManager",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_contract(IAccessControlManagerV8)5399",
+            "contract": "AccessControlledV8",
+            "src": "@venusprotocol/governance-contracts/contracts/Governance/AccessControlledV8.sol:17"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "AccessControlledV8",
+            "src": "@venusprotocol/governance-contracts/contracts/Governance/AccessControlledV8.sol:24"
+          },
+          {
+            "label": "validateConfigs",
+            "offset": 0,
+            "slot": "201",
+            "type": "t_mapping(t_address,t_struct(ValidateConfig)5793_storage)",
+            "contract": "BoundValidator",
+            "src": "contracts/oracle/BoundValidator.sol:28"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "202",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "BoundValidator",
+            "src": "contracts/oracle/BoundValidator.sol:121"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(IAccessControlManagerV8)5399": {
+            "label": "contract IAccessControlManagerV8",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_struct(ValidateConfig)5793_storage)": {
+            "label": "mapping(address => struct BoundValidator.ValidateConfig)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(ValidateConfig)5793_storage": {
+            "label": "struct BoundValidator.ValidateConfig",
+            "members": [
+              {
+                "label": "asset",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "upperBoundRatio",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "lowerBoundRatio",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    },
+    "25c20a6f2faed593ee845f476c182f8a5710040e7cb62446b93e63fb22b46a6c": {
+      "address": "0xe9F9a5C34963330F0d74dACBe1f63322CF25aE8A",
+      "txHash": "0x520f06c78a972f7c97a11c51a7848c2dd1d1b11fca6eeedb1505e33ca59daa26",
+      "layout": {
+        "solcVersion": "0.8.25",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:40"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_pendingOwner",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_address",
+            "contract": "Ownable2StepUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol:21"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "Ownable2StepUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol:70"
+          },
+          {
+            "label": "_accessControlManager",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_contract(IAccessControlManagerV8)5464",
+            "contract": "AccessControlledV8",
+            "src": "@venusprotocol/governance-contracts/contracts/Governance/AccessControlledV8.sol:17"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "AccessControlledV8",
+            "src": "@venusprotocol/governance-contracts/contracts/Governance/AccessControlledV8.sol:24"
+          },
+          {
+            "label": "underlyingPythOracle",
+            "offset": 0,
+            "slot": "201",
+            "type": "t_contract(IPyth)5043",
+            "contract": "PythOracle",
+            "src": "contracts/oracle/PythOracle.sol:37"
+          },
+          {
+            "label": "tokenConfigs",
+            "offset": 0,
+            "slot": "202",
+            "type": "t_mapping(t_address,t_struct(TokenConfig)6120_storage)",
+            "contract": "PythOracle",
+            "src": "contracts/oracle/PythOracle.sol:40"
+          },
+          {
+            "label": "storedPythPrices",
+            "offset": 0,
+            "slot": "203",
+            "type": "t_mapping(t_address,t_struct(Price)5076_storage)",
+            "contract": "PythOracle",
+            "src": "contracts/oracle/PythOracle.sol:43"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAccessControlManagerV8)5464": {
+            "label": "contract IAccessControlManagerV8",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IPyth)5043": {
+            "label": "contract IPyth",
+            "numberOfBytes": "20"
+          },
+          "t_int32": {
+            "label": "int32",
+            "numberOfBytes": "4"
+          },
+          "t_int64": {
+            "label": "int64",
+            "numberOfBytes": "8"
+          },
+          "t_mapping(t_address,t_struct(Price)5076_storage)": {
+            "label": "mapping(address => struct PythStructs.Price)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(TokenConfig)6120_storage)": {
+            "label": "mapping(address => struct PythOracle.TokenConfig)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Price)5076_storage": {
+            "label": "struct PythStructs.Price",
+            "members": [
+              {
+                "label": "price",
+                "type": "t_int64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "conf",
+                "type": "t_uint64",
+                "offset": 8,
+                "slot": "0"
+              },
+              {
+                "label": "expo",
+                "type": "t_int32",
+                "offset": 16,
+                "slot": "0"
+              },
+              {
+                "label": "publishTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(TokenConfig)6120_storage": {
+            "label": "struct PythOracle.TokenConfig",
+            "members": [
+              {
+                "label": "pythId",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "asset",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "maxStalePeriod",
+                "type": "t_uint64",
+                "offset": 20,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    },
+    "32d17564486c2b9ce306612afcb137cece3721b4605e93a4d88650ceae8024bc": {
+      "address": "0x8c707959A29A69Ee0395F1DeDF1754b9Ea5a8078",
+      "txHash": "0x9ee17ec953f2d210125e6fa1fcd01b7eddcff58c30b25cf8e91f3b62477a37d3",
+      "layout": {
+        "solcVersion": "0.8.25",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:40"
+          },
+          {
+            "label": "_paused",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_bool",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:29"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:116"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_pendingOwner",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_address",
+            "contract": "Ownable2StepUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol:21"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "Ownable2StepUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol:70"
+          },
+          {
+            "label": "_accessControlManager",
+            "offset": 0,
+            "slot": "201",
+            "type": "t_contract(IAccessControlManagerV8)5464",
+            "contract": "AccessControlledV8",
+            "src": "@venusprotocol/governance-contracts/contracts/Governance/AccessControlledV8.sol:17"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "202",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "AccessControlledV8",
+            "src": "@venusprotocol/governance-contracts/contracts/Governance/AccessControlledV8.sol:24"
+          },
+          {
+            "label": "tokenConfigs",
+            "offset": 0,
+            "slot": "251",
+            "type": "t_mapping(t_address,t_struct(TokenConfig)6875_storage)",
+            "contract": "ResilientOracle",
+            "src": "contracts/oracle/ResilientOracle.sol:91"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)3_storage": {
+            "label": "address[3]",
+            "numberOfBytes": "96"
+          },
+          "t_array(t_bool)3_storage": {
+            "label": "bool[3]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(IAccessControlManagerV8)5464": {
+            "label": "contract IAccessControlManagerV8",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_struct(TokenConfig)6875_storage)": {
+            "label": "mapping(address => struct ResilientOracle.TokenConfig)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(TokenConfig)6875_storage": {
+            "label": "struct ResilientOracle.TokenConfig",
+            "members": [
+              {
+                "label": "asset",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "oracles",
+                "type": "t_array(t_address)3_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "enableFlagsForOracles",
+                "type": "t_array(t_bool)3_storage",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    }
+  }
+}

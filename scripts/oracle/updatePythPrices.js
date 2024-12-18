@@ -2,7 +2,7 @@ const { contractAt } = require('../shared/helpers');
 
 const tokens = require('../core/tokens')[network.name];
 
-const PYTH_ORACLE_ADAPTER = "0xCA8208181EE3e9786D8714877Df8A822ee889600"
+const PYTH_ORACLE_ADAPTER = "0xeE6CFe0E287384B0e31B2023eeAeC8873B018766"
 
 async function main() {
 

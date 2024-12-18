@@ -74,6 +74,7 @@ contract ShortsTrackerTimelock {
         buffer = _buffer;
     }
 
+
     function signalSetAdmin(address _admin) external onlyAdmin {
         require(_admin != address(0), "ShortsTrackerTimelock: invalid admin");
 

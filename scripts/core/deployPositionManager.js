@@ -13,23 +13,24 @@ async function main() {
 
   // -------------------BTC --------------------
   const positionManagerAddress = undefined
-  const vault = await contractAt("Vault", "0x20192f037BfC79f667Ca0e444D87E8a7cC7f6345")
+  const vault = await contractAt("Vault", "0x8D1F4c528FD879A83aa41d4e1261c210Dd6e28d0")
   const timelock = await contractAt("Timelock", await vault.gov())
   const router = await contractAt("Router", await vault.router())
-  const shortsTracker = await contractAt("ShortsTracker", "0x936C54e4E9530e26a2655D09182898b75DE566cF")
+  const shortsTracker = await contractAt("ShortsTracker", "0x82394e132BcAf2297d0d41c4cfCC260Cc1bf3Da0")
   const shortsTrackerTimelock = await contractAt("ShortsTrackerTimelock", await shortsTracker.gov())
   const weth = await contractAt("WETH", tokens.nativeToken.address)
-  const orderBook = await contractAt("OrderBook", "0x762D4046fE8Cd4EA194930CD5cC9073B086A1968")
-  const referralStorage = await contractAt("ReferralStorage", "0x0db0429B421295590E1328Ba877cb22ba59637e5")
-  const positionUtils = await contractAt("PositionUtils", "0xe128bD2BCeE14260f4262ff9276f8ba0b27415c8")
+  const orderBook = await contractAt("OrderBook", "0x84d178be6A81dd5b29b1CDc289D16F39F94c682e")
+  const referralStorage = await contractAt("ReferralStorage", "0x2997249971523381AD58512905b863DCE6929787")
+  const positionUtils = await contractAt("PositionUtils", "0x914b5D85E586B0e4B6dDDfC2D902ED75EbE33950")
 
 
-  const orderKeepers = [
-    { address: "0x77B6935623878F8f9dce8E1A28d4A8A7E89A37b6" },
-    { address: "0x0666992F2D2fD045e9b876B5490F5470452aFBD3" }
+  const positionKeepers = [
+    { address: "0xa766db45cd087f3d8374d363624B6579f0474D5F" },
+    { address: "0x82bbd2795d9b6Fc08305eb21ffB3c07C1Ad104E8" }
   ]
   const liquidators = [
-    { address: "0x73CbB4801bFE4AD34d8B0Fd3dab8bE0E9e9d2579" }
+    { address: "0x7ADAcd37b82153B67fe2a7D08aBebdDeF5DFee29" },
+    { address: "0x1C415Dff215B695eFc798866094CfE0a81106D69" }
   ]
 
   const partnerContracts = []
@@ -59,8 +60,8 @@ async function main() {
     await sendTxn(positionManager.setShouldValidateIncreaseOrder(false), "positionManager.setShouldValidateIncreaseOrder(false)")
   }
 
-  for (let i = 0; i < orderKeepers.length; i++) {
-    const orderKeeper = orderKeepers[i]
+  for (let i = 0; i < positionKeepers.length; i++) {
+    const orderKeeper = positionKeepers[i]
     if (!(await positionManager.isOrderKeeper(orderKeeper.address))) {
       await sendTxn(positionManager.setOrderKeeper(orderKeeper.address, true), "positionManager.setOrderKeeper(orderKeeper)")
     }

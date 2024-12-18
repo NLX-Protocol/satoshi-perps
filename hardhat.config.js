@@ -10,9 +10,12 @@ require("@openzeppelin/hardhat-upgrades");
 const {
   CORE_TESTNET_URL,
   CORE_TESTNET_DEPLOY_KEY,
+  CORE_MAINNET_URL,
+  CORE_MAINNET_DEPLOY_KEY,
   BSC_URL,
   BSC_DEPLOY_KEY,
   CORE_TESTNET_API_KEY,
+  CORE_MAINNET_API_KEY,
   BSCSCAN_API_KEY,
   POLYGONSCAN_API_KEY,
   SNOWTRACE_API_KEY,
@@ -82,6 +85,13 @@ module.exports = {
       gasPrice: 10000000000,
       accounts: getEnvAccounts(CORE_TESTNET_DEPLOY_KEY),
     },
+    "core-mainnet": {
+      url: CORE_MAINNET_URL,
+      chainId: 1116,
+      // gasLimit:26000000,
+      gasPrice: 30000000000,
+      accounts: getEnvAccounts(CORE_MAINNET_DEPLOY_KEY),
+    },
     bsc: {
       url: BSC_URL,
       chainId: 56,
@@ -133,12 +143,12 @@ module.exports = {
   etherscan: {
     apiKey: {
       "core-testnet": CORE_TESTNET_API_KEY,
+      "core-mainnet": CORE_MAINNET_API_KEY,
       mainnet: ETHERSCAN_API_KEY,
       arbitrumOne: ARBISCAN_API_KEY,
       avalanche: SNOWTRACE_API_KEY,
       bsc: BSCSCAN_API_KEY,
       polygon: POLYGONSCAN_API_KEY,
-
     },
     customChains: [
       {
@@ -147,6 +157,14 @@ module.exports = {
         urls: {
           apiURL: "https://api.test.btcs.network/api",
           browserURL: "https://scan.test.btcs.network/"
+        }
+      },
+      {
+        network: "core-mainnet",
+        chainId: 1116,
+        urls: {
+          apiURL: "https://openapi.coredao.org/api",
+          browserURL: "https://scan.coredao.org/"
         }
       },
     ]

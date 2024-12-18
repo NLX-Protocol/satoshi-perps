@@ -147,7 +147,9 @@ contract Timelock is ITimelock, BasicMulticall {
     function setAdmin(address _admin) external override onlyTokenManager {
         admin = _admin;
     }
-
+    function setTokenManger(address _tokenManager) external onlyTokenManager {
+        tokenManager = _tokenManager;
+    }
     function setExternalAdmin(address _target, address _admin) external onlyAdmin {
         require(_target != address(this), "invalid _target");
         IAdmin(_target).setAdmin(_admin);

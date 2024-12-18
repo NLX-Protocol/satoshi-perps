@@ -11,10 +11,10 @@ async function main() {
   // ------------BTC market
   const orderBook = await deployContract("OrderBook", []);
   await sendTxn(orderBook.initialize(
-    "0x49a01E1C664D1a63c7bfafF2298d86A9D548356e", // router
-    "0x20192f037BfC79f667Ca0e444D87E8a7cC7f6345", // vault
+    "0xC9e6275cc66f066f485617F6C9C6B9D32D4a31B4", // router
+    "0x8D1F4c528FD879A83aa41d4e1261c210Dd6e28d0", // vault
     nativeToken.address, // weth
-    "0x538fbBA3B0d9d2eA116d5A7EAa6D68a778d15c4E", // usdg
+    "0x9bC26AC9C5Dc3AA99eC178731C64915Ed286ac0E", // usdg
     expandDecimals(1, 17), // 0.01 
     expandDecimals(10, 30) // min purchase token amount usd
   ), "orderBook.initialize");

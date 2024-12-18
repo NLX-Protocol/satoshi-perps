@@ -8,9 +8,9 @@ async function main() {
     // const SLP_MANAGER_ADDRESS = "0x16aCa8b0547566eA9b2aa7a232871D5D5C8160a6"
 
     // ---------- CORE ----------
-    const SLP_MANAGER_ADDRESS = "0xCCC4280Ba073cab90c671D6cb1d1b89910EEE6AE"
+    const SLP_MANAGER_ADDRESS = "0x0ED42645eB8061f6B327A13dF2974E8989E12e05"
     
-    const WCORE = "0x8154036681373780a862cB1bD05098D452871305"
+    const WCORE = "0xCA8c6C9Fb34388b8a4C93cD5d4D20f63B5997FBa"
 
     // deploy
     const slpManager = await contractAt("SlpManager", SLP_MANAGER_ADDRESS)
