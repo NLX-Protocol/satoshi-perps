@@ -59,7 +59,8 @@ const errors = [
   "Vault: forbidden", // 53
   "Vault: forbidden", // 54
   "Vault: maxGasPrice exceeded", // 55
-  "Vault: cannot withdraw whitelisted token", // 56
+  "Vault: max longs exceeded", // 56
+  "Vault: max shorts exceeded", // 57
 ]
 
 async function initVaultErrors(vault) {

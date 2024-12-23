@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity 0.8.25;
 
-import "./interfaces/VBep20Interface.sol";
+
 import "./interfaces/OracleInterface.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "@venusprotocol/governance-contracts/contracts/Governance/AccessControlledV8.sol";
 
 /**
  * @title AproOracle
  * @author Venus
  * @notice This oracle fetches prices of assets from the Apro oracle.
  */
-contract AproOracle is AccessControlledV8, OracleInterface {
+contract AproOracle is OracleInterface {
 
     /// @notice Exponent scale (decimal precision) of prices
     uint256 public constant PRICE_PRECISION = 10 ** 30;
@@ -28,9 +27,8 @@ contract AproOracle is AccessControlledV8, OracleInterface {
         uint256 maxStalePeriod;
     }
 
-    /// @notice Set this as asset address for native token on each chain.
-    /// This is the underlying address for vBNB on BNB chain or an underlying asset for a native market on any chain.
-    address public constant NATIVE_TOKEN_ADDR = 0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB;
+    /// @notice Contract governor address
+    address public gov;
 
     /// @notice Manually set an override price, useful under extenuating conditions such as price feed failure
     mapping(address => uint256) public prices;
@@ -38,53 +36,37 @@ contract AproOracle is AccessControlledV8, OracleInterface {
     /// @notice Token config by assets
     mapping(address => TokenConfig) public tokenConfigs;
 
-    /// @notice Emit when a price is manually set
-    event PricePosted(address indexed asset, uint256 previousPriceMantissa, uint256 newPriceMantissa);
-
     /// @notice Emit when a token config is added
     event TokenConfigAdded(address indexed asset, address feed, uint256 maxStalePeriod);
+
+    error Unauthorized();
 
     modifier notNullAddress(address someone) {
         if (someone == address(0)) revert("can't be zero address");
         _;
     }
 
-    /// @notice Constructor for the implementation contract.
-    /// @custom:oz-upgrades-unsafe-allow constructor
+
     constructor() {
-        _disableInitializers();
+       gov = msg.sender;
     }
 
-    /**
-     * @notice Initializes the owner of the contract
-     * @param accessControlManager_ Address of the access control manager contract
-     */
-    function initialize(address accessControlManager_) external initializer {
-        __AccessControlled_init(accessControlManager_);
+    modifier onlyGov() {
+        if (msg.sender != gov) revert Unauthorized();
+        _;
     }
 
-    /**
-     * @notice Manually set the price of a given asset
-     * @param asset Asset address
-     * @param price Asset price in 30 decimals
-     * @custom:access Only Governance
-     * @custom:event Emits PricePosted event on successfully setup of asset price
-     */
-    function setDirectPrice(address asset, uint256 price) external notNullAddress(asset) {
-        _checkAccessAllowed("setDirectPrice(address,uint256)");
-
-        uint256 previousPriceMantissa = prices[asset];
-        prices[asset] = price;
-        emit PricePosted(asset, previousPriceMantissa, price);
+    function setGov(address newGov) external onlyGov notNullAddress(newGov) {
+        gov = newGov;
     }
-
+    
     /**
      * @notice Add multiple token configs at the same time
      * @param tokenConfigs_ config array
      * @custom:access Only Governance
      * @custom:error Zero length error thrown, if length of the array in parameter is 0
      */
-    function setTokenConfigs(TokenConfig[] memory tokenConfigs_) external {
+    function setTokenConfigs(TokenConfig[] memory tokenConfigs_) external onlyGov {
         if (tokenConfigs_.length == 0) revert("length can't be 0");
         uint256 numTokenConfigs = tokenConfigs_.length;
         for (uint256 i; i < numTokenConfigs; ) {
@@ -106,8 +88,7 @@ contract AproOracle is AccessControlledV8, OracleInterface {
      */
     function setTokenConfig(
         TokenConfig memory tokenConfig
-    ) public notNullAddress(tokenConfig.asset) notNullAddress(tokenConfig.feed) {
-        _checkAccessAllowed("setTokenConfig(TokenConfig)");
+    ) public notNullAddress(tokenConfig.asset) notNullAddress(tokenConfig.feed) onlyGov {
 
         if (tokenConfig.maxStalePeriod == 0) revert("stale period can't be zero");
         tokenConfigs[tokenConfig.asset] = tokenConfig;

@@ -2,7 +2,7 @@ const { contractAt } = require('../shared/helpers');
 
 const tokens = require('../core/tokens')[network.name];
 
-const PYTH_ORACLE_ADAPTER = "0xeE6CFe0E287384B0e31B2023eeAeC8873B018766"
+const PYTH_ORACLE_ADAPTER = "0x8219388A5fF06122Af687FC7dfda3C62a24574D5"
 
 async function main() {
 
@@ -65,3 +65,6 @@ main()
         console.error(error)
         process.exit(1)
     })
+
+
+    //  npx hardhat run scripts/oracle/updatePythPrices.js --network core-testnet 

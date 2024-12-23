@@ -1,7 +1,4 @@
 const { getFrameSigner, deployContract, contractAt, sendTxn, writeTmpAddresses } = require("../shared/helpers")
-const { expandDecimals } = require("../../test/shared/utilities")
-const { toUsd } = require("../../test/shared/units")
-const { errors } = require("../../test/core/Vault/helpers")
 
 const network = (process.env.HARDHAT_NETWORK || 'mainnet');
 const tokens = require('./tokens')[network];
@@ -13,17 +10,27 @@ async function main() {
 
   // -------------------BTC --------------------
   const positionManagerAddress = undefined
-  const vault = await contractAt("Vault", "0x8D1F4c528FD879A83aa41d4e1261c210Dd6e28d0")
+  const vault = await contractAt("Vault", "0x736Cad071Fdb5ce7B17F35bB22f68Ad53F55C207")
   const timelock = await contractAt("Timelock", await vault.gov())
   const router = await contractAt("Router", await vault.router())
-  const shortsTracker = await contractAt("ShortsTracker", "0x82394e132BcAf2297d0d41c4cfCC260Cc1bf3Da0")
+  const shortsTracker = await contractAt("ShortsTracker", "0x76d870fe862a7951dF969E84B4c0C05E5FE028f8")
   const shortsTrackerTimelock = await contractAt("ShortsTrackerTimelock", await shortsTracker.gov())
   const weth = await contractAt("WETH", tokens.nativeToken.address)
-  const orderBook = await contractAt("OrderBook", "0x84d178be6A81dd5b29b1CDc289D16F39F94c682e")
-  const referralStorage = await contractAt("ReferralStorage", "0x2997249971523381AD58512905b863DCE6929787")
-  const positionUtils = await contractAt("PositionUtils", "0x914b5D85E586B0e4B6dDDfC2D902ED75EbE33950")
+  const orderBook = await contractAt("OrderBook", "0xDd2c29cfeb1444dB6575CcEB64D9A6177769B98f")
+  const referralStorage = await contractAt("ReferralStorage", "0x952c5Cb3355695Ed1DEDD72aD074c960C2D8ce03")
+  const positionUtils = await contractAt("PositionUtils", "0x859d66aD5C0dE79c1375326B9df6fC56A7145332")
 
 
+
+  // const positionKeepers = [
+  //   { address: "0x77B6935623878F8f9dce8E1A28d4A8A7E89A37b6" },
+  //   { address: "0x0666992F2D2fD045e9b876B5490F5470452aFBD3" }
+  // ]
+  // const liquidators = [
+  //   { address: "0x73CbB4801bFE4AD34d8B0Fd3dab8bE0E9e9d2579" },
+  //   { address: "0x0666992F2D2fD045e9b876B5490F5470452aFBD3" }
+  // ]
+// mainnet
   const positionKeepers = [
     { address: "0xa766db45cd087f3d8374d363624B6579f0474D5F" },
     { address: "0x82bbd2795d9b6Fc08305eb21ffB3c07C1Ad104E8" }
@@ -113,3 +120,5 @@ main()
     console.error(error)
     process.exit(1)
   })
+
+  // npx hardhat run scripts/core/deployPositionManager.js --network core-testnet 

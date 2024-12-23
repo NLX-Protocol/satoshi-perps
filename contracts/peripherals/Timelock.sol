@@ -8,6 +8,8 @@ import "./interfaces/ITimelockTarget.sol";
 import "./interfaces/ITimelock.sol";
 import "./interfaces/IHandlerTarget.sol";
 import "./BasicMulticall.sol";
+import "./interfaces/IGovernedProxyAdmin.sol";
+import "./interfaces/IOracleTokenConfigs.sol";
 
 import "../access/interfaces/IAdmin.sol";
 import "../access/interfaces/IGovRequester.sol";
@@ -293,6 +295,8 @@ contract Timelock is ITimelock, BasicMulticall {
         uint256 _tokenWeight,
         uint256 _minProfitBps,
         uint256 _maxUsdgAmount,
+        uint256 _maxLongOiAmount,
+        uint256 _maxShortOiAmount,
         bool _isStable,
         bool _isShortable
     ) external onlyKeeperAndAbove {
@@ -302,6 +306,8 @@ contract Timelock is ITimelock, BasicMulticall {
             _tokenWeight,
             _minProfitBps,
             _maxUsdgAmount,
+            _maxLongOiAmount,
+            _maxShortOiAmount,
             _isStable,
             _isShortable
         );
@@ -313,6 +319,8 @@ contract Timelock is ITimelock, BasicMulticall {
         uint256 _tokenWeight,
         uint256 _minProfitBps,
         uint256 _maxUsdgAmount,
+        uint256 _maxLongOiAmount,
+        uint256 _maxShortOiAmount,
         uint256 _bufferAmount,
         uint256 _usdgAmount
     ) external onlyKeeperAndAbove {
@@ -326,13 +334,15 @@ contract Timelock is ITimelock, BasicMulticall {
         bool isShortable = vault.shortableTokens(_token);
 
         IVault(_vault).setTokenConfig(
-            _token,
-            tokenDecimals,
-            _tokenWeight,
-            _minProfitBps,
-            _maxUsdgAmount,
-            isStable,
-            isShortable
+             _token,
+             tokenDecimals,
+             _tokenWeight,
+             _minProfitBps,
+             _maxUsdgAmount,
+             _maxLongOiAmount,
+             _maxShortOiAmount,
+             isStable,
+             isShortable
         );
 
         IVault(_vault).setBufferAmount(_token, _bufferAmount);
@@ -380,10 +390,6 @@ contract Timelock is ITimelock, BasicMulticall {
 
     function removeAdmin(address _token, address _account) external onlyAdmin {
         IYieldToken(_token).removeAdmin(_account);
-    }
-
-    function setIsSwapEnabled(address _vault, bool _isSwapEnabled) external onlyKeeperAndAbove {
-        IVault(_vault).setIsSwapEnabled(_isSwapEnabled);
     }
 
     function setTier(address _referralStorage, uint256 _tierId, uint256 _totalRebate, uint256 _discountShare) external onlyKeeperAndAbove {
@@ -592,6 +598,29 @@ contract Timelock is ITimelock, BasicMulticall {
         govRequesters[_requester] = _isActive;
     }
 
+    // Contract upgrades
+    function setUpgradeAdmin(address _governedProxyAdmin, address _admin, bool _enabled) external onlyAdmin{
+        IGovernedProxyAdmin(_governedProxyAdmin).setUpgradeAdmin(_admin, _enabled);
+    }
+
+    function setUpgradesEnabled(address _governedProxyAdmin, bool _enabled) external onlyAdmin{
+        IGovernedProxyAdmin(_governedProxyAdmin).setUpgradesEnabled(_enabled);
+    }
+
+    function setTokenConfigsChainlink(
+        address _oracle,
+        IOracleTokenConfigsChainlink.TokenConfig[] memory _tokenConfigs
+    ) external onlyAdmin {
+        IOracleTokenConfigsChainlink(_oracle).setTokenConfigs(_tokenConfigs);
+    }
+
+    function setTokenConfigsPyth(
+        address _oracle,
+        IOracleTokenConfigsPyth.TokenConfig[] memory _tokenConfigs
+    ) external onlyAdmin {
+        IOracleTokenConfigsPyth(_oracle).setTokenConfigs(_tokenConfigs);
+    }
+    
     function cancelAction(bytes32 _action) external onlyAdmin {
         _clearAction(_action);
     }

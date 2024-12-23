@@ -87,7 +87,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
         resilientOracleAddress = _resilientOracleAddress;
     }
 
- function getPrice(address _token, bool _maximise) public override view returns (uint256) {
+    function getPrice(address _token, bool _maximise) public override view returns (uint256) {
         // Primary Price Retrieval
         uint256 price = getPrimaryPrice(_token, _maximise);
 

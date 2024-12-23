@@ -6,15 +6,13 @@ import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "./interfaces/OracleInterface.sol";
-import "./interfaces/VBep20Interface.sol";
-import "@venusprotocol/governance-contracts/contracts/Governance/AccessControlledV8.sol";
 /**
  * @title PythOracle
  * @author Venus
  * @notice PythOracle contract reads prices from actual Pyth oracle contract which accepts, verifies and stores
  * the updated prices from external sources
  */
-contract PythOracle is AccessControlledV8, OracleInterface {
+contract PythOracle is OracleInterface {
     // To calculate 10 ** n(which is a signed type)
     using SignedMath for int256;
 
@@ -26,12 +24,10 @@ contract PythOracle is AccessControlledV8, OracleInterface {
         address asset;
         uint64 maxStalePeriod;
     }
-
+    /// @notice Contract governor address
+    address public gov;
     /// @notice Exponent scale (decimal precision) of prices
     uint256 public constant PRICE_PRECISION = 10 ** 30;
-
-    /// @notice Set this as asset address for BNB. This is the underlying for vBNB
-    address public constant BNB_ADDR = 0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB;
 
     /// @notice The actual pyth oracle address fetch & store the prices
     IPyth public underlyingPythOracle;
@@ -51,39 +47,35 @@ contract PythOracle is AccessControlledV8, OracleInterface {
     /// @notice Emit when a price is updated for a token
     event PriceUpdated(address indexed asset, uint publishTime, int64 price, int32 expo);
 
+    error Unauthorized();
+
     modifier notNullAddress(address someone) {
         if (someone == address(0)) revert("can't be zero address");
         _;
     }
 
-    /// @notice Constructor for the implementation contract.
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
+
+    constructor(address _underlyingPythOracle) {
+        gov = msg.sender;
+        underlyingPythOracle = IPyth(_underlyingPythOracle);
+        emit PythOracleSet(address(0), _underlyingPythOracle);
     }
 
-    /**
-     * @notice Initializes the owner of the contract and sets required contracts
-     * @param underlyingPythOracle_ Address of the Pyth oracle
-     * @param accessControlManager_ Address of the access control manager contract
-     */
-    function initialize(
-        address underlyingPythOracle_,
-        address accessControlManager_
-    ) external initializer notNullAddress(underlyingPythOracle_) {
-        __AccessControlled_init(accessControlManager_);
-
-        underlyingPythOracle = IPyth(underlyingPythOracle_);
-        emit PythOracleSet(address(0), underlyingPythOracle_);
+    modifier onlyGov() {
+        if (msg.sender != gov) revert Unauthorized();
+        _;
     }
 
+    function setGov(address newGov) external onlyGov notNullAddress(newGov) {
+        gov = newGov;
+    }
     /**
      * @notice Batch set token configs
      * @param tokenConfigs_ Token config array
      * @custom:access Only Governance
      * @custom:error Zero length error is thrown if length of the array in parameter is 0
      */
-    function setTokenConfigs(TokenConfig[] memory tokenConfigs_) external {
+    function setTokenConfigs(TokenConfig[] memory tokenConfigs_) external onlyGov {
         if (tokenConfigs_.length == 0) revert("length can't be 0");
         uint256 numTokenConfigs = tokenConfigs_.length;
         for (uint256 i; i < numTokenConfigs; ) {
@@ -103,8 +95,7 @@ contract PythOracle is AccessControlledV8, OracleInterface {
      */
     function setUnderlyingPythOracle(
         IPyth underlyingPythOracle_
-    ) external notNullAddress(address(underlyingPythOracle_)) {
-        _checkAccessAllowed("setUnderlyingPythOracle(address)");
+    ) external notNullAddress(address(underlyingPythOracle_)) onlyGov {
         IPyth oldUnderlyingPythOracle = underlyingPythOracle;
         underlyingPythOracle = underlyingPythOracle_;
         emit PythOracleSet(address(oldUnderlyingPythOracle), address(underlyingPythOracle_));
@@ -117,8 +108,7 @@ contract PythOracle is AccessControlledV8, OracleInterface {
      * @custom:error Range error is thrown if max stale period is zero
      * @custom:error NotNullAddress error is thrown if asset address is null
      */
-    function setTokenConfig(TokenConfig memory tokenConfig) public notNullAddress(tokenConfig.asset) {
-        _checkAccessAllowed("setTokenConfig(TokenConfig)");
+    function setTokenConfig(TokenConfig memory tokenConfig) public notNullAddress(tokenConfig.asset) onlyGov {
         if (tokenConfig.maxStalePeriod == 0) revert("max stale period cannot be 0");
         tokenConfigs[tokenConfig.asset] = tokenConfig;
         emit TokenConfigAdded(tokenConfig.asset, tokenConfig.pythId, tokenConfig.maxStalePeriod);

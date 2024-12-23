@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity 0.8.25;
 
-import "./interfaces/VBep20Interface.sol";
 import "./interfaces/OracleInterface.sol";
-import "@venusprotocol/governance-contracts/contracts/Governance/AccessControlledV8.sol";
 
 /**
  * @title BoundValidator
@@ -12,7 +10,7 @@ import "@venusprotocol/governance-contracts/contracts/Governance/AccessControlle
  * Each asset has an upper and lower bound ratio set in the config. In order for a price to be valid
  * it must fall within this range of the validator price.
  */
-contract BoundValidator is AccessControlledV8, BoundValidatorInterface {
+contract BoundValidator is BoundValidatorInterface {
     struct ValidateConfig {
         /// @notice asset address
         address asset;
@@ -23,6 +21,9 @@ contract BoundValidator is AccessControlledV8, BoundValidatorInterface {
         /// below which the reported price will be invalidated
         uint256 lowerBoundRatio;
     }
+    
+    /// @notice Contract governor address
+    address public gov;
 
     /// @notice validation configs by asset
     mapping(address => ValidateConfig) public validateConfigs;
@@ -30,20 +31,24 @@ contract BoundValidator is AccessControlledV8, BoundValidatorInterface {
     /// @notice Emit this event when new validation configs are added
     event ValidateConfigAdded(address indexed asset, uint256 indexed upperBound, uint256 indexed lowerBound);
 
-    /// @notice Constructor for the implementation contract. Sets immutable variables.
-    /// @custom:oz-upgrades-unsafe-allow constructor
+    error Unauthorized();
+
+    modifier notNullAddress(address someone) {
+        if (someone == address(0)) revert("can't be zero address");
+        _;
+    }
     constructor() {
-        _disableInitializers();
+       gov = msg.sender;
     }
 
-    /**
-     * @notice Initializes the owner of the contract
-     * @param accessControlManager_ Address of the access control manager contract
-     */
-    function initialize(address accessControlManager_) external initializer {
-        __AccessControlled_init(accessControlManager_);
+    modifier onlyGov() {
+        if (msg.sender != gov) revert Unauthorized();
+        _;
     }
 
+    function setGov(address newGov) external onlyGov notNullAddress(newGov) {
+        gov = newGov;
+    }
     /**
      * @notice Add multiple validation configs at the same time
      * @param configs Array of validation configs
@@ -51,7 +56,7 @@ contract BoundValidator is AccessControlledV8, BoundValidatorInterface {
      * @custom:error Zero length error is thrown if length of the config array is 0
      * @custom:event Emits ValidateConfigAdded for each validation config that is successfully set
      */
-    function setValidateConfigs(ValidateConfig[] memory configs) external {
+    function setValidateConfigs(ValidateConfig[] memory configs) external onlyGov {
         uint256 length = configs.length;
         if (length == 0) revert("invalid validate config length");
         for (uint256 i; i < length; ) {
@@ -71,8 +76,7 @@ contract BoundValidator is AccessControlledV8, BoundValidatorInterface {
      * @custom:error Range error thrown if lower bound is greater than or equal to upper bound
      * @custom:event Emits ValidateConfigAdded when a validation config is successfully set
      */
-    function setValidateConfig(ValidateConfig memory config) public {
-        _checkAccessAllowed("setValidateConfig(ValidateConfig)");
+    function setValidateConfig(ValidateConfig memory config) public onlyGov {
 
         if (config.asset == address(0)) revert("asset can't be zero address");
         if (config.upperBoundRatio == 0 || config.lowerBoundRatio == 0) revert("bound must be positive");
@@ -115,8 +119,4 @@ contract BoundValidator is AccessControlledV8, BoundValidatorInterface {
         return false;
     }
 
-    // BoundValidator is to get inherited, so it's a good practice to add some storage gaps like
-    // OpenZepplin proposed in their contracts: https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-    // solhint-disable-next-line
-    uint256[49] private __gap;
 }

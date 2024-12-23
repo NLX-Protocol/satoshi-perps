@@ -9,6 +9,7 @@ const { initVault, getBnbConfig, getBtcConfig, getEthConfig, getDaiConfig } = re
 use(solidity)
 
 describe("Vault.swap", function () {
+  // swap functionality removed
   const provider = waffle.provider
   const [wallet, user0, user1, user2, user3] = provider.getWallets()
   let vault

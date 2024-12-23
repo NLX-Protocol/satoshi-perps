@@ -8,12 +8,6 @@ interface OracleInterface {
 interface ResilientOracleInterface {
 
     function getPrice(address asset, bool maximize) external view returns (uint256);
-
-    function updatePrice(address vToken) external;
-
-    function updateAssetPrice(address asset) external;
-
-    function getUnderlyingPrice(address vToken, bool maximize) external view returns (uint256);
 }
 
 interface TwapInterface is OracleInterface {

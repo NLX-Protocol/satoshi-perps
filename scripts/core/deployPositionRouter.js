@@ -9,14 +9,21 @@ const tokens = require('./tokens')[network];
 
 
 
+// // testnet
+// const positionKeepers = [
+//   "0x77B6935623878F8f9dce8E1A28d4A8A7E89A37b6",
+//   "0x0666992F2D2fD045e9b876B5490F5470452aFBD3",
+// ]
+
+// mainnet
 const positionKeepers = [
   "0xa766db45cd087f3d8374d363624B6579f0474D5F",
   "0x82bbd2795d9b6Fc08305eb21ffB3c07C1Ad104E8",
 ]
 
 async function main() {
-  const vault = await contractAt("Vault", "0x8D1F4c528FD879A83aa41d4e1261c210Dd6e28d0")
-  const shortsTracker = await contractAt("ShortsTracker", "0x82394e132BcAf2297d0d41c4cfCC260Cc1bf3Da0")
+  const vault = await contractAt("Vault", "0x736Cad071Fdb5ce7B17F35bB22f68Ad53F55C207")
+  const shortsTracker = await contractAt("ShortsTracker", "0x76d870fe862a7951dF969E84B4c0C05E5FE028f8")
 
   const wallet = (await ethers.getSigners())[0]
 
@@ -89,3 +96,5 @@ main()
     console.error(error)
     process.exit(1)
   })
+
+  // npx hardhat run scripts/core/deployPositionRouter.js --network core-testnet

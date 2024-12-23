@@ -11,10 +11,10 @@ async function main() {
   // ------------BTC market
   const orderBook = await deployContract("OrderBook", []);
   await sendTxn(orderBook.initialize(
-    "0xC9e6275cc66f066f485617F6C9C6B9D32D4a31B4", // router
-    "0x8D1F4c528FD879A83aa41d4e1261c210Dd6e28d0", // vault
+    "0xd910dE6Ac0ED5a5085EF41bFCfDEaB3B3ba39c96", // router
+    "0x736Cad071Fdb5ce7B17F35bB22f68Ad53F55C207", // vault
     nativeToken.address, // weth
-    "0x9bC26AC9C5Dc3AA99eC178731C64915Ed286ac0E", // usdg
+    "0xa60DC7bAb41c8BdB7F0ae762aEdCE13DE0909e73", // usdg
     expandDecimals(1, 17), // 0.01 
     expandDecimals(10, 30) // min purchase token amount usd
   ), "orderBook.initialize");
@@ -32,3 +32,5 @@ main()
     console.error(error)
     process.exit(1)
   })
+
+  // npx hardhat run scripts/core/deployOrderBook.js --network core-testnet  

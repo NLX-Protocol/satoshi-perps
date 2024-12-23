@@ -6,7 +6,6 @@ import "./IVaultUtils.sol";
 
 interface IVault {
     function isInitialized() external view returns (bool);
-    function isSwapEnabled() external view returns (bool);
     function isLeverageEnabled() external view returns (bool);
 
     function setVaultUtils(IVaultUtils _vaultUtils) external;
@@ -41,7 +40,6 @@ interface IVault {
     function setMaxLeverage(uint256 _maxLeverage) external;
     function setInManagerMode(bool _inManagerMode) external;
     function setManager(address _manager, bool _isManager) external;
-    function setIsSwapEnabled(bool _isSwapEnabled) external;
     function setIsLeverageEnabled(bool _isLeverageEnabled) external;
     function setMaxGasPrice(uint256 _maxGasPrice) external;
     function upgradeVault(address _receiver, address _token, uint256 _amount) external;
@@ -68,9 +66,11 @@ interface IVault {
     function setTokenConfig(
         address _token,
         uint256 _tokenDecimals,
-        uint256 _redemptionBps,
+        uint256 _tokenWeight,
         uint256 _minProfitBps,
         uint256 _maxUsdgAmount,
+        uint256 _maxLongOiAmount,
+        uint256 _maxShortOiAmount,
         bool _isStable,
         bool _isShortable
     ) external;

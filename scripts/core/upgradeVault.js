@@ -1,4 +1,4 @@
-const { deployContract, contractAt , sendTxn, writeTmpAddresses, callWithRetries } = require("../shared/helpers")
+const { deployContract, contractAt, sendTxn, writeTmpAddresses, callWithRetries } = require("../shared/helpers")
 const { expandDecimals } = require("../../test/shared/utilities")
 const { toUsd } = require("../../test/shared/units")
 const { errors } = require("../../test/core/Vault/helpers")
@@ -9,18 +9,19 @@ const tokens = require('./tokens')[network];
 // this should only be used for development
 // mainnet contracts should be controller by a timelock
 async function main() {
-  const wallet = { address: "0x5F799f365Fa8A2B60ac0429C48B153cA5a6f0Cf8" }
+  const { SolvBTC } = tokens
+  const wallet = { address: "0xB08c0B39BAd8eD79dA4dB80D6a07cB56A204368b" }
 
-  const vault = await contractAt("Vault", "0xDE3590067c811b6F023b557ed45E4f1067859663")
-  const { eth, btc, usdc } = tokens
-  const tokenArr = [eth, btc, usdc]
-  for (let i = 0; i < tokenArr.length; i++) {
-    const tokenInfo = tokenArr[i]
-    const token = await contractAt("Token", tokenInfo.address)
-    const balance = await token.balanceOf(vault.address)
-    console.log(tokenInfo.name, balance.toString())
-    await sendTxn(vault.upgradeVault(wallet.address, token.address, balance), `vault.upgradeVault(${tokenInfo.name})`)
-  }
+  const vault = await contractAt("Vault", "0x8D1F4c528FD879A83aa41d4e1261c210Dd6e28d0")
+  
+  const timelockGov = await contractAt("Timelock", await vault.gov())
+  
+  const token = await contractAt("Token", SolvBTC.address)
+  const balance = await token.balanceOf(vault.address)
+  await sendTxn(timelockGov.signalUpgradeVault(vault.address, wallet.address, SolvBTC.address, balance.toString()), "timelockGov.signalUpgradeVault")
+  await sendTxn(timelockGov.upgradeVault(vault.address, wallet.address, SolvBTC.address, balance.toString()), "timelockGov.upgradeVault")
+
+
 }
 
 main()

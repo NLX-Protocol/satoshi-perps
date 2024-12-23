@@ -175,6 +175,8 @@ contract GmxTimelock is IGmxTimelock {
         uint256 _tokenWeight,
         uint256 _minProfitBps,
         uint256 _maxUsdgAmount,
+        uint256 _maxLongOiAmount,
+        uint256 _maxShortOiAmount,
         uint256 _bufferAmount,
         uint256 _usdgAmount
     ) external onlyAdmin {
@@ -193,6 +195,8 @@ contract GmxTimelock is IGmxTimelock {
             _tokenWeight,
             _minProfitBps,
             _maxUsdgAmount,
+            _maxLongOiAmount,
+            _maxShortOiAmount,
             isStable,
             isShortable
         );
@@ -227,10 +231,6 @@ contract GmxTimelock is IGmxTimelock {
         IVaultPriceFeed(_priceFeed).setSpreadThresholdBasisPoints(_spreadThresholdBasisPoints);
     }
 
-
-    function setIsSwapEnabled(address _vault, bool _isSwapEnabled) external onlyAdmin {
-        IVault(_vault).setIsSwapEnabled(_isSwapEnabled);
-    }
 
     function setIsLeverageEnabled(address _vault, bool _isLeverageEnabled) external override onlyAdminOrHandler {
         IVault(_vault).setIsLeverageEnabled(_isLeverageEnabled);
@@ -420,6 +420,8 @@ contract GmxTimelock is IGmxTimelock {
         uint256 _tokenWeight,
         uint256 _minProfitBps,
         uint256 _maxUsdgAmount,
+        uint256 _maxLongOiAmount,
+        uint256 _maxShortOiAmount,
         bool _isStable,
         bool _isShortable
     ) external onlyAdmin {
@@ -431,6 +433,8 @@ contract GmxTimelock is IGmxTimelock {
             _tokenWeight,
             _minProfitBps,
             _maxUsdgAmount,
+            _maxLongOiAmount,
+            _maxShortOiAmount,
             _isStable,
             _isShortable
         ));
@@ -444,6 +448,8 @@ contract GmxTimelock is IGmxTimelock {
             _tokenWeight,
             _minProfitBps,
             _maxUsdgAmount,
+            _maxLongOiAmount,
+            _maxShortOiAmount,
             _isStable,
             _isShortable
         );

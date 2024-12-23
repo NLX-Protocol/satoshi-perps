@@ -1,4 +1,4 @@
-const { deployContract, contractAt, sendTxn, writeTmpAddresses } = require("../shared/helpers")
+const { deployContract, contractAt, sendTxn, writeTmpAddresses, deployUpgradeableContract } = require("../shared/helpers")
 const { expandDecimals } = require("../../test/shared/utilities")
 const { toUsd } = require("../../test/shared/units")
 const { errors } = require("../../test/core/Vault/helpers")
@@ -10,8 +10,11 @@ async function main() {
 
   const { nativeToken } = tokens
 
-  const vault = await deployContract("Vault", [])
+  const vaultUpgradeableContracts = await deployUpgradeableContract("Vault", [], undefined,{
+    proxyAdmin: "GovernedProxyAdmin"
+  })
 
+  const vault = vaultUpgradeableContracts.proxy
   const wallet = (await ethers.getSigners())[0]
 
 
@@ -96,6 +99,8 @@ async function main() {
     btcUsdg: btcUsdg.address,
     slpBTC: slpBTC.address,
     vaultBTC: vault.address,
+    currentVaultImplementationBTC: vaultUpgradeableContracts.implementationAddress,
+    vaultBTCProxyAdmin: vaultUpgradeableContracts.proxyAdminAddress,
     routerBTC: router.address,
     vaultPriceFeedBTC: vaultPriceFeed.address,
     slpManagerBTC: slpManager.address,
@@ -114,3 +119,6 @@ main()
     console.error(error)
     process.exit(1)
   })
+
+ 
+  // npx hardhat run scripts/core/deployVault.js --network core-testnet  

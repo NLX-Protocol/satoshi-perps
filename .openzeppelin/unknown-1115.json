@@ -724,6 +724,31 @@
       "address": "0x36c7f881F8cFc94cB0e6FdeC1Df4Cb2259f3aB85",
       "txHash": "0x7364abed6f967084af7164b492adb0687337d1ef00dd164afa8d04e866f9ca4a",
       "kind": "transparent"
+    },
+    {
+      "address": "0x6a8295a5726cF309e62D22B8F63f364E425B0964",
+      "txHash": "0x21230346829675ab9aca87e73a340a9033bb84a08692ff02b74efca1eec3a3ae",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xe3147eB37300Cdb8b3C538E7b06ceB696a964cC6",
+      "txHash": "0x936d338219e5a47b23d823fa8b069900759beabbe004d769736156bb3954ced4",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x2D719d197758FFbdbA12081d3581bbB076094C6c",
+      "txHash": "0xd68d208e78734605703adb6e6071ea110a9a567977c09f6aee45701f2888d13a",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xD0d2834241b47dcf79D031af7fd0f021b2763a9e",
+      "txHash": "0x4c264691031f89eb823b08e6b26f7aaa89fca531f4e834f39728e7c7ed70a550",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x0e4BABF195c0A8b36cBB9024ac27dC98D15CA16C",
+      "txHash": "0x41c925526895347e755a4a45d6e902523d9bef38e4909309785cabf10f1819cd",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -8031,6 +8056,594 @@
           "t_uint8": {
             "label": "uint8",
             "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    },
+    "c26c05f404fd69483bf454baf7f0c073051301fd76ac044b2b7321e22fb35c5e": {
+      "address": "0x1db5ccaAE504e8C59B1f2c6a16e041d2979da70B",
+      "txHash": "0xdca8bc489a85ca97131bbf53efc286864ae6638aa3d06adedac8f6a409d596a8",
+      "layout": {
+        "solcVersion": "0.6.12",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin-3/contracts-upgradeable/proxy/Initializable.sol:25"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin-3/contracts-upgradeable/proxy/Initializable.sol:30"
+          },
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin-3/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol:37"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin-3/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol:67"
+          },
+          {
+            "label": "isInitialized",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_bool",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:40"
+          },
+          {
+            "label": "isLeverageEnabled",
+            "offset": 1,
+            "slot": "51",
+            "type": "t_bool",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:41"
+          },
+          {
+            "label": "vaultUtils",
+            "offset": 2,
+            "slot": "51",
+            "type": "t_contract(IVaultUtils)19904",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:43"
+          },
+          {
+            "label": "errorController",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_address",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:45"
+          },
+          {
+            "label": "router",
+            "offset": 0,
+            "slot": "53",
+            "type": "t_address",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:47"
+          },
+          {
+            "label": "priceFeed",
+            "offset": 0,
+            "slot": "54",
+            "type": "t_address",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:48"
+          },
+          {
+            "label": "usdg",
+            "offset": 0,
+            "slot": "55",
+            "type": "t_address",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:50"
+          },
+          {
+            "label": "gov",
+            "offset": 0,
+            "slot": "56",
+            "type": "t_address",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:51"
+          },
+          {
+            "label": "whitelistedTokenCount",
+            "offset": 0,
+            "slot": "57",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:53"
+          },
+          {
+            "label": "maxLeverage",
+            "offset": 0,
+            "slot": "58",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:55"
+          },
+          {
+            "label": "liquidationFeeUsd",
+            "offset": 0,
+            "slot": "59",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:57"
+          },
+          {
+            "label": "taxBasisPoints",
+            "offset": 0,
+            "slot": "60",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:58"
+          },
+          {
+            "label": "stableTaxBasisPoints",
+            "offset": 0,
+            "slot": "61",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:59"
+          },
+          {
+            "label": "mintBurnFeeBasisPoints",
+            "offset": 0,
+            "slot": "62",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:60"
+          },
+          {
+            "label": "swapFeeBasisPoints",
+            "offset": 0,
+            "slot": "63",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:61"
+          },
+          {
+            "label": "stableSwapFeeBasisPoints",
+            "offset": 0,
+            "slot": "64",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:62"
+          },
+          {
+            "label": "marginFeeBasisPoints",
+            "offset": 0,
+            "slot": "65",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:63"
+          },
+          {
+            "label": "minProfitTime",
+            "offset": 0,
+            "slot": "66",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:65"
+          },
+          {
+            "label": "hasDynamicFees",
+            "offset": 0,
+            "slot": "67",
+            "type": "t_bool",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:66"
+          },
+          {
+            "label": "fundingInterval",
+            "offset": 0,
+            "slot": "68",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:68"
+          },
+          {
+            "label": "fundingRateFactor",
+            "offset": 0,
+            "slot": "69",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:69"
+          },
+          {
+            "label": "stableFundingRateFactor",
+            "offset": 0,
+            "slot": "70",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:70"
+          },
+          {
+            "label": "totalTokenWeights",
+            "offset": 0,
+            "slot": "71",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:71"
+          },
+          {
+            "label": "inManagerMode",
+            "offset": 0,
+            "slot": "72",
+            "type": "t_bool",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:74"
+          },
+          {
+            "label": "inPrivateLiquidationMode",
+            "offset": 1,
+            "slot": "72",
+            "type": "t_bool",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:75"
+          },
+          {
+            "label": "maxGasPrice",
+            "offset": 0,
+            "slot": "73",
+            "type": "t_uint256",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:77"
+          },
+          {
+            "label": "approvedRouters",
+            "offset": 0,
+            "slot": "74",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:79"
+          },
+          {
+            "label": "isLiquidator",
+            "offset": 0,
+            "slot": "75",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:80"
+          },
+          {
+            "label": "isManager",
+            "offset": 0,
+            "slot": "76",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:81"
+          },
+          {
+            "label": "allWhitelistedTokens",
+            "offset": 0,
+            "slot": "77",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:83"
+          },
+          {
+            "label": "whitelistedTokens",
+            "offset": 0,
+            "slot": "78",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:85"
+          },
+          {
+            "label": "tokenDecimals",
+            "offset": 0,
+            "slot": "79",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:86"
+          },
+          {
+            "label": "minProfitBasisPoints",
+            "offset": 0,
+            "slot": "80",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:87"
+          },
+          {
+            "label": "stableTokens",
+            "offset": 0,
+            "slot": "81",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:88"
+          },
+          {
+            "label": "shortableTokens",
+            "offset": 0,
+            "slot": "82",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:89"
+          },
+          {
+            "label": "tokenBalances",
+            "offset": 0,
+            "slot": "83",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:92"
+          },
+          {
+            "label": "tokenWeights",
+            "offset": 0,
+            "slot": "84",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:95"
+          },
+          {
+            "label": "usdgAmounts",
+            "offset": 0,
+            "slot": "85",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:98"
+          },
+          {
+            "label": "maxUsdgAmounts",
+            "offset": 0,
+            "slot": "86",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:101"
+          },
+          {
+            "label": "poolAmounts",
+            "offset": 0,
+            "slot": "87",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:105"
+          },
+          {
+            "label": "reservedAmounts",
+            "offset": 0,
+            "slot": "88",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:108"
+          },
+          {
+            "label": "bufferAmounts",
+            "offset": 0,
+            "slot": "89",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:112"
+          },
+          {
+            "label": "guaranteedUsd",
+            "offset": 0,
+            "slot": "90",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:119"
+          },
+          {
+            "label": "cumulativeFundingRates",
+            "offset": 0,
+            "slot": "91",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:122"
+          },
+          {
+            "label": "lastFundingTimes",
+            "offset": 0,
+            "slot": "92",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:124"
+          },
+          {
+            "label": "positions",
+            "offset": 0,
+            "slot": "93",
+            "type": "t_mapping(t_bytes32,t_struct(Position)12506_storage)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:127"
+          },
+          {
+            "label": "feeReserves",
+            "offset": 0,
+            "slot": "94",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:130"
+          },
+          {
+            "label": "globalShortSizes",
+            "offset": 0,
+            "slot": "95",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:132"
+          },
+          {
+            "label": "globalShortAveragePrices",
+            "offset": 0,
+            "slot": "96",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:133"
+          },
+          {
+            "label": "maxGlobalShortSizes",
+            "offset": 0,
+            "slot": "97",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:134"
+          },
+          {
+            "label": "errors",
+            "offset": 0,
+            "slot": "98",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:136"
+          },
+          {
+            "label": "maxLongOpenInterest",
+            "offset": 0,
+            "slot": "99",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:138"
+          },
+          {
+            "label": "maxShortOpenInterest",
+            "offset": 0,
+            "slot": "100",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:139"
+          },
+          {
+            "label": "longOpenInterest",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:140"
+          },
+          {
+            "label": "shortOpenInterest",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Vault",
+            "src": "contracts/core/Vault.sol:141"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IVaultUtils)19904": {
+            "label": "contract IVaultUtils",
+            "numberOfBytes": "20"
+          },
+          "t_int256": {
+            "label": "int256",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(Position)12506_storage)": {
+            "label": "mapping(bytes32 => struct Vault.Position)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Position)12506_storage": {
+            "label": "struct Vault.Position",
+            "members": [
+              {
+                "label": "size",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "collateral",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "averagePrice",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "entryFundingRate",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "reserveAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "realisedPnl",
+                "type": "t_int256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "lastIncreasedTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              }
+            ],
+            "numberOfBytes": "224"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
           }
         },
         "namespaces": {}

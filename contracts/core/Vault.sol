@@ -5,14 +5,15 @@ pragma solidity 0.6.12;
 import "../libraries/math/SafeMath.sol";
 import "../libraries/token/IERC20.sol";
 import "../libraries/token/SafeERC20.sol";
-import "../libraries/utils/ReentrancyGuard.sol";
 
 import "../tokens/interfaces/IUSDG.sol";
 import "./interfaces/IVault.sol";
 import "./interfaces/IVaultUtils.sol";
 import "./interfaces/IVaultPriceFeed.sol";
+import  "@openzeppelin-3/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
-contract Vault is ReentrancyGuard, IVault {
+
+contract Vault is ReentrancyGuardUpgradeable, IVault {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -37,8 +38,7 @@ contract Vault is ReentrancyGuard, IVault {
     uint256 public constant MAX_FUNDING_RATE_FACTOR = 10000; // 1%
 
     bool public override isInitialized;
-    bool public override isSwapEnabled = false;
-    bool public override isLeverageEnabled = true;
+    bool public override isLeverageEnabled;
 
     IVaultUtils public vaultUtils;
 
@@ -52,27 +52,27 @@ contract Vault is ReentrancyGuard, IVault {
 
     uint256 public override whitelistedTokenCount;
 
-    uint256 public override maxLeverage = 250 * 10000; // 250x
+    uint256 public override maxLeverage;
 
     uint256 public override liquidationFeeUsd;
-    uint256 public override taxBasisPoints = 50; // 0.5%
-    uint256 public override stableTaxBasisPoints = 20; // 0.2%
-    uint256 public override mintBurnFeeBasisPoints = 30; // 0.3%
-    uint256 public override swapFeeBasisPoints = 30; // 0.3%
-    uint256 public override stableSwapFeeBasisPoints = 4; // 0.04%
-    uint256 public override marginFeeBasisPoints = 10; // 0.1%
+    uint256 public override taxBasisPoints;
+    uint256 public override stableTaxBasisPoints;
+    uint256 public override mintBurnFeeBasisPoints;
+    uint256 public override swapFeeBasisPoints;
+    uint256 public override stableSwapFeeBasisPoints;
+    uint256 public override marginFeeBasisPoints;
 
     uint256 public override minProfitTime;
-    bool public override hasDynamicFees = false;
+    bool public override hasDynamicFees;
 
-    uint256 public override fundingInterval = 8 hours;
+    uint256 public override fundingInterval;
     uint256 public override fundingRateFactor;
     uint256 public override stableFundingRateFactor;
     uint256 public override totalTokenWeights;
 
 
-    bool public override inManagerMode = false;
-    bool public override inPrivateLiquidationMode = false;
+    bool public override inManagerMode;
+    bool public override inPrivateLiquidationMode;
 
     uint256 public override maxGasPrice;
 
@@ -134,6 +134,11 @@ contract Vault is ReentrancyGuard, IVault {
     mapping (address => uint256) public override maxGlobalShortSizes;
 
     mapping (uint256 => string) public errors;
+
+    mapping(address => uint256) public maxLongOpenInterest;
+    mapping(address => uint256) public maxShortOpenInterest;
+    mapping(address => uint256) public longOpenInterest;
+    mapping(address => uint256) public shortOpenInterest;
 
     event BuyUSDG(address account, address token, uint256 tokenAmount, uint256 usdgAmount, uint256 feeBasisPoints);
     event SellUSDG(address account, address token, uint256 usdgAmount, uint256 tokenAmount, uint256 feeBasisPoints);
@@ -209,11 +214,7 @@ contract Vault is ReentrancyGuard, IVault {
     event IncreaseGuaranteedUsd(address token, uint256 amount);
     event DecreaseGuaranteedUsd(address token, uint256 amount);
 
-    // once the parameters are verified to be working correctly,
-    // gov should be set to a timelock contract or a governance contract
-    constructor() public {
-        gov = msg.sender;
-    }
+
 
     function initialize(
         address _router,
@@ -223,8 +224,9 @@ contract Vault is ReentrancyGuard, IVault {
         uint256 _fundingRateFactor,
         uint256 _stableFundingRateFactor
     ) external {
-        _onlyGov();
+    
         _validate(!isInitialized, 1);
+        __ReentrancyGuard_init_unchained();
         isInitialized = true;
 
         router = _router;
@@ -233,6 +235,21 @@ contract Vault is ReentrancyGuard, IVault {
         liquidationFeeUsd = _liquidationFeeUsd;
         fundingRateFactor = _fundingRateFactor;
         stableFundingRateFactor = _stableFundingRateFactor;
+        
+        
+        maxLeverage = 250 * 10000; // 250x
+        taxBasisPoints = 50; // 0.5%
+        stableTaxBasisPoints = 20; // 0.2%
+        mintBurnFeeBasisPoints = 30; // 0.3%
+        swapFeeBasisPoints = 30; // 0.3%
+        stableSwapFeeBasisPoints = 4; // 0.04%
+        marginFeeBasisPoints = 10; // 0.1%
+
+
+        fundingInterval = 8 hours;
+        // once the parameters are verified to be working correctly,
+        // gov should be set to a timelock contract or a governance contract
+        gov = msg.sender;
     }
 
     function setVaultUtils(IVaultUtils _vaultUtils) external override {
@@ -272,11 +289,6 @@ contract Vault is ReentrancyGuard, IVault {
     function setLiquidator(address _liquidator, bool _isActive) external override {
         _onlyGov();
         isLiquidator[_liquidator] = _isActive;
-    }
-
-    function setIsSwapEnabled(bool _isSwapEnabled) external override {
-        _onlyGov();
-        isSwapEnabled = _isSwapEnabled;
     }
 
     function setIsLeverageEnabled(bool _isLeverageEnabled) external override {
@@ -355,17 +367,19 @@ contract Vault is ReentrancyGuard, IVault {
         stableFundingRateFactor = _stableFundingRateFactor;
     }
 
-    function setTokenConfig(
+ function setTokenConfig(
         address _token,
         uint256 _tokenDecimals,
         uint256 _tokenWeight,
         uint256 _minProfitBps,
         uint256 _maxUsdgAmount,
+        uint256 _maxLongOiAmount,
+        uint256 _maxShortOiAmount,
         bool _isStable,
         bool _isShortable
     ) external override {
         _onlyGov();
-        // increment token count for the first time
+        
         if (!whitelistedTokens[_token]) {
             whitelistedTokenCount = whitelistedTokenCount.add(1);
             allWhitelistedTokens.push(_token);
@@ -381,6 +395,8 @@ contract Vault is ReentrancyGuard, IVault {
         maxUsdgAmounts[_token] = _maxUsdgAmount;
         stableTokens[_token] = _isStable;
         shortableTokens[_token] = _isShortable;
+        maxLongOpenInterest[_token] = _maxLongOiAmount;
+        maxShortOpenInterest[_token] = _maxShortOiAmount;
 
         totalTokenWeights = _totalTokenWeights.add(_tokenWeight);
 
@@ -399,6 +415,8 @@ contract Vault is ReentrancyGuard, IVault {
         delete maxUsdgAmounts[_token];
         delete stableTokens[_token];
         delete shortableTokens[_token];
+        delete maxLongOpenInterest[_token];
+        delete maxShortOpenInterest[_token];
         whitelistedTokenCount = whitelistedTokenCount.sub(1);
     }
 
@@ -519,44 +537,7 @@ contract Vault is ReentrancyGuard, IVault {
     }
 
     function swap(address _tokenIn, address _tokenOut, address _receiver) external override nonReentrant returns (uint256) {
-        _validate(isSwapEnabled, 23);
-        _validate(whitelistedTokens[_tokenIn], 24);
-        _validate(whitelistedTokens[_tokenOut], 25);
-        _validate(_tokenIn != _tokenOut, 26);
-
-
-        updateCumulativeFundingRate(_tokenIn, _tokenIn);
-        updateCumulativeFundingRate(_tokenOut, _tokenOut);
-
-        uint256 amountIn = _transferIn(_tokenIn);
-        _validate(amountIn > 0, 27);
-
-        uint256 priceIn = getMinPrice(_tokenIn);
-        uint256 priceOut = getMaxPrice(_tokenOut);
-
-        uint256 amountOut = amountIn.mul(priceIn).div(priceOut);
-        amountOut = adjustForDecimals(amountOut, _tokenIn, _tokenOut);
-
-        // adjust usdgAmounts by the same usdgAmount as debt is shifted between the assets
-        uint256 usdgAmount = amountIn.mul(priceIn).div(PRICE_PRECISION);
-        usdgAmount = adjustForDecimals(usdgAmount, _tokenIn, usdg);
-
-        uint256 feeBasisPoints = vaultUtils.getSwapFeeBasisPoints(_tokenIn, _tokenOut, usdgAmount);
-        uint256 amountOutAfterFees = _collectSwapFees(_tokenOut, amountOut, feeBasisPoints);
-
-        _increaseUsdgAmount(_tokenIn, usdgAmount);
-        _decreaseUsdgAmount(_tokenOut, usdgAmount);
-
-        _increasePoolAmount(_tokenIn, amountIn);
-        _decreasePoolAmount(_tokenOut, amountOut);
-
-        _validateBufferAmount(_tokenOut);
-
-        _transferOut(_tokenOut, amountOutAfterFees, _receiver);
-
-        emit Swap(_receiver, _tokenIn, _tokenOut, amountIn, amountOut, amountOutAfterFees, feeBasisPoints);
-
-        return amountOutAfterFees;
+        revert ("swap disabled");
     }
 
     function increasePosition(address _account, address _collateralToken, address _indexToken, uint256 _sizeDelta, bool _isLong) external override nonReentrant {
@@ -566,6 +547,15 @@ contract Vault is ReentrancyGuard, IVault {
         _validateTokens(_collateralToken, _indexToken, _isLong);
         vaultUtils.validateIncreasePosition(_account, _collateralToken, _indexToken, _sizeDelta, _isLong);
 
+        if (_isLong) {
+            uint256 nextLongOi = longOpenInterest[_indexToken].add(_sizeDelta);
+            _validate(nextLongOi <= maxLongOpenInterest[_indexToken], 56); 
+            longOpenInterest[_indexToken] = nextLongOi;
+        } else {
+            uint256 nextShortOi = shortOpenInterest[_indexToken].add(_sizeDelta);
+            _validate(nextShortOi <= maxShortOpenInterest[_indexToken], 57); 
+            shortOpenInterest[_indexToken] = nextShortOi;
+        }
         updateCumulativeFundingRate(_collateralToken, _indexToken);
 
         bytes32 key = getPositionKey(_account, _collateralToken, _indexToken, _isLong);
@@ -643,6 +633,11 @@ contract Vault is ReentrancyGuard, IVault {
         _validate(position.size >= _sizeDelta, 32);
         _validate(position.collateral >= _collateralDelta, 33);
 
+        if (_isLong) {
+            longOpenInterest[_indexToken] = longOpenInterest[_indexToken].sub(_sizeDelta);
+        } else {
+            shortOpenInterest[_indexToken] = shortOpenInterest[_indexToken].sub(_sizeDelta);
+        }
         uint256 collateral = position.collateral;
         // scrop variables to avoid stack too deep errors
         {
@@ -715,6 +710,12 @@ contract Vault is ReentrancyGuard, IVault {
             // max leverage exceeded but there is collateral remaining after deducting losses so decreasePosition instead
             _decreasePosition(_account, _collateralToken, _indexToken, 0, position.size, _isLong, _account);
             return;
+        }
+
+        if (_isLong) {
+            longOpenInterest[_indexToken] = longOpenInterest[_indexToken].sub(position.size);
+        } else {
+            shortOpenInterest[_indexToken] = shortOpenInterest[_indexToken].sub(position.size);
         }
 
         uint256 feeTokens = usdToTokenMin(_collateralToken, marginFees);

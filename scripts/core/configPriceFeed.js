@@ -7,8 +7,8 @@ const tokens = require('./tokens')[network];
 
 
 
-const VAULT = "0x8D1F4c528FD879A83aa41d4e1261c210Dd6e28d0" //BTC
-const VAULT_PRICE_FEED = "0x01Ae480E600E3c3ABd0c70627C94dcc8528a9598"
+const VAULT = "0x736Cad071Fdb5ce7B17F35bB22f68Ad53F55C207" //BTC
+const VAULT_PRICE_FEED = "0x0eE402630B89A38325dcEAf3c0cF9cac933142D8"
 
 async function main() {
   const wallet = (await ethers.getSigners())[0]
@@ -55,10 +55,28 @@ async function main() {
       token.tokenWeight, // _tokenWeight
       token.minProfitBps, // _minProfitBps
       expandDecimals(token.maxUsdgAmount, 30), // _maxUsdgAmount
+      expandDecimals(token.maxLongOpenInterest, 30), // _maxLongOpenInterest
+      expandDecimals(token.maxShortOpenInterest, 30), // _maxShortOpenInterest
       token.isStable, // _isStable
       token.isShortable // _isShortable
     ), `vault.setTokenConfig(${token.name}) ${token.address}`)
   }
+
+  // const timelock = await contractAt("Timelock", await vault.gov())
+  // for (const token of tokenArr) {
+  //   await sendTxn(timelock.setVaultTokenConfig(
+  //     vault.address, // _vault
+  //     token.address, // _token
+  //     token.decimals, // _tokenDecimals
+  //     token.tokenWeight, // _tokenWeight
+  //     token.minProfitBps, // _minProfitBps
+  //     expandDecimals(token.maxUsdgAmount, 30), // _maxUsdgAmount
+  //     expandDecimals(token.maxLongOpenInterest, 30), // _maxLongOpenInterest
+  //     expandDecimals(token.maxShortOpenInterest, 30), // _maxShortOpenInterest
+  //     token.isStable, // _isStable
+  //     token.isShortable // _isShortable
+  //   ), `timelock.setTokenConfig(${token.name}) ${token.address}`)
+  // }
 
   await sendTxn(vaultPriceFeed.setGov(vaultPriceFeedTimelock.address), "vaultPriceFeed.setGov")
 
@@ -72,3 +90,4 @@ main()
     console.error(error)
     process.exit(1)
   })
+//  npx hardhat run scripts/core/configPriceFeed.js --network core-testnet

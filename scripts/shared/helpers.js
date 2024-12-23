@@ -13,7 +13,7 @@ const {
   ARBITRUM_DEPLOY_KEY,
   AVAX_DEPLOY_KEY
 } = require("../../env.json");
-const { ethers } = require('hardhat');
+const { ethers, upgrades } = require('hardhat');
 
 const providers = {
   arbitrum: new ethers.providers.JsonRpcProvider(ARBITRUM_URL),
@@ -32,9 +32,9 @@ function sleep(ms) {
 const readCsv = async (file) => {
   records = []
   const parser = fs
-  .createReadStream(file)
-  .pipe(parse({ columns: true, delimiter: ',' }))
-  parser.on('error', function(err){
+    .createReadStream(file)
+    .pipe(parse({ columns: true, delimiter: ',' }))
+  parser.on('error', function (err) {
     console.error(err.message)
   })
   for await (const record of parser) {
@@ -99,7 +99,7 @@ async function callWithRetries(func, args, retriesCount = 3) {
 }
 
 async function deployContract(name, args, label, options) {
-  
+
   if (!options && typeof label === "object") {
     label = null
     options = label
@@ -115,9 +115,9 @@ async function deployContract(name, args, label, options) {
 
   const contractFactory = await ethers.getContractFactory(name, contractFactoryOptions)
   let contract
-  
 
-  
+
+
   if (options) {
     delete options.libraries
     contract = await contractFactory.deploy(...args, options)
@@ -129,57 +129,203 @@ async function deployContract(name, args, label, options) {
   await contract.deployTransaction.wait()
   console.info("... Completed!")
 
-    // Verify the contract after deployment
-    try {
-      console.log("Verifying contract...");
-  
-      await hre.run("verify:verify", {
-        address: contract.address,
-        constructorArguments: args,        
-      });
-  
-      console.info("Contract verified successfully!");
-    } catch (err) {
-      console.error("Verification failed:", err);
-    }
-  
-  
+  // Verify the contract after deployment
+  try {
+    console.log("Verifying contract...");
+
+    await hre.run("verify:verify", {
+      address: contract.address,
+      constructorArguments: args,
+    });
+
+    console.info("Contract verified successfully!");
+  } catch (err) {
+    console.error("Verification failed:", err);
+  }
+
+
   return contract
 }
 
+async function deployUpgradeableContract(name, args, label, options) {
+  if (!options && typeof label === "object") {
+    label = null;
+    options = label;
+  }
+
+  let info = name;
+  if (label) { info = name + ":" + label; }
+
+  const contractFactoryOptions = {};
+  if (options?.libraries) {
+    contractFactoryOptions.libraries = options.libraries;
+  }
+
+  // Deploy custom ProxyAdmin if specified
+  let proxyAdmin;
+  if (options?.proxyAdmin) {
+    try {
+      console.info(`Deploying custom ProxyAdmin (${options.proxyAdmin})...`);
+      const ProxyAdminFactory = await ethers.getContractFactory(options.proxyAdmin);
+      proxyAdmin = await ProxyAdminFactory.deploy();
+      await proxyAdmin.deployed();
+      console.info(`Custom ProxyAdmin deployed at ${proxyAdmin.address}`);
+
+      // Verify ProxyAdmin contract
+      try {
+        console.log("Verifying ProxyAdmin contract...");
+        await hre.run("verify:verify", {
+          address: proxyAdmin.address,
+          constructorArguments: []
+        });
+        console.info("ProxyAdmin contract verified successfully!");
+      } catch (err) {
+        console.error("ProxyAdmin verification failed:", err);
+      }
+    } catch (error) {
+      console.error("ProxyAdmin deployment failed:", error);
+      throw error;
+    }
+  }
+
+  // Get main contract factory and deploy implementation
+  const contractFactory = await ethers.getContractFactory(name, contractFactoryOptions);
+  let proxy;
+  let implementation;
+
+  try {
+    // First deploy the implementation contract
+    implementation = await contractFactory.deploy();
+    await implementation.deployed();
+    console.info(`Implementation deployed at ${implementation.address}`);
+
+    // Verify the implementation contract
+    try {
+      console.log("Verifying implementation contract...");
+      await hre.run("verify:verify", {
+        address: implementation.address,
+        constructorArguments: []
+      });
+      console.info("Contract implementation verified successfully!");
+    } catch (err) {
+      console.error("Implementation verification failed:", err);
+    }
+
+
+    if (proxyAdmin) {
+      // Deploy TransparentUpgradeableProxy with empty initialization data
+      const ProxyFactory = await ethers.getContractFactory("TransparentUpgradeableProxy");
+      
+      proxy = await ProxyFactory.deploy(
+        implementation.address,
+        proxyAdmin.address,
+        "0x" // Empty initialization data
+      );
+      await proxy.deployed();
+      
+      console.info(`Proxy deployed at ${proxy.address}`);
+      console.info(`Using custom ProxyAdmin at ${proxyAdmin.address}`);
+
+      // Verify the proxy contract
+      try {
+        console.log("Verifying proxy contract...");
+        await hre.run("verify:verify", {
+          address: proxy.address,
+          constructorArguments: [
+            implementation.address,
+            proxyAdmin.address,
+            "0x"
+          ]
+        });
+        console.info("Proxy contract verified successfully!");
+      } catch (err) {
+        console.error("Proxy verification failed:", err);
+      }
+    } else {
+      // Use standard upgrades deployment
+      const deployOptions = {
+        initializer: false,
+        kind: 'transparent',
+        ...(options || {})
+      };
+      
+      proxy = await upgrades.deployProxy(contractFactory, args, deployOptions);
+      await proxy.deployed();
+
+      // Verify the proxy contract
+      try {
+        console.log("Verifying proxy contract...");
+        await hre.run("verify:verify", {
+          address: proxy.address,
+          constructorArguments: []
+        });
+        console.info("Proxy contract verified successfully!");
+      } catch (err) {
+        console.error("Proxy verification failed:", err);
+      }
+    }
+
+    const argStr = args.map((i) => `"${i}"`).join(" ");
+    console.info(`Deployed Upgradeable ${info} ${proxy.address} ${argStr}`);
+    
+    // Log final addresses
+    const adminAddress = await upgrades.erc1967.getAdminAddress(proxy.address);
+    const implAddress = await upgrades.erc1967.getImplementationAddress(proxy.address);
+    console.info(`Final Addresses:`);
+    console.info(`- Proxy: ${proxy.address}`);
+    console.info(`- Implementation: ${implAddress}`);
+    console.info(`- ProxyAdmin: ${adminAddress}`);
+
+    // Create a contract instance attached to the proxy address
+    const contract = contractFactory.attach(proxy.address);
+
+    // Return all deployed contracts and addresses
+    return {
+      proxy: contract,              // Main contract instance (attached to proxy)
+      proxyAddress: proxy.address,  // Proxy contract address
+      implementation,               // Implementation contract instance
+      implementationAddress: implementation.address, // Implementation contract address
+      proxyAdmin,                  // ProxyAdmin contract instance (if custom)
+      proxyAdminAddress: proxyAdmin ? proxyAdmin.address : adminAddress // ProxyAdmin address
+    };
+  } catch (error) {
+    console.error("Deployment failed:", error);
+    throw error;
+  }
+}
 async function verifyUpgradeable(contract, constructorArguments = undefined) {
-   // Verify the contract after deployment
-   if (constructorArguments) {
+  // Verify the contract after deployment
+  if (constructorArguments) {
     try {
       console.log("Verifying contract...");
-  
+
       await hre.run("verify:verify", {
         address: contract,
-        constructorArguments,        
+        constructorArguments,
       });
-  
+
       console.info("Contract verified successfully!");
     } catch (err) {
       console.error("Verification failed:", err);
     }
 
-   }else{
+  } else {
 
-     try {
+    try {
       console.log("Verifying contract...");
-  
+
       await hre.run("verify:verify", {
         address: contract,
-        constructorArguments: [],        
+        constructorArguments: [],
       });
-  
+
       console.info("Contract verified successfully!");
     } catch (err) {
       console.error("Verification failed:", err);
     }
-   }
+  }
 
-  return 
+  return
 }
 
 async function contractAt(name, address, provider = undefined, options) {
@@ -256,6 +402,7 @@ module.exports = {
   getFrameSigner,
   sendTxn,
   deployContract,
+  deployUpgradeableContract,
   verifyUpgradeable,
   contractAt,
   writeTmpAddresses,

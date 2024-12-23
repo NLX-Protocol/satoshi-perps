@@ -2,11 +2,7 @@
 // SPDX-FileCopyrightText: 2022 Venus
 pragma solidity 0.8.25;
 
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "./interfaces/VBep20Interface.sol";
 import "./interfaces/OracleInterface.sol";
-import "@venusprotocol/governance-contracts/contracts/Governance/AccessControlledV8.sol";
-import "@venusprotocol/governance-contracts/contracts/Governance/AccessControlManager.sol";
 
 
 /**
@@ -45,7 +41,7 @@ isValid = anchorRatio <= upperBoundAnchorRatio && anchorRatio >= lowerBoundAncho
  * For a fetched price to be valid it must be positive and not stagnant. If the price is invalid then we consider the
  * oracle to be stagnant and treat it like it's disabled.
  */
-contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOracleInterface {
+contract ResilientOracle is ResilientOracleInterface {
     /**
      * @dev Oracle roles:
      * **main**: The most trustworthy price source
@@ -80,15 +76,14 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address public immutable vai;
 
-    /// @notice Set this as asset address for Native token on each chain.This is the underlying for vBNB (on bsc)
-    /// and can serve as any underlying asset of a market that supports native tokens
-    address public constant NATIVE_TOKEN_ADDR = 0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB;
-
     /// @notice Bound validator contract address
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     BoundValidatorInterface public immutable boundValidator;
 
     mapping(address => TokenConfig) private tokenConfigs;
+
+    /// @notice Contract governor address
+    address public gov;
 
     event TokenConfigAdded(
         address indexed asset,
@@ -98,10 +93,20 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
     );
 
     /// Event emitted when an oracle is set
-    event OracleSet(address indexed asset, address indexed oracle, uint256 indexed role);
+    event OracleSet(
+        address indexed asset,
+        address indexed oracle,
+        uint256 indexed role
+    );
 
     /// Event emitted when an oracle is enabled or disabled
-    event OracleEnabled(address indexed asset, uint256 indexed role, bool indexed enable);
+    event OracleEnabled(
+        address indexed asset,
+        uint256 indexed role,
+        bool indexed enable
+    );
+
+    error Unauthorized();
 
     /**
      * @notice Checks whether an address is null or not
@@ -117,55 +122,26 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
      * @param asset asset address
      */
     modifier checkTokenConfigExistence(address asset) {
-        if (tokenConfigs[asset].asset == address(0)) revert("token config must exist");
+        if (tokenConfigs[asset].asset == address(0))
+            revert("token config must exist");
         _;
     }
 
-    /// @notice Constructor for the implementation contract. Sets immutable variables.
-    /// @dev nativeMarketAddress can be address(0) if on the chain we do not support native market
-    ///      (e.g vETH on ethereum would not be supported, only vWETH)
-    /// @param nativeMarketAddress The address of a native market (for bsc it would be vBNB address)
-    /// @param vaiAddress The address of the VAI token (if there is VAI on the deployed chain).
-    ///          Set to address(0) of VAI is not existent.
-    /// @param _boundValidator Address of the bound validator contract
-    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(
-        address nativeMarketAddress,
-        address vaiAddress,
         BoundValidatorInterface _boundValidator
     ) notNullAddress(address(_boundValidator)) {
-        nativeMarket = nativeMarketAddress;
-        vai = vaiAddress;
         boundValidator = _boundValidator;
 
-        _disableInitializers();
+        gov = msg.sender;
     }
 
-    /**
-     * @notice Initializes the contract admin and sets the BoundValidator contract address
-     * @param accessControlManager_ Address of the access control manager contract
-     */
-    function initialize(address accessControlManager_) external initializer {
-        __AccessControlled_init(accessControlManager_);
-        __Pausable_init();
+    modifier onlyGov() {
+        if (msg.sender != gov) revert Unauthorized();
+        _;
     }
 
-    /**
-     * @notice Pauses oracle
-     * @custom:access Only Governance
-     */
-    function pause() external {
-        _checkAccessAllowed("pause()");
-        _pause();
-    }
-
-    /**
-     * @notice Unpauses oracle
-     * @custom:access Only Governance
-     */
-    function unpause() external {
-        _checkAccessAllowed("unpause()");
-        _unpause();
+    function setGov(address newGov) external onlyGov notNullAddress(newGov) {
+        gov = newGov;
     }
 
     /**
@@ -174,7 +150,9 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
      * @custom:access Only Governance
      * @custom:error Throws a length error if the length of the token configs array is 0
      */
-    function setTokenConfigs(TokenConfig[] memory tokenConfigs_) external {
+    function setTokenConfigs(
+        TokenConfig[] memory tokenConfigs_
+    ) external onlyGov {
         if (tokenConfigs_.length == 0) revert("length can't be 0");
         uint256 numTokenConfigs = tokenConfigs_.length;
         for (uint256 i; i < numTokenConfigs; ) {
@@ -201,9 +179,9 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
         address asset,
         address oracle,
         OracleRole role
-    ) external notNullAddress(asset) checkTokenConfigExistence(asset) {
-        _checkAccessAllowed("setOracle(address,address,uint8)");
-        if (oracle == address(0) && role == OracleRole.MAIN) revert("can't set zero address to main oracle");
+    ) external notNullAddress(asset) checkTokenConfigExistence(asset) onlyGov {
+        if (oracle == address(0) && role == OracleRole.MAIN)
+            revert("can't set zero address to main oracle");
         tokenConfigs[asset].oracles[uint256(role)] = oracle;
         emit OracleSet(asset, oracle, uint256(role));
     }
@@ -222,37 +200,9 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
         address asset,
         OracleRole role,
         bool enable
-    ) external notNullAddress(asset) checkTokenConfigExistence(asset) {
-        _checkAccessAllowed("enableOracle(address,uint8,bool)");
+    ) external notNullAddress(asset) checkTokenConfigExistence(asset) onlyGov {
         tokenConfigs[asset].enableFlagsForOracles[uint256(role)] = enable;
         emit OracleEnabled(asset, uint256(role), enable);
-    }
-
-    /**
-     * @notice Updates the TWAP pivot oracle price.
-     * @dev This function should always be called before calling getUnderlyingPrice
-     * @param vToken vToken address
-     */
-    function updatePrice(address vToken) external override {
-        address asset = _getUnderlyingAsset(vToken);
-        (address pivotOracle, bool pivotOracleEnabled) = getOracle(asset, OracleRole.PIVOT);
-        if (pivotOracle != address(0) && pivotOracleEnabled) {
-            //if pivot oracle is not TwapOracle it will revert so we need to catch the revert
-            try TwapInterface(pivotOracle).updateTwap(asset) {} catch {}
-        }
-    }
-
-    /**
-     * @notice Updates the pivot oracle price. Currently using TWAP
-     * @dev This function should always be called before calling getPrice
-     * @param asset asset address
-     */
-    function updateAssetPrice(address asset) external {
-        (address pivotOracle, bool pivotOracleEnabled) = getOracle(asset, OracleRole.PIVOT);
-        if (pivotOracle != address(0) && pivotOracleEnabled) {
-            //if pivot oracle is not TwapOracle it will revert so we need to catch the revert
-            try TwapInterface(pivotOracle).updateTwap(asset) {} catch {}
-        }
     }
 
     /**
@@ -260,28 +210,10 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
      * @param asset asset address
      * @return tokenConfig Config for the asset
      */
-    function getTokenConfig(address asset) external view returns (TokenConfig memory) {
+    function getTokenConfig(
+        address asset
+    ) external view returns (TokenConfig memory) {
         return tokenConfigs[asset];
-    }
-
-    /**
-     * @notice Gets price of the underlying asset for a given vToken. Validation flow:
-     * - Check if the oracle is paused globally
-     * - Validate price from main oracle against pivot oracle
-     * - Validate price from fallback oracle against pivot oracle if the first validation failed
-     * - Validate price from main oracle against fallback oracle if the second validation failed
-     * In the case that the pivot oracle is not available but main price is available and validation is successful,
-     * main oracle price is returned.
-     * @param vToken vToken address
-     * @return price USD price in scaled decimal places.
-     * @custom:error Paused error is thrown when resilent oracle is paused
-     * @custom:error Invalid resilient oracle price error is thrown if fetched prices from oracle is invalid
-     */
-    function getUnderlyingPrice(address vToken, bool _maximize) external view override returns (uint256) {
-        if (paused()) revert("resilient oracle is paused");
-
-        address asset = _getUnderlyingAsset(vToken);
-        return _getPrice(asset, _maximize);
     }
 
     /**
@@ -291,8 +223,10 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
      * @custom:error Paused error is thrown when resilent oracle is paused
      * @custom:error Invalid resilient oracle price error is thrown if fetched prices from oracle is invalid
      */
-    function getPrice(address asset, bool _maximize) external view override returns (uint256) {
-        if (paused()) revert("resilient oracle is paused");
+    function getPrice(
+        address asset,
+        bool _maximize
+    ) external view override returns (uint256) {
         return _getPrice(asset, _maximize);
     }
 
@@ -307,9 +241,12 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
      */
     function setTokenConfig(
         TokenConfig memory tokenConfig
-    ) public notNullAddress(tokenConfig.asset) notNullAddress(tokenConfig.oracles[uint256(OracleRole.MAIN)]) {
-        _checkAccessAllowed("setTokenConfig(TokenConfig)");
-
+    )
+        public
+        notNullAddress(tokenConfig.asset)
+        notNullAddress(tokenConfig.oracles[uint256(OracleRole.MAIN)])
+        onlyGov
+    {
         tokenConfigs[tokenConfig.asset] = tokenConfig;
         emit TokenConfigAdded(
             tokenConfig.asset,
@@ -326,18 +263,29 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
      * @return oracle Oracle address based on role
      * @return enabled Enabled flag of the oracle based on token config
      */
-    function getOracle(address asset, OracleRole role) public view returns (address oracle, bool enabled) {
+    function getOracle(
+        address asset,
+        OracleRole role
+    ) public view returns (address oracle, bool enabled) {
         oracle = tokenConfigs[asset].oracles[uint256(role)];
         enabled = tokenConfigs[asset].enableFlagsForOracles[uint256(role)];
     }
 
-    function _getPrice(address asset, bool _maximize) internal view returns (uint256) {
+    function _getPrice(
+        address asset,
+        bool _maximize
+    ) internal view returns (uint256) {
         uint256 pivotPrice = INVALID_PRICE;
 
         // Get pivot oracle price, Invalid price if not available or error
-        (address pivotOracle, bool pivotOracleEnabled) = getOracle(asset, OracleRole.PIVOT);
+        (address pivotOracle, bool pivotOracleEnabled) = getOracle(
+            asset,
+            OracleRole.PIVOT
+        );
         if (pivotOracleEnabled && pivotOracle != address(0)) {
-            try OracleInterface(pivotOracle).getPrice(asset) returns (uint256 pricePivot) {
+            try OracleInterface(pivotOracle).getPrice(asset) returns (
+                uint256 pricePivot
+            ) {
                 pivotPrice = pricePivot;
             } catch {}
         }
@@ -356,22 +304,32 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
 
         // Compare fallback and pivot if main oracle comparision fails with pivot
         // Return fallback price when fallback price is validated successfully with pivot oracle
-        (uint256 fallbackPrice, bool validatedPivotFallback) = _getFallbackOraclePrice(asset, pivotPrice);
+        (
+            uint256 fallbackPrice,
+            bool validatedPivotFallback
+        ) = _getFallbackOraclePrice(asset, pivotPrice);
         if (fallbackPrice != INVALID_PRICE && validatedPivotFallback) {
-            finalPrice = _maximize ? _max(finalPrice, fallbackPrice) : _min(finalPrice, fallbackPrice);
+            finalPrice = _maximize
+                ? _max(finalPrice, fallbackPrice)
+                : _min(finalPrice, fallbackPrice);
         }
 
         // Lastly compare main price and fallback price
         if (
             mainPrice != INVALID_PRICE &&
             fallbackPrice != INVALID_PRICE &&
-            boundValidator.validatePriceWithAnchorPrice(asset, mainPrice, fallbackPrice)
+            boundValidator.validatePriceWithAnchorPrice(
+                asset,
+                mainPrice,
+                fallbackPrice
+            )
         ) {
             return finalPrice;
         }
 
         if (mainPrice != INVALID_PRICE && validatedPivotMain) return mainPrice;
-        if (fallbackPrice != INVALID_PRICE && validatedPivotFallback) return fallbackPrice;
+        if (fallbackPrice != INVALID_PRICE && validatedPivotFallback)
+            return fallbackPrice;
 
         revert("invalid resilient oracle price");
     }
@@ -396,9 +354,14 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
         uint256 pivotPrice,
         bool pivotEnabled
     ) internal view returns (uint256, bool) {
-        (address mainOracle, bool mainOracleEnabled) = getOracle(asset, OracleRole.MAIN);
+        (address mainOracle, bool mainOracleEnabled) = getOracle(
+            asset,
+            OracleRole.MAIN
+        );
         if (mainOracleEnabled && mainOracle != address(0)) {
-            try OracleInterface(mainOracle).getPrice(asset) returns (uint256 mainOraclePrice) {
+            try OracleInterface(mainOracle).getPrice(asset) returns (
+                uint256 mainOraclePrice
+            ) {
                 if (!pivotEnabled) {
                     return (mainOraclePrice, true);
                 }
@@ -407,7 +370,11 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
                 }
                 return (
                     mainOraclePrice,
-                    boundValidator.validatePriceWithAnchorPrice(asset, mainOraclePrice, pivotPrice)
+                    boundValidator.validatePriceWithAnchorPrice(
+                        asset,
+                        mainOraclePrice,
+                        pivotPrice
+                    )
                 );
             } catch {
                 return (INVALID_PRICE, false);
@@ -427,16 +394,28 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
      * @custom:error Invalid price error is thrown if fallback oracle is not enabled or fallback oracle
      * address is null
      */
-    function _getFallbackOraclePrice(address asset, uint256 pivotPrice) private view returns (uint256, bool) {
-        (address fallbackOracle, bool fallbackEnabled) = getOracle(asset, OracleRole.FALLBACK);
+    function _getFallbackOraclePrice(
+        address asset,
+        uint256 pivotPrice
+    ) private view returns (uint256, bool) {
+        (address fallbackOracle, bool fallbackEnabled) = getOracle(
+            asset,
+            OracleRole.FALLBACK
+        );
         if (fallbackEnabled && fallbackOracle != address(0)) {
-            try OracleInterface(fallbackOracle).getPrice(asset) returns (uint256 fallbackOraclePrice) {
+            try OracleInterface(fallbackOracle).getPrice(asset) returns (
+                uint256 fallbackOraclePrice
+            ) {
                 if (pivotPrice == INVALID_PRICE) {
                     return (fallbackOraclePrice, false);
                 }
                 return (
                     fallbackOraclePrice,
-                    boundValidator.validatePriceWithAnchorPrice(asset, fallbackOraclePrice, pivotPrice)
+                    boundValidator.validatePriceWithAnchorPrice(
+                        asset,
+                        fallbackOraclePrice,
+                        pivotPrice
+                    )
                 );
             } catch {
                 return (INVALID_PRICE, false);
@@ -444,21 +423,6 @@ contract ResilientOracle is PausableUpgradeable, AccessControlledV8, ResilientOr
         }
 
         return (INVALID_PRICE, false);
-    }
-
-    /**
-     * @dev This function returns the underlying asset of a vToken
-     * @param vToken vToken address
-     * @return asset underlying asset address
-     */
-    function _getUnderlyingAsset(address vToken) private view notNullAddress(vToken) returns (address asset) {
-        if (vToken == nativeMarket) {
-            asset = NATIVE_TOKEN_ADDR;
-        } else if (vToken == vai) {
-            asset = vai;
-        } else {
-            asset = VBep20Interface(vToken).underlying();
-        }
     }
 
     function _max(uint256 a, uint256 b) internal pure returns (uint256) {
