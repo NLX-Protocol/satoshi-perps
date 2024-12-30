@@ -247,7 +247,7 @@ contract SlpManager is ReentrancyGuard, Governable, ISlpManager {
 
         IERC20(usdg).transfer(address(vault), usdgAmount);
         uint256 amountOut = vault.sellUSDG(_tokenOut, _receiver);
-        require(amountOut >= _minOut, "SlpManager: insufficient output");
+        require(amountOut >= _minOut, "SlpManager: 10utput");
 
         emit RemoveLiquidity(_account, _tokenOut, _slpAmount, aumInUsdg, slpSupply, usdgAmount, amountOut);
 
