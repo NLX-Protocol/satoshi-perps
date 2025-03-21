@@ -2,20 +2,34 @@ const { expandDecimals } = require("../../test/shared/utilities");
 const { deployContract, contractAt, writeTmpAddresses } = require("../shared/helpers")
 
 
-// BTC
-const VAULT_READER = "0x22237B9AC346fdBA4F3310A818044c6005117427"
-// const VAULT_READER = "0xa2B0b61a62BBb2BEBe5d1Bdf2b43DA56d5d0f5B9"
-// const VAULT_READER = "0x8c0Ad8C009A4001B2bA306AA9Ac1A954c819FA7C"
+// // Mainnet
+// // BTC
+// const VAULT_READER = "0x22237B9AC346fdBA4F3310A818044c6005117427"
+// // const VAULT_READER = "0xa2B0b61a62BBb2BEBe5d1Bdf2b43DA56d5d0f5B9"
+// // const VAULT_READER = "0x8c0Ad8C009A4001B2bA306AA9Ac1A954c819FA7C"
 
-const VAULT = "0xB3992C9eaE205CC5AD8c95F79131d429287aE1e7";
-const WCORE = "0x0B4501d4e506956c648908F306717608f7625831";
-const POSITION_MANAGER = "0x239ad5c1D15DAe0f8163bC178c7921Bf5a1759cc"; //position router
-// const POSITION_MANAGER = "0x239ad5c1D15DAe0f8163bC178c7921Bf5a1759cc";
+// const VAULT = "0xB3992C9eaE205CC5AD8c95F79131d429287aE1e7";
+// const WCORE = "0x0B4501d4e506956c648908F306717608f7625831";
+// const POSITION_MANAGER = "0x239ad5c1D15DAe0f8163bC178c7921Bf5a1759cc"; //position router
+// // const POSITION_MANAGER = "0x239ad5c1D15DAe0f8163bC178c7921Bf5a1759cc";
+// const USDG_AMOUNT = expandDecimals(1, 30)
+// const TOKENS = [
+//     // "0x9D14040c235ff8a8B59d9C4deE7dcdb49B515EC8",//ABTC
+//     // "0xE8E8371405538DAb7BA7f063eD16C00CeE026468", //CORETBC
+//     "0xef317386be450E6Cb6e191E38B819508c4D5e820" //SOLVBTC
+// ]
+
+// Testnet
+
+const VAULT_READER = "0xeA2941FdDFCb3de631eD88c1dbE965f8493670e5"
+
+const VAULT = "0x683fb89cf3C1009f43517A61138703C4f2e8DF95";
+const WCORE = "0x8154036681373780a862cB1bD05098D452871305";
+const POSITION_MANAGER = "0x1cedE978029F5D5F32Ffc4Be7723C21F1Ee2f3D8"; //position router
+
 const USDG_AMOUNT = expandDecimals(1, 30)
 const TOKENS = [
-    // "0x9D14040c235ff8a8B59d9C4deE7dcdb49B515EC8",//ABTC
-    // "0xE8E8371405538DAb7BA7f063eD16C00CeE026468", //CORETBC
-    "0xef317386be450E6Cb6e191E38B819508c4D5e820" //SOLVBTC
+    "0x912d9B0ab196d1Ad9A23B6cE25F7F06AfaC8755a" //SOLVBTC
 ]
 async function main() {
 
@@ -44,13 +58,12 @@ async function main() {
         //     USDG_AMOUNT,
         //     TOKENS,
         // )
-        // const res = await vaultReader.getVaultTokenInfoV4(
-        //     VAULT,
-        //     WCORE,
-        //     POSITION_MANAGER,
-        //     USDG_AMOUNT,
-        //     TOKENS,
-        // )
+        const res = await vaultReader.getVaultTokenInfoV4(
+            VAULT,
+            WCORE,
+            USDG_AMOUNT,
+            TOKENS,
+        )
         // const res = await vaultReader.getVaultTokenInfoV4(
         //     "0xB3992C9eaE205CC5AD8c95F79131d429287aE1e7",
         //     "0x0B4501d4e506956c648908F306717608f7625831",
@@ -81,17 +94,17 @@ async function main() {
         //     ],
         // )
         
-        const res2 = await vaultReader.getMaxGlobalSizesForTokens(
-            POSITION_MANAGER,
-            "0x0B4501d4e506956c648908F306717608f7625831",
-            [
-                "0x9D14040c235ff8a8B59d9C4deE7dcdb49B515EC8".toLowerCase(),
-                "0xE8E8371405538DAb7BA7f063eD16C00CeE026468".toLowerCase(),
-                "0xef317386be450E6Cb6e191E38B819508c4D5e820".toLowerCase(),
-            ],
-        )
+        // const res2 = await vaultReader.getMaxGlobalSizesForTokens(
+        //     POSITION_MANAGER,
+        //     "0x0B4501d4e506956c648908F306717608f7625831",
+        //     [
+        //         "0x9D14040c235ff8a8B59d9C4deE7dcdb49B515EC8".toLowerCase(),
+        //         "0xE8E8371405538DAb7BA7f063eD16C00CeE026468".toLowerCase(),
+        //         "0xef317386be450E6Cb6e191E38B819508c4D5e820".toLowerCase(),
+        //     ],
+        // )
 
-        console.log({  res2 });
+        console.log({  res });
     } catch (error) {
         console.log(error);
     }

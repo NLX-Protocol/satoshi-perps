@@ -2,22 +2,32 @@ const { contractAt } = require('../shared/helpers');
 
 const tokens = require('../core/tokens')[network.name];
 
-const PYTH_ORACLE_ADAPTER = "0xAd1d1355be077B06D82fEA75eF3b9941EdE96958"
+// // MAINNET
+// const PYTH_ORACLE_ADAPTER = "0xAd1d1355be077B06D82fEA75eF3b9941EdE96958"
 
+// TESTNET
+const PYTH_ORACLE_ADAPTER = "0xE464C02889DfE75B81635bcE6bec3B0aFC007bA8"
 async function main() {
 
+    // const {
+    //     BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC, Solv, Trump, nativeToken
+    // } = tokens
+    // const tokenArr = [
+    //     BTC,
+    //     CORE, ETH, SOL,
+    //     BNB, DOGE, TRX,
+    //     SUI, AVAX, XRP,
+    //     SHIB, BONK,
+    //     FLOKI, ENA,
+    //     LINK, POPCAT,
+    //     SolvBTC, Solv, Trump, nativeToken
+    // ]
+
     const {
-        BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC, PumpBTC, nativeToken
+        USDC, USDT, nativeToken
     } = tokens
     const tokenArr = [
-        BTC,
-        CORE, ETH, SOL,
-        BNB, DOGE, TRX,
-        SUI, AVAX, XRP,
-        SHIB, BONK,
-        FLOKI, ENA,
-        LINK, POPCAT,
-        SolvBTC, PumpBTC, nativeToken
+        USDC, USDT, nativeToken
     ]
 
     const pythOracleAdapter = await contractAt("PythOracle", PYTH_ORACLE_ADAPTER)
@@ -67,4 +77,4 @@ main()
     })
 
 
-    //  npx hardhat run scripts/oracle/updatePythPrices.js --network core-testnet 
+//  npx hardhat run scripts/oracle/updatePythPrices.js --network core-testnet 
