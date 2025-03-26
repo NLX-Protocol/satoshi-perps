@@ -347,12 +347,59 @@ module.exports = {
       isStable: false,
       isShortable: true,
     },
+    USDC: {
+      name: "USDC",
+      address: "0x6922eAa41238160CcD2DBaf13c7A679FE0F37180",
+      decimals: 6, 
+      priceFeed: {
+        pyth: "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"
+      },
+      priceDecimals: 8,
+      isStrictStable: true,
+      tokenWeight: 1000,
+      minProfitBps: 0,
+      maxUsdgAmount: 15 * 1000 * 1000,
+      maxLongOpenInterest: 10 * 1000 * 1000,
+      maxShortOpenInterest: 10 * 1000 * 1000,
+      bufferAmount: 0,
+      isStable: true,
+      isShortable: false
+    },
+    USDT: {
+      name: "USDT",
+      address: "0x2eF0FaA388571254c80FAC11e5eD098eb8a841F1", 
+      decimals: 6, 
+      priceFeed: {
+        pyth: "0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b" 
+      },
+      priceDecimals: 8,
+      isStrictStable: true,
+      tokenWeight: 1000, 
+      minProfitBps: 0,
+      maxUsdgAmount: 15 * 1000 * 1000,
+      maxLongOpenInterest: 10 * 1000 * 1000,
+      maxShortOpenInterest: 10 * 1000 * 1000,
+      bufferAmount: 0,
+      isStable: true,
+      isShortable: false
+    },
     nativeToken: {
       address: "0x8154036681373780a862cB1bD05098D452871305",
+      name: "nativeToken",
       priceFeed: {
         pyth: "0x9b4503710cc8c53f75c30e6e4fda1a7064680ef2e0ee97acd2e3a7c37b3c830c"
       },
       decimals: 18,
+      priceDecimals: 8,
+      isStrictStable: false,
+      minProfitBps: 0,
+      tokenWeight: 0,
+      maxUsdgAmount: 15 * 1000 * 1000,
+      maxLongOpenInterest: 10 * 1000 * 1000,
+      maxShortOpenInterest: 10 * 1000 * 1000,
+      bufferAmount: 0,
+      isStable: false,
+      isShortable: true,
     },
   },
   "core-mainnet": {
@@ -718,6 +765,115 @@ module.exports = {
       isStable: false,
       isShortable: true,
     },
+
+    Trump: {
+      name: "Trump",
+      address: "0x994f4c83240c8467592611A294e44561582a79e9",
+      decimals: 18,
+      priceFeed: {
+        pyth: "0x879551021853eec7a7dc827578e8e69da7e4fa8148339aa0d3d5296405be4b1a"
+      },
+      priceDecimals: 8,
+      isStrictStable: false,
+      tokenWeight: 0,
+      minProfitBps: 0,
+      maxUsdgAmount: 15 * 1000 * 1000,
+      maxLongOpenInterest: 50 * 1000,
+      maxShortOpenInterest: 50 * 1000,
+      bufferAmount: 1,
+      isStable: false,
+      isShortable: true,
+    },
+    BERA: {
+      name: "BERA",
+      address: "0x6638f849469F4Ff43E21a538DECf3790228cddd4",
+      decimals: 18,
+      priceFeed: {
+        pyth: "0x962088abcfdbdb6e30db2e340c8cf887d9efb311b1f2f17b155a63dbb6d40265"
+      },
+      priceDecimals: 8,
+      isStrictStable: false,
+      tokenWeight: 0,
+      minProfitBps: 0,
+      maxUsdgAmount: 15 * 1000 * 1000,
+      maxLongOpenInterest: 50 * 1000,
+      maxShortOpenInterest: 50 * 1000,
+      bufferAmount: 1,
+      isStable: false,
+      isShortable: true,
+    },
+    VIRTUAL: {
+      name: "VIRTUAL",
+      address: "0xCcA807a6389B63569Fdc2fa66657bcb35F079D0B",
+      decimals: 18,
+      priceFeed: {
+        pyth: "0x8132e3eb1dac3e56939a16ff83848d194345f6688bff97eb1c8bd462d558802b"
+      },
+      priceDecimals: 8,
+      isStrictStable: false,
+      tokenWeight: 0,
+      minProfitBps: 0,
+      maxUsdgAmount: 15 * 1000 * 1000,
+      maxLongOpenInterest: 100 * 1000,
+      maxShortOpenInterest: 100 * 1000,
+      bufferAmount: 1,
+      isStable: false,
+      isShortable: true,
+    },
+    APT: {
+      name: "APT",
+      address: "0xa1d660b5FA9AdDBFF89DE41089366C085AAd0010",
+      decimals: 18,
+      priceFeed: {
+        pyth: "0x03ae4db29ed4ae33d323568895aa00337e658e348b37509f5372ae51f0af00d5"
+      },
+      priceDecimals: 8,
+      isStrictStable: false,
+      tokenWeight: 0,
+      minProfitBps: 0,
+      maxUsdgAmount: 15 * 1000 * 1000,
+      maxLongOpenInterest: 100 * 1000,
+      maxShortOpenInterest: 100 * 1000,
+      bufferAmount: 1,
+      isStable: false,
+      isShortable: true,
+    },
+    Solv: {
+      name: "Solv",
+      address: "0x7A03D25D30D0CdeFc0DaDAebdE4cdCB9cA802341",
+      decimals: 18,
+      priceFeed: {
+        pyth: "0x03d73649ee5ff534163a584a865128c641ce1effedd330fa6bbe4c9581b0510e"
+      },
+      priceDecimals: 8,
+      isStrictStable: false,
+      tokenWeight: 0,
+      minProfitBps: 0,
+      maxUsdgAmount: 15 * 1000 * 1000,
+      maxLongOpenInterest: 50 * 1000,
+      maxShortOpenInterest: 50 * 1000,
+      bufferAmount: 1,
+      isStable: false,
+      isShortable: true,
+    },
+    Kaito: {
+      name: "Kaito",
+      address: "0x2e6654A062B817a50e03Ea5DA89fbf161af52826",
+      decimals: 18,
+      priceFeed: {
+        pyth: "0x7302dee641a08507c297a7b0c8b3efa74a48a3baa6c040acab1e5209692b7e59"
+      },
+      priceDecimals: 8,
+      isStrictStable: false,
+      tokenWeight: 0,
+      minProfitBps: 0,
+      maxUsdgAmount: 15 * 1000 * 1000,
+      maxLongOpenInterest: 50 * 1000,
+      maxShortOpenInterest: 50 * 1000,
+      bufferAmount: 1,
+      isStable: false,
+      isShortable: true,
+    },
     nativeToken: {
       address: "0xCA8c6C9Fb34388b8a4C93cD5d4D20f63B5997FBa",
       priceFeed: {
@@ -725,6 +881,7 @@ module.exports = {
       },
       decimals: 18,
     },
+
   },
   bsc: {
     btcPriceFeed: { address: "0x264990fbd0A4796A3E3d8E37C4d5F87a3aCa5Ebf" },

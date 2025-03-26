@@ -12,6 +12,8 @@ import "../libraries/utils/ReentrancyGuard.sol";
 import "./interfaces/IRouter.sol";
 import "./interfaces/IVault.sol";
 import "./interfaces/IOrderBook.sol";
+import "../peripherals/interfaces/ITimelock.sol";
+
 
 contract OrderBook is ReentrancyGuard, IOrderBook {
     using SafeMath for uint256;
@@ -758,7 +760,10 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
             IERC20(order.collateralToken).safeTransfer(vault, amountOut);
         }
 
+        address timelock = IVault(vault).gov();
+        ITimelock(timelock).enableLeverage(vault);
         IRouter(router).pluginIncreasePosition(order.account, order.collateralToken, order.indexToken, order.sizeDelta, order.isLong);
+        ITimelock(timelock).disableLeverage(vault);
 
         // pay executor
         _transferOutETH(order.executionFee, _feeReceiver);
@@ -859,6 +864,10 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
 
         delete decreaseOrders[_address][_orderIndex];
 
+
+
+        address timelock = IVault(vault).gov();
+        ITimelock(timelock).enableLeverage(vault);
         uint256 amountOut = IRouter(router).pluginDecreasePosition(
             order.account,
             order.collateralToken,
@@ -868,6 +877,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
             order.isLong,
             address(this)
         );
+        ITimelock(timelock).disableLeverage(vault);
 
         // transfer released collateral to user
         if (order.collateralToken == weth) {
