@@ -11,12 +11,13 @@ async function readVaultTokenInfo(vault, tokens, usdgAmount) {
     console.log("vault.poolAmounts", (await vault.poolAmounts(token)).toString())
     console.log("vault.reservedAmounts", (await vault.reservedAmounts(token)).toString())
     console.log("vault.usdgAmounts", (await vault.usdgAmounts(token)).toString())
-    console.log("vault.getRedemptionAmount", (await vault.getRedemptionAmount(token, usdgAmount)).toString())
+    //console.log("vault.getRedemptionAmount", (await vault.getRedemptionAmount(token, usdgAmount)).toString())
     console.log("vault.getMinPrice", (await vault.getMinPrice(token)).toString())
     console.log("vault.getMaxPrice", (await vault.getMaxPrice(token)).toString())
     console.log("vault.guaranteedUsd", (await vault.guaranteedUsd(token)).toString())
-    console.log("priceFeed.getPrice", (await priceFeed.getPrice(token, false, false, false)).toString())
-    console.log("priceFeed.getPrice", (await priceFeed.getPrice(token, true, false, false)).toString())
+    //console.log("priceFeed.getPrice", (await priceFeed.getPrice(token, false, false, false)).toString())
+    //console.log("priceFeed.getPrice", (await priceFeed.getPrice(token, true, false, false)).toString())
+    console.log("vault.whitelistedTokens", (await vault.whitelistedTokens(token)).toString())
   }
 }
 
@@ -86,14 +87,16 @@ async function main() {
   // await getPool(weth.address, usdc.address, 500)
   // await getPool(weth.address, gmx.address, 10000)
 
-  const vault = await contractAt("Vault", "0x489ee077994B6658eAfA855C308275EAd8097C4A")
-  const glpManager = await contractAt("GlpManager", "0x321F653eED006AD1C29D174e17d96351BDe22649")
+  const vault = await contractAt("Vault", "0x7266488Fb3529a06B62092492B44824c21c47820")
+  const glpManager = await contractAt("SlpManager", "0x0DD5bc2bB6886f54B5Ea7fFa74aedDb93f25C8C4")
   let startTime = Date.now()
-  await vault.getMinPrice("0x82aF49447D8a07e3bd95BD0d56f35241523fBab1")
+  //await vault.getMinPrice("0x2e1e48FaDBF81747A07B9fb510dba353A89830a7")
   console.log("vault.getMinPrice", Date.now() - startTime)
+  //await readFeeConfig(vault);
+  await readVaultTokenInfo(vault, ["0x0ba12D6748DEFF71df1A1c361aF8a0Abd585ed2f"])
 
   startTime = Date.now()
-  await glpManager.getAums()
+  //await glpManager.getAums()
   console.log("glpManager.getAums", Date.now() - startTime)
 }
 

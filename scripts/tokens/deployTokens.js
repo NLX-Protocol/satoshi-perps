@@ -31,7 +31,7 @@ async function main() {
   addresses["KAITO"] = (await callWithRetries(deployContract, ["SyntheticToken", ["KAITO/USD", "KAITO"]])).address
 
   // COLLATERAL TOKENS
-  // addresses["USDC"] = (await callWithRetries(deployContract, ["FaucetToken", ["USDC", "USDC", 6, expandDecimals(1000, 6)]])).address
+  addresses["USDC"] = (await callWithRetries(deployContract, ["FaucetToken", ["USDC", "USDC", 6, expandDecimals(1000, 6)]])).address
   // addresses["USDT"] = (await callWithRetries(deployContract, ["FaucetToken", ["USDT", "USDT", 6, expandDecimals(1000, 6)]])).address
 
   // // Native Token
@@ -64,4 +64,4 @@ main()
 // ReferralStorage
 // GMX-ETH Uniswap Pool
 
-// npx hardhat run scripts/tokens/deployTokens.js --network core-mainnet     
+// npx hardhat run scripts/tokens/deployTokens.js --network core-mainnet

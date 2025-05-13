@@ -1,4 +1,4 @@
-const { getFrameSigner, deployContract, contractAt, sendTxn, writeTmpAddresses } = require("../shared/helpers")
+const { getFrameSigner, deployContract, contractAt, sendTxn, writeTmpAddresses, readTmpAddresses} = require("../shared/helpers")
 
 const network = (process.env.HARDHAT_NETWORK || 'mainnet');
 const tokens = require('./tokens')[network];
@@ -8,17 +8,19 @@ const depositFee = 30 // 0.3%
 
 async function main() {
 
+  const addresses = readTmpAddresses()
+
   // -------------------BTC --------------------
   const positionManagerAddress = undefined
-  const vault = await contractAt("Vault", "0x736Cad071Fdb5ce7B17F35bB22f68Ad53F55C207")
+  const vault = await contractAt("Vault", addresses.vaultBTC)
   const timelock = await contractAt("Timelock", await vault.gov())
   const router = await contractAt("Router", await vault.router())
-  const shortsTracker = await contractAt("ShortsTracker", "0x76d870fe862a7951dF969E84B4c0C05E5FE028f8")
+  const shortsTracker = await contractAt("ShortsTracker", addresses.shortsTrackerBTC)
   const shortsTrackerTimelock = await contractAt("ShortsTrackerTimelock", await shortsTracker.gov())
-  const weth = await contractAt("WETH", tokens.nativeToken.address)
-  const orderBook = await contractAt("OrderBook", "0xDd2c29cfeb1444dB6575CcEB64D9A6177769B98f")
-  const referralStorage = await contractAt("ReferralStorage", "0x952c5Cb3355695Ed1DEDD72aD074c960C2D8ce03")
-  const positionUtils = await contractAt("PositionUtils", "0x859d66aD5C0dE79c1375326B9df6fC56A7145332")
+  const weth = await contractAt("WETH", addresses.WCORE)
+  const orderBook = await contractAt("OrderBook", addresses.orderBookBTC)
+  const referralStorage = await contractAt("ReferralStorage", addresses.referralStorageBTC)
+  const positionUtils = await contractAt("PositionUtils", addresses.positionUtilsBTC)
 
 
 
@@ -32,12 +34,12 @@ async function main() {
   // ]
 // mainnet
   const positionKeepers = [
-    { address: "0xa766db45cd087f3d8374d363624B6579f0474D5F" },
-    { address: "0x82bbd2795d9b6Fc08305eb21ffB3c07C1Ad104E8" }
+    { address: "0x061B9ede7731dE3c16767CEA82eF18BED69fD8ce" },
+    /*{ address: "0x82bbd2795d9b6Fc08305eb21ffB3c07C1Ad104E8" }*/
   ]
   const liquidators = [
-    { address: "0x7ADAcd37b82153B67fe2a7D08aBebdDeF5DFee29" },
-    { address: "0x1C415Dff215B695eFc798866094CfE0a81106D69" }
+    { address: "0x061B9ede7731dE3c16767CEA82eF18BED69fD8ce" },
+    // { address: "0x1C415Dff215B695eFc798866094CfE0a81106D69" }
   ]
 
   const partnerContracts = []
@@ -107,10 +109,10 @@ async function main() {
     await sendTxn(positionManager.setGov(await vault.gov()), "positionManager.setGov")
   }
 
-  const addresses = {
+
+  writeTmpAddresses({
     positionManagerBTC: positionManager.address,
-  }
-  writeTmpAddresses(addresses)
+  })
   console.log("done.")
 }
 
@@ -121,4 +123,4 @@ main()
     process.exit(1)
   })
 
-  // npx hardhat run scripts/core/deployPositionManager.js --network core-testnet 
+  // npx hardhat run scripts/core/deployPositionManager.js --network core-testnet

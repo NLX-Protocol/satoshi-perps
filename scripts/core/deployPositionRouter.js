@@ -16,14 +16,18 @@ const tokens = require('./tokens')[network];
 // ]
 
 // mainnet
-const positionKeepers = [
+/*const positionKeepers = [
   "0xa766db45cd087f3d8374d363624B6579f0474D5F",
   "0x82bbd2795d9b6Fc08305eb21ffB3c07C1Ad104E8",
+]*/
+
+const positionKeepers = [
+  "0x061B9ede7731dE3c16767CEA82eF18BED69fD8ce",
 ]
 
 async function main() {
-  const vault = await contractAt("Vault", "0x736Cad071Fdb5ce7B17F35bB22f68Ad53F55C207")
-  const shortsTracker = await contractAt("ShortsTracker", "0x76d870fe862a7951dF969E84B4c0C05E5FE028f8")
+  const vault = await contractAt("Vault", "0x7266488Fb3529a06B62092492B44824c21c47820")
+  const shortsTracker = await contractAt("ShortsTracker", "0xc352346B69f8982e90ED78e38e2D7E91d50064e8")
 
   const wallet = (await ethers.getSigners())[0]
 
@@ -65,7 +69,7 @@ async function main() {
   await sendTxn(positionRouter.setAdmin(wallet.address), "positionRouter.setAdmin")
   for (const positionKeeper of positionKeepers){
     console.log({ positionKeeper});
-    
+
     await sendTxn(positionRouter.setPositionKeeper(positionKeeper, true), "positionRouter.setPositionKeeper")
   }
 
@@ -74,15 +78,15 @@ async function main() {
   const buffer = 0 // 0 seconds
   const updateDelay = 300 // 300 seconds, 5 minutes
   const maxAveragePriceChange = 20 // 0.2%
-  const shortsTrackerTimelock = await deployContract("ShortsTrackerTimelock", [wallet.address, buffer, updateDelay, maxAveragePriceChange]) 
+  const shortsTrackerTimelock = await deployContract("ShortsTrackerTimelock", [wallet.address, buffer, updateDelay, maxAveragePriceChange])
 
-  await sendTxn(shortsTracker.setGov(shortsTrackerTimelock.address), "shortsTracker.setGov") 
+  await sendTxn(shortsTracker.setGov(shortsTrackerTimelock.address), "shortsTracker.setGov")
 
   const addresses = {
     referralStorageBTC: referralStorage.address,
     positionUtilsBTC: positionUtils.address,
     positionRouterBTC: positionRouter.address,
-    shortsTrackerTimelockBTC: shortsTrackerTimelock.address, 
+    shortsTrackerTimelockBTC: shortsTrackerTimelock.address,
   }
 
   writeTmpAddresses(addresses)

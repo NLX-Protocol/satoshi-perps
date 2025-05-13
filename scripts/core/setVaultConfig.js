@@ -2,7 +2,7 @@ const { contractAt , sendTxn, callWithRetries } = require("../shared/helpers")
 const { expandDecimals } = require("../../test/shared/utilities")
 
 async function main() {
-  const vault = await callWithRetries(contractAt, ["Vault", "0xA4704fBfaf7c89511668052931Ba0f1816D2c9d3"])
+  const vault = await callWithRetries(contractAt, ["Vault", "0x7266488Fb3529a06B62092492B44824c21c47820"])
 
   await sendTxn(callWithRetries(vault.setFees.bind(vault), [
     10, // taxBasisPoints,

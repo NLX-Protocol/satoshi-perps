@@ -1,26 +1,22 @@
 const { ethers, network } = require("hardhat");
 const { expandDecimals } = require("../../test/shared/utilities");
-const { contractAt, sendTxn } = require("../shared/helpers");
+const { contractAt, sendTxn, readTmpAddresses} = require("../shared/helpers");
 const tokens = require('../core/tokens')[network.name];
 
-const VAULT = "0x683fb89cf3C1009f43517A61138703C4f2e8DF95" //BTC
-const VAULT_TIMELOCK = "0x44cd56A0Ac2414daaBa9e29c05B4809D4Ee2c31D"
-// const VAULT_PRICE_FEED = "0x0eE402630B89A38325dcEAf3c0cF9cac933142D8"
-const BOUND_VALIDATOR = "0x0E931b0bDe54BA8Ca6116d0bBBf1e9b4DD19f84C"
-const PYTH_ORACLE_ADAPTER = "0xE464C02889DfE75B81635bcE6bec3B0aFC007bA8"
-const RESILIENT_ORACLE = "0x90c4aD8572B6f4FCD461F822925F4875B270Fe19"
-
-
-
 async function main() {
-    const {
-        USDT, USDC, nativeToken
+    const addresses = readTmpAddresses()
+
+  const {
+    WCORE, BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, TRUMP, BERA, VIRTUAL, APT, SOLV, KAITO
+  } = tokens
+  const tokenArr = [WCORE, BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, TRUMP, BERA, VIRTUAL, APT, SOLV, KAITO]
+  //const tokenArr = [WCORE]
+
+    /*const {
+      VIRTUAL
     } = tokens
-    const tokenArr = [USDT, USDC, nativeToken]
-    // const pythMaxStalePeriod = 60 * 60 * 24 // 24 hours
+    const tokenArr = [VIRTUAL]*/
     const pythMaxStalePeriod = 60 * 60 // 1 hour
-
-
 
 
     const validateConfigs = []
@@ -28,7 +24,6 @@ async function main() {
     const resilientOracleConfigs = []
     const vaultWhitelistConfigs = []
 
-    // BTC
     for (const token of tokenArr) {
         validateConfigs.push({
             asset: token.address,
@@ -42,12 +37,12 @@ async function main() {
         })
         resilientOracleConfigs.push({
             asset: token.address,
-            oracles: [PYTH_ORACLE_ADAPTER, ethers.constants.AddressZero, ethers.constants.AddressZero],
+            oracles: [addresses.pythOracle, ethers.constants.AddressZero, ethers.constants.AddressZero],
             enableFlagsForOracles: [true, false, false]
         })
 
         vaultWhitelistConfigs.push({
-            vault: VAULT,
+            vault: addresses.vaultBTC,
             token: token.address,
             tokenDecimals: token.decimals,
             tokenWeight: token.tokenWeight,
@@ -60,8 +55,6 @@ async function main() {
         })
     }
 
-
-
     console.log({
         validateConfigs,
         pythTokenConfigs,
@@ -69,10 +62,10 @@ async function main() {
     });
 
     //  setConfigs
-    const boundValidator = await contractAt("BoundValidator", BOUND_VALIDATOR)
-    const pythOracle = await contractAt("PythOracle", PYTH_ORACLE_ADAPTER)
-    const resilientOracle = await contractAt("ResilientOracle", RESILIENT_ORACLE)
-    const timelock = await contractAt("Timelock", VAULT_TIMELOCK)
+    const boundValidator = await contractAt("BoundValidator", addresses.boundValidator)
+    const pythOracle = await contractAt("PythOracle", addresses.pythOracle)
+    const resilientOracle = await contractAt("ResilientOracle", addresses.resilientOracle)
+    const timelock = await contractAt("Timelock", addresses.vaultTimelockBTC)
 
     await sendTxn(boundValidator.setValidateConfigs(validateConfigs), "boundValidator.setValidateConfig")
     await sendTxn(pythOracle.setTokenConfigs(pythTokenConfigs), "pythOracle.setTokenConfigs")

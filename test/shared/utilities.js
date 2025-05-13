@@ -1,4 +1,5 @@
 const BN = require('bn.js')
+const {ethers} = require("ethers");
 
 const maxUint256 = ethers.constants.MaxUint256
 

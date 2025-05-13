@@ -80,7 +80,7 @@ module.exports = {
     },
     "core-testnet": {
       url: CORE_TESTNET_URL,
-      chainId: 1115,
+      chainId: 1114,
       // gasLimit:26000000,
       gasPrice: 10000000000,
       accounts: getEnvAccounts(CORE_TESTNET_DEPLOY_KEY),
@@ -153,10 +153,10 @@ module.exports = {
     customChains: [
       {
         network: "core-testnet",
-        chainId: 1115,
+        chainId: 1114,
         urls: {
-          apiURL: "https://api.test.btcs.network/api",
-          browserURL: "https://scan.test.btcs.network/"
+          apiURL: "https://api.test2.btcs.network/api",
+          browserURL: "https://scan.test2.btcs.network/"
         }
       },
       {
@@ -210,4 +210,4 @@ module.exports = {
     outDir: "typechain",
     target: "ethers-v5",
   },
-};                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+};

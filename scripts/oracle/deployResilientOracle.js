@@ -3,18 +3,19 @@ const { writeTmpAddresses, sendTxn, verifyUpgradeable, deployContract, contractA
 const { expandDecimals } = require("../../test/shared/utilities");
 const tokens = require('../core/tokens')[network.name];
 
-const VAULT = "0x736Cad071Fdb5ce7B17F35bB22f68Ad53F55C207" //BTC
-const VAULT_PRICE_FEED = "0x0eE402630B89A38325dcEAf3c0cF9cac933142D8"
+const VAULT = "0x7266488Fb3529a06B62092492B44824c21c47820" //BTC
+const VAULT_PRICE_FEED = "0xD318864E715c75D46500B91E66F02B5Bd7d5b19C"
 //pyth contract address
-// const PRICE_FEED_CONTRACT_ADDRESS = "0x8D254a21b3C86D32F7179855531CE99164721933" //testnet
-const PRICE_FEED_CONTRACT_ADDRESS = "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729" //mainnet
+//const PRICE_FEED_CONTRACT_ADDRESS = "0x8D254a21b3C86D32F7179855531CE99164721933" //testnet
+const PRICE_FEED_CONTRACT_ADDRESS = "0x2880aB155794e7179c9eE2e38200202908C17B43" //testnet2
+//const PRICE_FEED_CONTRACT_ADDRESS = "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729" //mainnet
 
 async function main() {
 
   const {
-    BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC, PumpBTC, nativeToken
+    BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, TRUMP, BERA, VIRTUAL, APT, SOLV, KAITO, SolvBTC, nativeToken
   } = tokens
-  const tokenArr = [BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, SolvBTC, PumpBTC, nativeToken]
+  const tokenArr = [BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, TRUMP, BERA, VIRTUAL, APT, SOLV, KAITO, SolvBTC, nativeToken]
   // const pythMaxStalePeriod = 60 * 60 * 24 // 24 hours
   const pythMaxStalePeriod = 60 * 60 // 1 hour
 
@@ -61,7 +62,7 @@ async function main() {
 
   console.log("pythOracle deployed to: " + pythOracle.address);
 
-  // deploy ResilientOracle 
+  // deploy ResilientOracle
   const resilientOracle = await deployContract("ResilientOracle", [boundValidator.address]);
 
   console.log("resilientOracle deployed to: " + resilientOracle.address);
@@ -82,15 +83,15 @@ async function main() {
 
 
 
-  
-  // await sendTxn(vaultPriceFeed.setMaxStrictPriceDeviation(expandDecimals(5, 28)), "vaultPriceFeed.setMaxStrictPriceDeviation") // 0.01 USD
-    // await sendTxn(vaultPriceFeed.setResilientOracle(resilientOracle.address), "vaultPriceFeed.setResilientOracle")
-    // await sendTxn(vault.setPriceFeed(vaultPriceFeed.address), "vault.setPriceFeed")
-  // writeTmpAddresses({
-  //   boundValidator: boundValidator.address,
-  //   pythOracle: pythOracle.address,
-  //   resilientOracle: resilientOracle.address,
-  // })
+
+  await sendTxn(vaultPriceFeed.setMaxStrictPriceDeviation(expandDecimals(5, 28)), "vaultPriceFeed.setMaxStrictPriceDeviation") // 0.01 USD
+    await sendTxn(vaultPriceFeed.setResilientOracle(resilientOracle.address), "vaultPriceFeed.setResilientOracle")
+    await sendTxn(vault.setPriceFeed(vaultPriceFeed.address), "vault.setPriceFeed")
+  writeTmpAddresses({
+    boundValidator: boundValidator.address,
+    pythOracle: pythOracle.address,
+    resilientOracle: resilientOracle.address,
+  })
 
   console.log({
     boundValidator: boundValidator.address,

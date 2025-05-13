@@ -12,8 +12,8 @@ async function main() {
     // const SLP_MANAGER_ADDRESS = "0x16aCa8b0547566eA9b2aa7a232871D5D5C8160a6"
 
     // ---------- CORE ----------
-    const SLP_MANAGER_ADDRESS = "0x7C393006729b18FD63346138f9E730CF812529a4"
-    
+    const SLP_MANAGER_ADDRESS = "0x0DD5bc2bB6886f54B5Ea7fFa74aedDb93f25C8C4"
+
 
 
     // deploy

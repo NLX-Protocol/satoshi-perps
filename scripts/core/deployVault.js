@@ -33,10 +33,10 @@ async function main() {
   const shortsTracker = await deployContract("ShortsTracker", [vault.address], "ShortsTracker",)
 
   const slpManager = await deployContract("SlpManager", [
-    vault.address, 
-    btcUsdg.address, 
-    slpBTC.address, 
-    shortsTracker.address, 
+    vault.address,
+    btcUsdg.address,
+    slpBTC.address,
+    shortsTracker.address,
     0,// coolDown Period - 15 * 60
   ])
   // await sendTxn(slpManager.setInPrivateMode(true), "slpManager.setInPrivateMode")
@@ -93,7 +93,7 @@ async function main() {
     50, // marginFeeBasisPoints 0.5%
     500, // maxMarginFeeBasisPoints 5%
   ])
-  // await sendTxn(vault.setGov(vaultTimelock.address), "vault.setGov")
+  //await sendTxn(vault.setGov(vaultTimelock.address), "vault.setGov")
 
   const addresses = {
     btcUsdg: btcUsdg.address,
@@ -120,5 +120,5 @@ main()
     process.exit(1)
   })
 
- 
-  // npx hardhat run scripts/core/deployVault.js --network core-testnet  
+
+  // npx hardhat run scripts/core/deployVault.js --network core-testnet
