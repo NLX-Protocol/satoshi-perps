@@ -11,4 +11,7 @@ interface ITimelock {
     function signalSetGov(address _target, address _gov) external;
     function setGov(address _target) external;
     function requestGov(address[] memory _targets) external;
+    function setInManagerMode(address _vault, bool _inManagerMode) external;
+    function setInPrivateLiquidationMode(address _vault, bool _inPrivateLiquidationMode) external;
+
 }

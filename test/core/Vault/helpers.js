@@ -61,6 +61,7 @@ const errors = [
   "Vault: maxGasPrice exceeded", // 55
   "Vault: max longs exceeded", // 56
   "Vault: max shorts exceeded", // 57
+  "Vault: poolAmount < buffer", // 58
 ]
 
 async function initVaultErrors(vault) {

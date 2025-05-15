@@ -5,10 +5,6 @@ const network = (process.env.HARDHAT_NETWORK || 'mainnet');
 async function main() {
   const reader = await deployContract("Reader", [], "Reader")
 
-  // if (network === "avax") {
-  //   await sendTxn(reader.setConfig(true), "Reader.setConfig")
-  // }
-
   await sendTxn(reader.setConfig(true), "Reader.setConfig")
 
   writeTmpAddresses({
@@ -23,4 +19,4 @@ main()
     process.exit(1)
   })
 
-  // npx hardhat run scripts/peripherals/deployReader.js --network core-testnet 
+// npx hardhat run scripts/peripherals/deployReader.js --network core-testnet

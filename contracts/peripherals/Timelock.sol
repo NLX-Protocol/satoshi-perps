@@ -27,6 +27,7 @@ import "../staking/interfaces/IRewardRouterV2.sol";
 
 import "../libraries/math/SafeMath.sol";
 import "../libraries/token/IERC20.sol";
+import {IPausable} from "./interfaces/IPausable.sol";
 
 contract Timelock is ITimelock, BasicMulticall {
     using SafeMath for uint256;
@@ -425,7 +426,6 @@ contract Timelock is ITimelock, BasicMulticall {
         IVault(_vault).upgradeVault(_receiver, _token, _amount);
     }
 
-
     function withdrawFees(address _vault, address _token, address _receiver) external onlyAdmin {
         IVault(_vault).withdrawFees(_token, _receiver);
     }
@@ -436,7 +436,11 @@ contract Timelock is ITimelock, BasicMulticall {
         }
     }
 
-    function setInPrivateLiquidationMode(address _vault, bool _inPrivateLiquidationMode) external onlyAdmin {
+    function setInManagerMode(address _vault, bool _inManagerMode) external override onlyAdmin {
+        IVault(_vault).setInManagerMode(_inManagerMode);
+    }
+
+    function setInPrivateLiquidationMode(address _vault, bool _inPrivateLiquidationMode) external override onlyAdmin {
         IVault(_vault).setInPrivateLiquidationMode(_inPrivateLiquidationMode);
     }
 
@@ -620,7 +624,7 @@ contract Timelock is ITimelock, BasicMulticall {
     ) external onlyAdmin {
         IOracleTokenConfigsPyth(_oracle).setTokenConfigs(_tokenConfigs);
     }
-    
+
     function cancelAction(bytes32 _action) external onlyAdmin {
         _clearAction(_action);
     }
@@ -651,5 +655,33 @@ contract Timelock is ITimelock, BasicMulticall {
         require(pendingActions[_action] != 0, "invalid _action");
         delete pendingActions[_action];
         emit ClearAction(_action);
+    }
+
+    function pauseProtocol(
+        address _vault,
+        address _positionRouter,
+        address _positionManager,
+        address _orderBook,
+        address _slpManager
+    ) external onlyAdmin {
+        IPausable(_vault).pause();
+        IPausable(_positionRouter).pause();
+        IPausable(_positionManager).pause();
+        IPausable(_orderBook).pause();
+        IPausable(_slpManager).pause();
+    }
+
+    function unpauseProtocol(
+        address _vault,
+        address _positionRouter,
+        address _positionManager,
+        address _orderBook,
+        address _slpManager
+    ) external onlyAdmin {
+        IPausable(_vault).unpause();
+        IPausable(_positionRouter).unpause();
+        IPausable(_positionManager).unpause();
+        IPausable(_orderBook).unpause();
+        IPausable(_slpManager).unpause();
     }
 }

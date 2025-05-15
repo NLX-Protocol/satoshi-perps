@@ -13,9 +13,9 @@ import "./interfaces/IRouter.sol";
 import "./interfaces/IVault.sol";
 import "./interfaces/IOrderBook.sol";
 import "../peripherals/interfaces/ITimelock.sol";
+import "../libraries/utils/Pausable.sol";
 
-
-contract OrderBook is ReentrancyGuard, IOrderBook {
+contract OrderBook is ReentrancyGuard, IOrderBook, Pausable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Address for address payable;
@@ -259,6 +259,14 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         emit Initialize(_router, _vault, _weth, _usdg, _minExecutionFee, _minPurchaseTokenAmountUsd);
     }
 
+    function pause() external onlyGov {
+        _pause();
+    }
+
+    function unpause() external onlyGov {
+        _unpause();
+    }
+
     receive() external payable {
         require(msg.sender == weth, "OrderBook: invalid sender");
     }
@@ -315,7 +323,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         uint256 _executionFee,
         bool _shouldWrap,
         bool _shouldUnwrap
-    ) external payable nonReentrant {
+    ) external payable nonReentrant whenNotPaused {
         require(_path.length == 2 || _path.length == 3, "OrderBook: invalid _path.length");
         require(_path[0] != _path[_path.length - 1], "OrderBook: invalid _path");
         require(_amountIn > 0, "OrderBook: invalid _amountIn");
@@ -461,7 +469,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         return isValid;
     }
 
-    function updateSwapOrder(uint256 _orderIndex, uint256 _minOut, uint256 _triggerRatio, bool _triggerAboveThreshold) external nonReentrant {
+    function updateSwapOrder(uint256 _orderIndex, uint256 _minOut, uint256 _triggerRatio, bool _triggerAboveThreshold) external nonReentrant whenNotPaused {
         SwapOrder storage order = swapOrders[msg.sender][_orderIndex];
         require(order.account != address(0), "OrderBook: non-existent order");
 
@@ -482,7 +490,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         );
     }
 
-    function executeSwapOrder(address _account, uint256 _orderIndex, address payable _feeReceiver) override external nonReentrant {
+    function executeSwapOrder(address _account, uint256 _orderIndex, address payable _feeReceiver) override external nonReentrant whenNotPaused {
         SwapOrder memory order = swapOrders[_account][_orderIndex];
         require(order.account != address(0), "OrderBook: non-existent order");
 
@@ -600,7 +608,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         bool _triggerAboveThreshold,
         uint256 _executionFee,
         bool _shouldWrap
-    ) external payable nonReentrant {
+    ) external payable nonReentrant whenNotPaused {
         // always need this call because of mandatory executionFee user has to transfer in ETH
         _transferInETH();
 
@@ -685,7 +693,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         );
     }
 
-    function updateIncreaseOrder(uint256 _orderIndex, uint256 _sizeDelta, uint256 _triggerPrice, bool _triggerAboveThreshold) external nonReentrant {
+    function updateIncreaseOrder(uint256 _orderIndex, uint256 _sizeDelta, uint256 _triggerPrice, bool _triggerAboveThreshold) external nonReentrant whenNotPaused {
         IncreaseOrder storage order = increaseOrders[msg.sender][_orderIndex];
         require(order.account != address(0), "OrderBook: non-existent order");
 
@@ -733,7 +741,7 @@ contract OrderBook is ReentrancyGuard, IOrderBook {
         );
     }
 
-    function executeIncreaseOrder(address _address, uint256 _orderIndex, address payable _feeReceiver) override external nonReentrant {
+    function executeIncreaseOrder(address _address, uint256 _orderIndex, address payable _feeReceiver) override external nonReentrant whenNotPaused {
         IncreaseOrder memory order = increaseOrders[_address][_orderIndex];
         require(order.account != address(0), "OrderBook: non-existent order");
 

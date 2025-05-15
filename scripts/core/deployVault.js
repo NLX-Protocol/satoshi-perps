@@ -1,4 +1,4 @@
-const { deployContract, contractAt, sendTxn, writeTmpAddresses, deployUpgradeableContract } = require("../shared/helpers")
+const { contractAt, deployContract, sendTxn, writeTmpAddresses, deployUpgradeableContract, readTmpAddresses } = require("../shared/helpers")
 const { expandDecimals } = require("../../test/shared/utilities")
 const { toUsd } = require("../../test/shared/units")
 const { errors } = require("../../test/core/Vault/helpers")
@@ -7,54 +7,118 @@ const network = (process.env.HARDHAT_NETWORK || 'mainnet');
 const tokens = require('./tokens')[network];
 
 async function main() {
-
   const { nativeToken } = tokens
-
-  const vaultUpgradeableContracts = await deployUpgradeableContract("Vault", [], undefined,{
-    proxyAdmin: "GovernedProxyAdmin"
-  })
-
-  const vault = vaultUpgradeableContracts.proxy
   const wallet = (await ethers.getSigners())[0]
 
+  // Check if this is first deployment or upgrade
+  let isUpgrade = false;
+  let addresses;
 
-  const btcUsdg = await deployContract("BTC_USDG", [vault.address])
-  const router = await deployContract("Router", [vault.address, btcUsdg.address, nativeToken.address])
+  try {
+    addresses = readTmpAddresses();
+    isUpgrade = addresses.vaultBTC !== undefined;
+  } catch (e) {
+    console.log("No existing addresses found, proceeding with fresh deployment");
+  }
+
+  let vault, vaultImplementation, vaultProxyAdmin;
+
+  if (isUpgrade) {
+    console.log("Performing upgrade of existing vault...");
+
+    // Use existing proxy address
+    vault = await contractAt("Vault", addresses.vaultBTC);
+    const proxyAdmin = await contractAt("GovernedProxyAdmin", addresses.vaultBTCProxyAdmin);
+
+    // Deploy new implementation only
+    const newImplementation = await deployContract("Vault", []);
+    console.log("New implementation deployed at:", newImplementation.address);
+
+    // Save current implementation before upgrading
+    const currentImpl = await proxyAdmin.getProxyImplementation(addresses.vaultBTC);
+    console.log("Current implementation:", currentImpl);
+
+    // Upgrade proxy to new implementation
+    await proxyAdmin.upgrade(addresses.vaultBTC, newImplementation.address);
+    console.log("Vault upgraded!");
+
+    vaultImplementation = newImplementation.address;
+    vaultProxyAdmin = addresses.vaultBTCProxyAdmin;
 
 
-  const vaultPriceFeed = await deployContract("VaultPriceFeed", [])
+    const currentGov = await vault.gov();
+    console.log("Current gov:", currentGov);
+    // Transfer gov back to wallet temporarily
+    if (currentGov !== wallet.address) {
+      const timelock = await contractAt("Timelock", currentGov);
+      const tx = await timelock.signalSetGov(vault.address, wallet.address);
+      await tx.wait();
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      await timelock.setGov(vault.address);
+      console.log("Gov transferred to wallet");
+    }
 
-  await sendTxn(vaultPriceFeed.setMaxStrictPriceDeviation(expandDecimals(1, 28)), "vaultPriceFeed.setMaxStrictPriceDeviation") // 0.05 USD
+  } else {
+    console.log("Performing fresh deployment...");
 
-  const slpBTC = await deployContract("SLPBTC", [])
-  // await sendTxn(slpBTC.setInPrivateTransferMode(true), "slpBTC.setInPrivateTransferMode")
+    // Deploy new upgradeable vault
+    const vaultUpgradeableContracts = await deployUpgradeableContract("Vault", [], undefined, {
+      proxyAdmin: "GovernedProxyAdmin"
+    })
+
+    vault = vaultUpgradeableContracts.proxy;
+    vaultImplementation = vaultUpgradeableContracts.implementationAddress;
+    vaultProxyAdmin = vaultUpgradeableContracts.proxyAdminAddress;
+  }
 
 
-  const shortsTracker = await deployContract("ShortsTracker", [vault.address], "ShortsTracker",)
+  let btcUsdg;
+  let slpBTC;
+  let router;
+  let vaultPriceFeed;
+  if(isUpgrade){
+    btcUsdg = await contractAt("BTC_USDG", addresses.btcUsdg);
+    slpBTC = await contractAt("SLPBTC", addresses.slpBTC);
+    router = await contractAt("Router", addresses.routerBTC)
+    vaultPriceFeed = await contractAt("VaultPriceFeed", addresses.vaultPriceFeedBTC)
+  } else {
+    btcUsdg = await deployContract("BTC_USDG", [vault.address])
+    slpBTC = await deployContract("SLPBTC", [])
+    router = await deployContract("Router", [vault.address, btcUsdg.address, nativeToken.address])
+    vaultPriceFeed = await deployContract("VaultPriceFeed", [])
+  }
+
+  const shortsTracker = await deployContract("ShortsTracker", [vault.address], "ShortsTracker")
 
   const slpManager = await deployContract("SlpManager", [
     vault.address,
     btcUsdg.address,
     slpBTC.address,
     shortsTracker.address,
-    0,// coolDown Period - 15 * 60
+    0,
   ])
   // await sendTxn(slpManager.setInPrivateMode(true), "slpManager.setInPrivateMode")
 
   await sendTxn(slpBTC.setMinter(slpManager.address, true), "slpBTC.setMinter")
   await sendTxn(btcUsdg.addVault(slpManager.address), "btcUsdg.addVault(slpManager)")
 
-  await sendTxn(vault.initialize(
-    router.address, // router
-    btcUsdg.address, // usdg
-    vaultPriceFeed.address, // priceFeed
-    toUsd(5), // liquidationFeeUsd
-    100, // fundingRateFactor
-    100 // stableFundingRateFactor
-  ), "vault.initialize")
+  // Only initialize if fresh deployment
+  if (!isUpgrade) {
+    await sendTxn(vaultPriceFeed.setMaxStrictPriceDeviation(expandDecimals(1, 28)), "vaultPriceFeed.setMaxStrictPriceDeviation")
+
+    await sendTxn(vault.initialize(
+      router.address, // router
+      btcUsdg.address, // usdg
+      vaultPriceFeed.address, // priceFeed
+      toUsd(5), // liquidationFeeUsd
+      100, // fundingRateFactor
+      100 // stableFundingRateFactor
+    ), "vault.initialize")
+  } else {
+    console.log("Skipping vault initialization (already initialized)");
+  }
 
   await sendTxn(vault.setFundingRate(60 * 60, 100, 100), "vault.setFundingRate")
-
   await sendTxn(vault.setInManagerMode(true), "vault.setInManagerMode")
   await sendTxn(vault.setManager(slpManager.address, true), "vault.setManager")
 
@@ -93,14 +157,15 @@ async function main() {
     50, // marginFeeBasisPoints 0.5%
     500, // maxMarginFeeBasisPoints 5%
   ])
-  //await sendTxn(vault.setGov(vaultTimelock.address), "vault.setGov")
 
-  const addresses = {
+  // Save addresses
+  writeTmpAddresses({
     btcUsdg: btcUsdg.address,
     slpBTC: slpBTC.address,
     vaultBTC: vault.address,
-    currentVaultImplementationBTC: vaultUpgradeableContracts.implementationAddress,
-    vaultBTCProxyAdmin: vaultUpgradeableContracts.proxyAdminAddress,
+    currentVaultImplementationBTC: vaultImplementation,
+    previousVaultImplementationBTC: isUpgrade ? addresses.currentVaultImplementationBTC : undefined,
+    vaultBTCProxyAdmin: vaultProxyAdmin,
     routerBTC: router.address,
     vaultPriceFeedBTC: vaultPriceFeed.address,
     slpManagerBTC: slpManager.address,
@@ -108,9 +173,7 @@ async function main() {
     vaultErrorControllerBTC: vaultErrorController.address,
     vaultUtilsBTC: vaultUtils.address,
     vaultTimelockBTC: vaultTimelock.address,
-  }
-  writeTmpAddresses(addresses)
-
+  })
 }
 
 main()
@@ -120,5 +183,4 @@ main()
     process.exit(1)
   })
 
-
-  // npx hardhat run scripts/core/deployVault.js --network core-testnet
+// npx hardhat run scripts/core/deployVault.js --network core-testnet

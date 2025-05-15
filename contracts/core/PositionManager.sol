@@ -8,8 +8,9 @@ import "./interfaces/IOrderBook.sol";
 
 import "../peripherals/interfaces/ITimelock.sol";
 import "./BasePositionManager.sol";
+import "../libraries/utils/Pausable.sol";
 
-contract PositionManager is BasePositionManager {
+contract PositionManager is BasePositionManager, Pausable {
 
     address public orderBook;
     bool public inLegacyMode;
@@ -52,6 +53,14 @@ contract PositionManager is BasePositionManager {
         orderBook = _orderBook;
     }
 
+    function pause() external onlyGov {
+        _pause();
+    }
+
+    function unpause() external onlyGov {
+        _unpause();
+    }
+
     function setOrderKeeper(address _account, bool _isActive) external onlyAdmin {
         isOrderKeeper[_account] = _isActive;
         emit SetOrderKeeper(_account, _isActive);
@@ -85,7 +94,7 @@ contract PositionManager is BasePositionManager {
         uint256 _sizeDelta,
         bool _isLong,
         uint256 _price
-    ) external nonReentrant onlyPartnersOrLegacyMode {
+    ) external nonReentrant onlyPartnersOrLegacyMode whenNotPaused {
         require(_path.length == 1 || _path.length == 2, "PositionManager: invalid _path.length");
 
         if (_amountIn > 0) {
@@ -110,7 +119,7 @@ contract PositionManager is BasePositionManager {
         uint256 _sizeDelta,
         bool _isLong,
         uint256 _price
-    ) external payable nonReentrant onlyPartnersOrLegacyMode {
+    ) external payable nonReentrant onlyPartnersOrLegacyMode whenNotPaused {
         require(_path.length == 1 || _path.length == 2, "PositionManager: invalid _path.length");
         require(_path[0] == weth, "PositionManager: invalid _path");
 
@@ -213,11 +222,11 @@ contract PositionManager is BasePositionManager {
         ITimelock(timelock).disableLeverage(_vault);
     }
 
-    function executeSwapOrder(address _account, uint256 _orderIndex, address payable _feeReceiver) external onlyOrderKeeper {
+    function executeSwapOrder(address _account, uint256 _orderIndex, address payable _feeReceiver) external onlyOrderKeeper whenNotPaused {
         IOrderBook(orderBook).executeSwapOrder(_account, _orderIndex, _feeReceiver);
     }
 
-    function executeIncreaseOrder(address _account, uint256 _orderIndex, address payable _feeReceiver) external onlyOrderKeeper {
+    function executeIncreaseOrder(address _account, uint256 _orderIndex, address payable _feeReceiver) external onlyOrderKeeper whenNotPaused {
         _validateIncreaseOrder(_account, _orderIndex);
 
         address _vault = vault;

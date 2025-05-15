@@ -15,4 +15,4 @@ main()
     process.exit(1)
   })
 
-   //  npx hardhat run scripts/peripherals/deployVaultReader.js --network core-testnet
+//  npx hardhat run scripts/peripherals/deployVaultReader.js --network core-testnet

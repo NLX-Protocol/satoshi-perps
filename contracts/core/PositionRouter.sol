@@ -10,8 +10,9 @@ import "./interfaces/IPositionRouterCallbackReceiver.sol";
 import "../libraries/utils/Address.sol";
 import "../peripherals/interfaces/ITimelock.sol";
 import "./BasePositionManager.sol";
+import "../libraries/utils/Pausable.sol";
 
-contract PositionRouter is BasePositionManager, IPositionRouter {
+contract PositionRouter is BasePositionManager, IPositionRouter, Pausable {
     using Address for address;
 
     struct IncreasePositionRequest {
@@ -174,7 +175,7 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
     event Callback(address callbackTarget, bool success, uint256 callbackGasLimit);
 
     modifier onlyPositionKeeper() {
-        require(isPositionKeeper[msg.sender], "403");
+        require(isPositionKeeper[msg.sender], "6");
         _;
     }
 
@@ -187,6 +188,14 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
         uint256 _minExecutionFee
     ) public BasePositionManager(_vault, _router, _shortsTracker, _weth, _depositFee) {
         minExecutionFee = _minExecutionFee;
+    }
+
+    function pause() external onlyGov {
+        _pause();
+    }
+
+    function unpause() external onlyGov {
+        _unpause();
     }
 
     function setPositionKeeper(address _account, bool _isActive) external onlyAdmin {
@@ -228,7 +237,7 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
         emit SetRequestKeysStartValues(_increasePositionRequestKeysStart, _decreasePositionRequestKeysStart);
     }
 
-    function executeIncreasePositions(uint256 _endIndex, address payable _executionFeeReceiver) external override onlyPositionKeeper {
+    function executeIncreasePositions(uint256 _endIndex, address payable _executionFeeReceiver) external override onlyPositionKeeper whenNotPaused {
         uint256 index = increasePositionRequestKeysStart;
         uint256 length = increasePositionRequestKeys.length;
 
@@ -308,10 +317,10 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
         uint256 _executionFee,
         bytes32 _referralCode,
         address _callbackTarget
-    ) external payable nonReentrant returns (bytes32) {
-        require(_executionFee >= minExecutionFee, "fee");
-        require(msg.value == _executionFee, "val");
-        require(_path.length == 1 || _path.length == 2, "len");
+    ) external payable nonReentrant whenNotPaused returns (bytes32) {
+        require(_executionFee >= minExecutionFee, "0");
+        require(msg.value == _executionFee, "1");
+        require(_path.length == 1 || _path.length == 2, "2");
 
         _transferInETH();
         _setTraderReferralCode(_referralCode);
@@ -345,11 +354,11 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
         uint256 _executionFee,
         bytes32 _referralCode,
         address _callbackTarget
-    ) external payable nonReentrant returns (bytes32) {
-        require(_executionFee >= minExecutionFee, "fee");
-        require(msg.value >= _executionFee, "val");
-        require(_path.length == 1 || _path.length == 2, "len");
-        require(_path[0] == weth, "path");
+    ) external payable nonReentrant whenNotPaused returns (bytes32) {
+        require(_executionFee >= minExecutionFee, "0");
+        require(msg.value >= _executionFee, "1");
+        require(_path.length == 1 || _path.length == 2, "2");
+        require(_path[0] == weth, "3");
         _transferInETH();
         _setTraderReferralCode(_referralCode);
 
@@ -383,12 +392,12 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
         bool _withdrawETH,
         address _callbackTarget
     ) external payable nonReentrant returns (bytes32) {
-        require(_executionFee >= minExecutionFee, "fee");
-        require(msg.value == _executionFee, "val");
-        require(_path.length == 1 || _path.length == 2, "len");
+        require(_executionFee >= minExecutionFee, "0");
+        require(msg.value == _executionFee, "1");
+        require(_path.length == 1 || _path.length == 2, "2");
 
         if (_withdrawETH) {
-            require(_path[_path.length - 1] == weth, "path");
+            require(_path[_path.length - 1] == weth, "3");
         }
 
         _transferInETH();
@@ -418,9 +427,8 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
         );
     }
 
-    function executeIncreasePosition(bytes32 _key, address payable _executionFeeReceiver) public nonReentrant returns (bool) {
+    function executeIncreasePosition(bytes32 _key, address payable _executionFeeReceiver) public nonReentrant whenNotPaused returns (bool) {
         IncreasePositionRequest memory request = increasePositionRequests[_key];
-        // if the request was already executed or cancelled, return true so that the executeIncreasePositions loop will continue executing the next request
         if (request.account == address(0)) { return true; }
 
         bool shouldExecute = _validateExecution(request.blockNumber, request.blockTime, request.account);
@@ -432,8 +440,7 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
             uint256 amountIn = request.amountIn;
 
             if (request.path.length > 1) {
-                IERC20(request.path[0]).safeTransfer(vault, request.amountIn);
-                amountIn = _swap(request.path, request.minOut, address(this));
+                revert ("7");
             }
 
             uint256 afterFeeAmount = _collectFees(request.account, request.path, amountIn, request.indexToken, request.isLong, request.sizeDelta);
@@ -465,7 +472,6 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
 
     function cancelIncreasePosition(bytes32 _key, address payable _executionFeeReceiver) public nonReentrant returns (bool) {
         IncreasePositionRequest memory request = increasePositionRequests[_key];
-        // if the request was already executed or cancelled, return true so that the executeIncreasePositions loop will continue executing the next request
         if (request.account == address(0)) { return true; }
 
         bool shouldCancel = _validateCancellation(request.blockNumber, request.blockTime, request.account);
@@ -502,7 +508,6 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
 
     function executeDecreasePosition(bytes32 _key, address payable _executionFeeReceiver) public nonReentrant returns (bool) {
         DecreasePositionRequest memory request = decreasePositionRequests[_key];
-        // if the request was already executed or cancelled, return true so that the executeDecreasePositions loop will continue executing the next request
         if (request.account == address(0)) { return true; }
 
         bool shouldExecute = _validateExecution(request.blockNumber, request.blockTime, request.account);
@@ -514,8 +519,7 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
 
         if (amountOut > 0) {
             if (request.path.length > 1) {
-                IERC20(request.path[0]).safeTransfer(vault, amountOut);
-                amountOut = _swap(request.path, request.minOut, address(this));
+                revert ("7");
             }
 
             if (request.withdrawETH) {
@@ -549,7 +553,6 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
 
     function cancelDecreasePosition(bytes32 _key, address payable _executionFeeReceiver) public nonReentrant returns (bool) {
         DecreasePositionRequest memory request = decreasePositionRequests[_key];
-        // if the request was already executed or cancelled, return true so that the executeDecreasePositions loop will continue executing the next request
         if (request.account == address(0)) { return true; }
 
         bool shouldCancel = _validateCancellation(request.blockNumber, request.blockTime, request.account);
@@ -607,30 +610,26 @@ contract PositionRouter is BasePositionManager, IPositionRouter {
 
     function _validateExecution(uint256 _positionBlockNumber, uint256 _positionBlockTime, address _account) internal view returns (bool) {
         if (_positionBlockTime.add(maxTimeDelay) <= block.timestamp) {
-            revert("expired");
+            revert("4");
         }
 
-        return _validateExecutionOrCancellation(_positionBlockNumber, _positionBlockTime, _account);
+        return _validateCancellation(_positionBlockNumber, _positionBlockTime, _account);
     }
 
     function _validateCancellation(uint256 _positionBlockNumber, uint256 _positionBlockTime, address _account) internal view returns (bool) {
-        return _validateExecutionOrCancellation(_positionBlockNumber, _positionBlockTime, _account);
-    }
-
-    function _validateExecutionOrCancellation(uint256 _positionBlockNumber, uint256 _positionBlockTime, address _account) internal view returns (bool) {
         bool isKeeperCall = msg.sender == address(this) || isPositionKeeper[msg.sender];
 
         if (!isLeverageEnabled && !isKeeperCall) {
-            revert("403");
+            revert("6");
         }
 
         if (isKeeperCall) {
             return _positionBlockNumber.add(minBlockDelayKeeper) <= block.number;
         }
 
-        require(msg.sender == _account, "403");
+        require(msg.sender == _account, "6");
 
-        require(_positionBlockTime.add(minTimeDelayPublic) <= block.timestamp, "delay");
+        require(_positionBlockTime.add(minTimeDelayPublic) <= block.timestamp, "5");
 
         return true;
     }

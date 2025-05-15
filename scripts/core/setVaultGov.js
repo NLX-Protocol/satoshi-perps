@@ -1,19 +1,22 @@
-const { contractAt, sendTxn } = require("../shared/helpers")
+const { contractAt, sendTxn, readTmpAddresses} = require("../shared/helpers")
 
 //const MULTISIG = "0x9f50221ea9Cb120807121c930a2B8583Fc567e66"
 
 async function main() {
-
-  const vault = await contractAt("Vault", "0x7266488Fb3529a06B62092492B44824c21c47820")
-  const positionRouter = await contractAt("PositionRouter", "0xA2aEa186372BAaC0597bf78dB89C8A14b9b1B9E4",undefined,{
+  const addresses = readTmpAddresses()
+  const vault = await contractAt("Vault", addresses.vaultBTC)
+  const positionRouter = await contractAt("PositionRouter", addresses.positionRouterBTC,undefined,{
     libraries: {
-      PositionUtils:"0xc4702BF1876ac8d9148D5a700D80e96e1ab7100c",
+      PositionUtils:addresses.positionUtilsBTC,
     }
   })
-  const referralStorage = await contractAt("ReferralStorage", "0xdF928f566eadF71C254A5ff6395566e27b657f1D")
-  const alreadyDeployedVaultTimelock = await contractAt("Timelock", "0x1D8C714C76D7E725CcB85f6B36eA2B94d62940F1")
+  const referralStorage = await contractAt("ReferralStorage", addresses.referralStorageBTC)
+  const alreadyDeployedVaultTimelock = await contractAt("Timelock", addresses.vaultTimelockBTC)
 
-  const governedProxyAdmin = await contractAt("GovernedProxyAdmin", "0xC761C34a5dA689a9e39aa9A2369e60434C099d7d")
+  const governedProxyAdmin = await contractAt("GovernedProxyAdmin", addresses.vaultBTCProxyAdmin)
+
+  const orderBook = await contractAt("OrderBook", addresses.orderBookBTC)
+  const slpManager = await contractAt("SlpManager", addresses.slpManagerBTC)
 
   // const resilientOracle = await contractAt("ResilientOracle", "0x3e9b6c48A388e5d580e6D65bB2896D60b606CDaD")
   // const boundValidator = await contractAt("BoundValidator", "0x47794688e555F03F64cd0b4A65fFcec7C7387cA2")
@@ -28,10 +31,12 @@ async function main() {
   await sendTxn(referralStorage.setGov(alreadyDeployedVaultTimelock.address), "referralStorage.setGov")
   await sendTxn(vault.setGov(alreadyDeployedVaultTimelock.address), "vault.setGov")
 
+  await sendTxn(orderBook.setGov(alreadyDeployedVaultTimelock.address), "orderBook.setGov") // check
+  await sendTxn(slpManager.setGov(alreadyDeployedVaultTimelock.address), "slpManager.setGov") // check
+
   // await sendTxn(resilientOracle.setGov(MULTISIG), "resilientOracle.setGov")
   // await sendTxn(boundValidator.setGov(MULTISIG), "boundValidator.setGov")
   // await sendTxn(pythOracle.setGov(MULTISIG), "pythOracle.setGov")
-
 }
 
 
@@ -42,4 +47,4 @@ main()
     process.exit(1)
   })
 
-  // npx hardhat run scripts/core/setVaultGov.js --network core-testnet
+// npx hardhat run scripts/core/setVaultGov.js --network core-testnet

@@ -26,6 +26,7 @@ contract VaultUtils is IVaultUtils, Governable {
 
     uint256 public constant BASIS_POINTS_DIVISOR = 10000;
     uint256 public constant FUNDING_RATE_PRECISION = 1000000;
+    uint256 public constant USDG_DECIMALS = 18;
 
     constructor(IVault _vault) public {
         vault = _vault;
@@ -168,5 +169,86 @@ contract VaultUtils is IVaultUtils, Governable {
         }
         uint256 taxBps = _taxBasisPoints.mul(averageDiff).div(targetAmount);
         return _feeBasisPoints.add(taxBps);
+    }
+
+    function getNextGlobalShortAveragePrice(address _indexToken, uint256 _nextPrice, uint256 _sizeDelta) public override view returns (uint256) {
+        IVault _vault = vault;
+        uint256 size = _vault.globalShortSizes(_indexToken);
+        uint256 averagePrice = _vault.globalShortAveragePrices(_indexToken);
+        uint256 priceDelta = averagePrice > _nextPrice ? averagePrice.sub(_nextPrice) : _nextPrice.sub(averagePrice);
+        uint256 delta = size.mul(priceDelta).div(averagePrice);
+        bool hasProfit = averagePrice > _nextPrice;
+
+        uint256 nextSize = size.add(_sizeDelta);
+        uint256 divisor = hasProfit ? nextSize.sub(delta) : nextSize.add(delta);
+
+        return _nextPrice.mul(nextSize).div(divisor);
+    }
+
+    function getGlobalShortDelta(address _token) public override view returns (bool, uint256) {
+        IVault _vault = vault;
+        uint256 size = _vault.globalShortSizes(_token);
+        if (size == 0) { return (false, 0); }
+
+        uint256 nextPrice = _vault.getMaxPrice(_token);
+        uint256 averagePrice = _vault.globalShortAveragePrices(_token);
+        uint256 priceDelta = averagePrice > nextPrice ? averagePrice.sub(nextPrice) : nextPrice.sub(averagePrice);
+        uint256 delta = size.mul(priceDelta).div(averagePrice);
+        bool hasProfit = averagePrice > nextPrice;
+
+        return (hasProfit, delta);
+    }
+
+    function getDelta(address _indexToken, uint256 _size, uint256 _averagePrice, bool _isLong, uint256 _lastIncreasedTime) public override view returns (bool, uint256) {
+        IVault _vault = vault;
+        require(_averagePrice > 0, "VaultUtils: invalid average price");
+        uint256 price = _isLong ? _vault.getMinPrice(_indexToken) : _vault.getMaxPrice(_indexToken);
+        uint256 priceDelta = _averagePrice > price ? _averagePrice.sub(price) : price.sub(_averagePrice);
+        uint256 delta = _size.mul(priceDelta).div(_averagePrice);
+
+        bool hasProfit;
+        if (_isLong) {
+            hasProfit = price > _averagePrice;
+        } else {
+            hasProfit = _averagePrice > price;
+        }
+
+        uint256 minBps = block.timestamp > _lastIncreasedTime.add(_vault.minProfitTime()) ? 0 : _vault.minProfitBasisPoints(_indexToken);
+        if (hasProfit && delta.mul(BASIS_POINTS_DIVISOR) <= _size.mul(minBps)) {
+            delta = 0;
+        }
+
+        return (hasProfit, delta);
+    }
+
+    function getTargetUsdgAmount(address _token) public override view returns (uint256) {
+        IVault _vault = vault;
+        uint256 supply = IERC20(_vault.usdg()).totalSupply();
+        if (supply == 0) { return 0; }
+        uint256 weight = _vault.tokenWeights(_token);
+        return weight.mul(supply).div(_vault.totalTokenWeights());
+    }
+
+    function adjustForDecimals(uint256 _amount, address _tokenDiv, address _tokenMul) public override view returns (uint256) {
+        IVault _vault = vault;
+        address _usdg = _vault.usdg();
+        uint256 decimalsDiv = _tokenDiv == _usdg ? USDG_DECIMALS : _vault.tokenDecimals(_tokenDiv);
+        uint256 decimalsMul = _tokenMul == _usdg ? USDG_DECIMALS : _vault.tokenDecimals(_tokenMul);
+        return _amount.mul(10 ** decimalsMul).div(10 ** decimalsDiv);
+    }
+
+    function getNextFundingRate(address _token) public override view returns (uint256) {
+        IVault _vault = vault;
+        uint256 lastFundingTime = _vault.lastFundingTimes(_token);
+        uint256 fundingInterval = _vault.fundingInterval();
+
+        if (lastFundingTime.add(fundingInterval) > block.timestamp) { return 0; }
+
+        uint256 intervals = block.timestamp.sub(lastFundingTime).div(fundingInterval);
+        uint256 poolAmount = _vault.poolAmounts(_token);
+        if (poolAmount == 0) { return 0; }
+
+        uint256 _fundingRateFactor = _vault.stableTokens(_token) ? _vault.stableFundingRateFactor() : _vault.fundingRateFactor();
+        return _fundingRateFactor.mul(_vault.reservedAmounts(_token)).mul(intervals).div(poolAmount);
     }
 }

@@ -14,4 +14,16 @@ interface IVaultUtils {
     function getSellUsdgFeeBasisPoints(address _token, uint256 _usdgAmount) external view returns (uint256);
     function getSwapFeeBasisPoints(address _tokenIn, address _tokenOut, uint256 _usdgAmount) external view returns (uint256);
     function getFeeBasisPoints(address _token, uint256 _usdgDelta, uint256 _feeBasisPoints, uint256 _taxBasisPoints, bool _increment) external view returns (uint256);
+    function getNextGlobalShortAveragePrice(address _indexToken, uint256 _nextPrice, uint256 _sizeDelta) external view returns (uint256);
+    function getGlobalShortDelta(address _token) external view returns (bool, uint256);
+    function getDelta(
+        address _indexToken,
+        uint256 _size,
+        uint256 _averagePrice,
+        bool _isLong,
+        uint256 _lastIncreasedTime
+    ) external view returns (bool, uint256);
+    function getTargetUsdgAmount(address _token) external view returns (uint256);
+    function adjustForDecimals(uint256 _amount, address _tokenDiv, address _tokenMul) external view returns (uint256);
+    function getNextFundingRate(address _token) external view returns (uint256);
 }

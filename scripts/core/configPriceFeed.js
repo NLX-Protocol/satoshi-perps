@@ -6,20 +6,17 @@ const network = (process.env.HARDHAT_NETWORK || 'mainnet');
 const tokens = require('./tokens')[network];
 
 
-
-const VAULT = "0x7266488Fb3529a06B62092492B44824c21c47820" //BTC
-const VAULT_PRICE_FEED = "0xD318864E715c75D46500B91E66F02B5Bd7d5b19C"
-
 async function main() {
+  const addresses = readTmpAddresses()
   const wallet = (await ethers.getSigners())[0]
 
   const {
-    BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, TRUMP, BERA, VIRTUAL, APT, SOLV, KAITO, SolvBTC
+    BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, TRUMP, BERA, VIRTUAL, APT, SOLV, KAITO, SolvBTC, WCORE, USDT
   } = tokens
-  const tokenArr = [BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, TRUMP, BERA, VIRTUAL, APT, SOLV, KAITO, SolvBTC]
+  const tokenArr = [BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, TRUMP, BERA, VIRTUAL, APT, SOLV, KAITO, SolvBTC, WCORE, USDT]
 
-  const vaultPriceFeed = await contractAt("VaultPriceFeed", VAULT_PRICE_FEED,)
-  const vault = await contractAt("Vault", VAULT)
+  const vaultPriceFeed = await contractAt("VaultPriceFeed", addresses.vaultPriceFeedBTC)
+  const vault = await contractAt("Vault", addresses.vaultBTC)
   for (const token of tokenArr) {
     console.log({
       vault: vault.address, // _vault
@@ -42,25 +39,7 @@ async function main() {
     wallet.address
   ])
 
-  const addresses = {
-    vaultPriceFeedTimelockBTC: vaultPriceFeedTimelock.address,
-  }
-
   const timelock = await contractAt("Timelock", await vault.gov())
-  /*for (const token of tokenArr) {
-    await sendTxn(timelock.setVaultTokenConfig(
-      vault.address, // _vault
-      token.address, // _token
-      token.decimals, // _tokenDecimals
-      token.tokenWeight, // _tokenWeight
-      token.minProfitBps, // _minProfitBps
-      expandDecimals(token.maxUsdgAmount, 30), // _maxUsdgAmount
-      expandDecimals(token.maxLongOpenInterest, 30), // _maxLongOpenInterest
-      expandDecimals(token.maxShortOpenInterest, 30), // _maxShortOpenInterest
-      token.isStable, // _isStable
-      token.isShortable // _isShortable
-    ), `timelock.setTokenConfig(${token.name}) ${token.address}`)
-  }*/
   for (const tokenItem of tokenArr) {
     if (tokenItem.spreadBasisPoints === undefined) { continue }
     await sendTxn(vaultPriceFeed.setSpreadBasisPoints(
@@ -68,8 +47,6 @@ async function main() {
       tokenItem.spreadBasisPoints // _spreadBasisPoints
     ), `vaultPriceFeed.setSpreadBasisPoints(${tokenItem.name}) ${tokenItem.spreadBasisPoints}`)
   }
-
-
 
   for (const token of tokenArr) {
     await sendTxn(vault.setTokenConfig(
@@ -84,7 +61,6 @@ async function main() {
       token.isShortable // _isShortable
     ), `vault.setTokenConfig(${token.name}) ${token.address}`)
   }
-
 
   for (const token of tokenArr) {
     await sendTxn(timelock.setVaultTokenConfig(
@@ -103,7 +79,9 @@ async function main() {
 
   await sendTxn(vaultPriceFeed.setGov(vaultPriceFeedTimelock.address), "vaultPriceFeed.setGov")
 
-  writeTmpAddresses(addresses)
+  writeTmpAddresses({
+    vaultPriceFeedTimelockBTC: vaultPriceFeedTimelock.address,
+  })
 
 }
 

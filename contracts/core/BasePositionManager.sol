@@ -82,7 +82,7 @@ contract BasePositionManager is IBasePositionManager, ReentrancyGuard, Governabl
     );
 
     modifier onlyAdmin() {
-        require(msg.sender == admin, "forbidden");
+        require(msg.sender == admin, "f");
         _;
     }
 
@@ -103,7 +103,7 @@ contract BasePositionManager is IBasePositionManager, ReentrancyGuard, Governabl
     }
 
     receive() external payable {
-        require(msg.sender == weth, "invalid sender");
+        require(msg.sender == weth, "n");
     }
 
     function setAdmin(address _admin) external onlyGov {
@@ -171,12 +171,12 @@ contract BasePositionManager is IBasePositionManager, ReentrancyGuard, Governabl
         if (_isLong) {
             uint256 maxGlobalLongSize = maxGlobalLongSizes[_indexToken];
             if (maxGlobalLongSize > 0 && IVault(vault).guaranteedUsd(_indexToken).add(_sizeDelta) > maxGlobalLongSize) {
-                revert("max longs exceeded");
+                revert("m");
             }
         } else {
             uint256 maxGlobalShortSize = maxGlobalShortSizes[_indexToken];
             if (maxGlobalShortSize > 0 && IVault(vault).globalShortSizes(_indexToken).add(_sizeDelta) > maxGlobalShortSize) {
-                revert("max shorts exceeded");
+                revert("m");
             }
         }
     }
@@ -204,9 +204,9 @@ contract BasePositionManager is IBasePositionManager, ReentrancyGuard, Governabl
 
         uint256 markPrice = _isLong ? IVault(_vault).getMinPrice(_indexToken) : IVault(_vault).getMaxPrice(_indexToken);
         if (_isLong) {
-            require(markPrice >= _price, "markPrice < price");
+            require(markPrice >= _price, "p");
         } else {
-            require(markPrice <= _price, "markPrice > price");
+            require(markPrice <= _price, "p");
         }
 
         address timelock = IVault(_vault).gov();
@@ -227,16 +227,7 @@ contract BasePositionManager is IBasePositionManager, ReentrancyGuard, Governabl
     }
 
     function _swap(address[] memory _path, uint256 _minOut, address _receiver) internal returns (uint256) {
-        if (_path.length == 2) {
-            return _vaultSwap(_path[0], _path[1], _minOut, _receiver);
-        }
-        revert("invalid _path.length");
-    }
-
-    function _vaultSwap(address _tokenIn, address _tokenOut, uint256 _minOut, address _receiver) internal returns (uint256) {
-        uint256 amountOut = IVault(vault).swap(_tokenIn, _tokenOut, _receiver);
-        require(amountOut >= _minOut, "insufficient amountOut");
-        return amountOut;
+        revert ("7");
     }
 
     function _transferInETH() internal {

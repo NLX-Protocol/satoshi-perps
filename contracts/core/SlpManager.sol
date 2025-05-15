@@ -11,10 +11,11 @@ import "./interfaces/IShortsTracker.sol";
 import "../tokens/interfaces/IUSDG.sol";
 import "../tokens/interfaces/IMintable.sol";
 import "../access/Governable.sol";
+import "../libraries/utils/Pausable.sol";
 
 pragma solidity 0.6.12;
 
-contract SlpManager is ReentrancyGuard, Governable, ISlpManager {
+contract SlpManager is ReentrancyGuard, Governable, ISlpManager, Pausable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -68,6 +69,15 @@ contract SlpManager is ReentrancyGuard, Governable, ISlpManager {
         cooldownDuration = _cooldownDuration;
     }
 
+    function pause() external onlyGov {
+        _pause();
+    }
+
+    function unpause() external onlyGov {
+        _unpause();
+    }
+
+
     function setInPrivateMode(bool _inPrivateMode) external onlyGov {
         inPrivateMode = _inPrivateMode;
     }
@@ -95,22 +105,22 @@ contract SlpManager is ReentrancyGuard, Governable, ISlpManager {
         aumDeduction = _aumDeduction;
     }
 
-    function addLiquidity(address _token, uint256 _amount, uint256 _minUsdg, uint256 _minSlp) external override nonReentrant returns (uint256) {
+    function addLiquidity(address _token, uint256 _amount, uint256 _minUsdg, uint256 _minSlp) external override nonReentrant whenNotPaused returns (uint256) {
         if (inPrivateMode) { revert("SlpManager: action not enabled"); }
         return _addLiquidity(msg.sender, msg.sender, _token, _amount, _minUsdg, _minSlp);
     }
 
-    function addLiquidityForAccount(address _fundingAccount, address _account, address _token, uint256 _amount, uint256 _minUsdg, uint256 _minSlp) external override nonReentrant returns (uint256) {
+    function addLiquidityForAccount(address _fundingAccount, address _account, address _token, uint256 _amount, uint256 _minUsdg, uint256 _minSlp) external override nonReentrant whenNotPaused returns (uint256) {
         _validateHandler();
         return _addLiquidity(_fundingAccount, _account, _token, _amount, _minUsdg, _minSlp);
     }
 
-    function removeLiquidity(address _tokenOut, uint256 _slpAmount, uint256 _minOut, address _receiver) external override nonReentrant returns (uint256) {
+    function removeLiquidity(address _tokenOut, uint256 _slpAmount, uint256 _minOut, address _receiver) external override nonReentrant whenNotPaused returns (uint256) {
         if (inPrivateMode) { revert("SlpManager: action not enabled"); }
         return _removeLiquidity(msg.sender, _tokenOut, _slpAmount, _minOut, _receiver);
     }
 
-    function removeLiquidityForAccount(address _account, address _tokenOut, uint256 _slpAmount, uint256 _minOut, address _receiver) external override nonReentrant returns (uint256) {
+    function removeLiquidityForAccount(address _account, address _tokenOut, uint256 _slpAmount, uint256 _minOut, address _receiver) external override nonReentrant whenNotPaused returns (uint256) {
         _validateHandler();
         return _removeLiquidity(_account, _tokenOut, _slpAmount, _minOut, _receiver);
     }

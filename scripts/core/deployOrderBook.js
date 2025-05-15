@@ -8,11 +8,8 @@ async function main() {
 
   const addresses = readTmpAddresses()
 
-  const { nativeToken } = tokens
-
   const orderBook = await deployContract("OrderBook", []);
 
-  // Arbitrum mainnet addresses
   await sendTxn(orderBook.initialize(
     addresses.routerBTC, // router
     addresses.vaultBTC, // vault

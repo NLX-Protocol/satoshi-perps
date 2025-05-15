@@ -10,11 +10,10 @@ async function main() {
 
   const addresses = readTmpAddresses()
 
-  // -------------------BTC --------------------
   const positionManagerAddress = undefined
   const vault = await contractAt("Vault", addresses.vaultBTC)
   const timelock = await contractAt("Timelock", await vault.gov())
-  const router = await contractAt("Router", await vault.router())
+  const router = await contractAt("Router", addresses.routerBTC)
   const shortsTracker = await contractAt("ShortsTracker", addresses.shortsTrackerBTC)
   const shortsTrackerTimelock = await contractAt("ShortsTrackerTimelock", await shortsTracker.gov())
   const weth = await contractAt("WETH", addresses.WCORE)
@@ -22,17 +21,6 @@ async function main() {
   const referralStorage = await contractAt("ReferralStorage", addresses.referralStorageBTC)
   const positionUtils = await contractAt("PositionUtils", addresses.positionUtilsBTC)
 
-
-
-  // const positionKeepers = [
-  //   { address: "0x77B6935623878F8f9dce8E1A28d4A8A7E89A37b6" },
-  //   { address: "0x0666992F2D2fD045e9b876B5490F5470452aFBD3" }
-  // ]
-  // const liquidators = [
-  //   { address: "0x73CbB4801bFE4AD34d8B0Fd3dab8bE0E9e9d2579" },
-  //   { address: "0x0666992F2D2fD045e9b876B5490F5470452aFBD3" }
-  // ]
-// mainnet
   const positionKeepers = [
     { address: "0x061B9ede7731dE3c16767CEA82eF18BED69fD8ce" },
     /*{ address: "0x82bbd2795d9b6Fc08305eb21ffB3c07C1Ad104E8" }*/
@@ -43,9 +31,6 @@ async function main() {
   ]
 
   const partnerContracts = []
-
-
-
 
   let positionManager
   if (positionManagerAddress) {
@@ -109,7 +94,6 @@ async function main() {
     await sendTxn(positionManager.setGov(await vault.gov()), "positionManager.setGov")
   }
 
-
   writeTmpAddresses({
     positionManagerBTC: positionManager.address,
   })
@@ -123,4 +107,4 @@ main()
     process.exit(1)
   })
 
-  // npx hardhat run scripts/core/deployPositionManager.js --network core-testnet
+// npx hardhat run scripts/core/deployPositionManager.js --network core-testnet

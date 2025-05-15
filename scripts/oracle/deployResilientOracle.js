@@ -1,29 +1,25 @@
 const { ethers, upgrades, network } = require("hardhat");
-const { writeTmpAddresses, sendTxn, verifyUpgradeable, deployContract, contractAt } = require("../shared/helpers");
+const { writeTmpAddresses, sendTxn, verifyUpgradeable, readTmpAddresses, deployContract, contractAt } = require("../shared/helpers");
 const { expandDecimals } = require("../../test/shared/utilities");
 const tokens = require('../core/tokens')[network.name];
 
-const VAULT = "0x7266488Fb3529a06B62092492B44824c21c47820" //BTC
-const VAULT_PRICE_FEED = "0xD318864E715c75D46500B91E66F02B5Bd7d5b19C"
 //pyth contract address
 //const PRICE_FEED_CONTRACT_ADDRESS = "0x8D254a21b3C86D32F7179855531CE99164721933" //testnet
 const PRICE_FEED_CONTRACT_ADDRESS = "0x2880aB155794e7179c9eE2e38200202908C17B43" //testnet2
 //const PRICE_FEED_CONTRACT_ADDRESS = "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729" //mainnet
 
 async function main() {
+  const addresses = readTmpAddresses()
 
   const {
-    BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, TRUMP, BERA, VIRTUAL, APT, SOLV, KAITO, SolvBTC, nativeToken
+    BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, TRUMP, BERA, VIRTUAL, APT, SOLV, KAITO, SolvBTC, WCORE, USDT
   } = tokens
-  const tokenArr = [BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, TRUMP, BERA, VIRTUAL, APT, SOLV, KAITO, SolvBTC, nativeToken]
-  // const pythMaxStalePeriod = 60 * 60 * 24 // 24 hours
+  const tokenArr = [BTC, CORE, ETH, SOL, BNB, DOGE, TRX, SUI, AVAX, XRP, SHIB, BONK, FLOKI, ENA, LINK, POPCAT, TRUMP, BERA, VIRTUAL, APT, SOLV, KAITO, SolvBTC, WCORE, USDT]
+
   const pythMaxStalePeriod = 60 * 60 // 1 hour
 
-  const vaultPriceFeed = await contractAt("VaultPriceFeed", VAULT_PRICE_FEED)
-  const vault = await contractAt("Vault", VAULT)
-
-
-
+  const vaultPriceFeed = await contractAt("VaultPriceFeed", addresses.vaultPriceFeedBTC)
+  const vault = await contractAt("Vault", addresses.vaultBTC)
 
   const signers = await ethers.getSigners()
   const wallet = signers[0]
@@ -31,12 +27,8 @@ async function main() {
   console.log("userAddress: ", userAddress);
 
 
-
-
   const boundValidator = await deployContract("BoundValidator", []);
-
   console.log("BoundValidator deployed to: " + boundValidator.address);
-
 
   const validateConfigs = []
   const pythTokenConfigs = []
@@ -56,15 +48,12 @@ async function main() {
     })
   }
 
-
   // deploy pyth oracle
   const pythOracle = await deployContract("PythOracle", [PRICE_FEED_CONTRACT_ADDRESS]);
-
   console.log("pythOracle deployed to: " + pythOracle.address);
 
   // deploy ResilientOracle
   const resilientOracle = await deployContract("ResilientOracle", [boundValidator.address]);
-
   console.log("resilientOracle deployed to: " + resilientOracle.address);
 
   // resilientOracle
@@ -81,24 +70,15 @@ async function main() {
   await sendTxn(resilientOracle.setTokenConfigs(resilientOracleConfigs), "resilientOracle.setTokenConfigs")
 
 
-
-
-
   await sendTxn(vaultPriceFeed.setMaxStrictPriceDeviation(expandDecimals(5, 28)), "vaultPriceFeed.setMaxStrictPriceDeviation") // 0.01 USD
-    await sendTxn(vaultPriceFeed.setResilientOracle(resilientOracle.address), "vaultPriceFeed.setResilientOracle")
-    await sendTxn(vault.setPriceFeed(vaultPriceFeed.address), "vault.setPriceFeed")
+  await sendTxn(vaultPriceFeed.setResilientOracle(resilientOracle.address), "vaultPriceFeed.setResilientOracle")
+  await sendTxn(vault.setPriceFeed(vaultPriceFeed.address), "vault.setPriceFeed")
+
   writeTmpAddresses({
     boundValidator: boundValidator.address,
     pythOracle: pythOracle.address,
     resilientOracle: resilientOracle.address,
   })
-
-  console.log({
-    boundValidator: boundValidator.address,
-    pythOracle: pythOracle.address,
-    resilientOracle: resilientOracle.address,
-  })
-
 }
 
 main()
